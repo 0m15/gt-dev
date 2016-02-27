@@ -1,6 +1,6 @@
 export default function fft(id) {
 
-  var audio = document.getElementById('sfx-1')
+  var audio = document.getElementById('track')
   var audioContext = new AudioContext()
   var source = audioContext.createMediaElementSource(audio)
   var analyser = audioContext.createAnalyser()
@@ -29,14 +29,5 @@ export default function fft(id) {
   
   //audio.play()
 
-  setTimeout(function() {
-    audio.pause()
-  }, 0)
-  
-
-  setTimeout(function() {
-    audio.play()
-  }, 1000)
-
-  return analyser
+  return { analyser, audio }
 }

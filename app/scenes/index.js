@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
 import TypeWriter from '../components/TypeWriter'
 import ThreeScene from '../components/Three'
+import * as visualization from './collection.js'
 
 import { playSfx } from '../lib/sfx'
 
 import THREE from 'three'
+import TWEEN from 'tween'
 
 require('./styles/home.css')
 
@@ -13,12 +15,14 @@ export default class Scene extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      mouseover: false
+      mouseover: false,
+      author: false
     }
 
     this.mouseOver = this.mouseOver.bind(this)
     this.mouseOut = this.mouseOut.bind(this)
 
+    this.animate = this.animate.bind(this)
     this.renderScene = this.renderScene.bind(this)
   }
 
@@ -27,10 +31,10 @@ export default class Scene extends Component {
   }
 
   typewrite() {
-    playSfx('sfx08')
+    playSfx('sfx08', 0.15)
     setTimeout(() => {
       this.setState({
-        mouseover: !this.state.mouseover
+        author: !this.state.author
       })
       this.typewrite()
     }, 5000)
@@ -38,10 +42,15 @@ export default class Scene extends Component {
 
   mouseOver() {
     playSfx('sfx05')
+    this.setState({
+      mouseover: true
+    })
   }
 
   mouseOut() {
-    
+    this.setState({
+      mouseover: false
+    }) 
   }
 
   renderScene(scene, camera, renderer) {
@@ -59,14 +68,27 @@ export default class Scene extends Component {
   }
 
   animate(scene, camera) {
-    scene.rotation.x += 0.01
-    scene.rotation.y += 0.01
-    scene.rotation.z += 0.01
+    
+    if(this.state.mouseover) {
+      scene.rotation.x += 0.01
+      scene.rotation.y += 0.01
+      scene.rotation.z += 0.01
+    }
+
+    //TWEEN.udpate()
+
+  }
+
+  launch() {
+    visualization.init()
+    visualization.animate()
   }
 
   render() {
 
     return <div className="gt-container">
+
+      <div id="visualization" />
       <div className="gt-screen gt-screen--home">
         
 
@@ -75,8 +97,8 @@ export default class Scene extends Component {
         </h1>
 
         <h2>
-          {!this.state.mouseover && <TypeWriter word="max/casacci" />}
-          {this.state.mouseover && <TypeWriter word="daniele/mana" />}
+          {this.state.author==0 && <TypeWriter word="max/casacci" />}
+          {this.state.author==1 && <TypeWriter word="daniele/mana" />}
         </h2>
 
         <div className="gt-screen__icosahedron">
@@ -90,7 +112,10 @@ export default class Scene extends Component {
         </div>
 
         <div className="gt-screen__action">
-          <a href="#" className="gt-button gt-button--launch" onMouseOver={this.mouseOver}>
+          <a href="#" className="gt-button gt-button--launch" 
+            onMouseOver={this.mouseOver}
+            onMouseOut={this.mouseOut}
+            onClick={this.launch.bind(this)}>
             launch visualization*
           </a>
         </div>

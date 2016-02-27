@@ -8,14 +8,16 @@ video.width    = 320;
 video.height   = 240;
 video.autoplay = true;
 
-navigator.webkitGetUserMedia({video: true}, function(stream){
-  video.src    = webkitURL.createObjectURL(stream);
-}, function(error){
-  console.log("Failed to get a stream due to", error);
-});
+function startCamera() {
+  navigator.webkitGetUserMedia({video: true}, function(stream){
+    video.src    = webkitURL.createObjectURL(stream);
+  }, function(error){
+    console.log("Failed to get a stream due to", error);
+  });
+}
 
 // audio stuff
-var analyser = fft('track.mp3')
+var { analyser, audio } = fft('track.mp3')
 var bufferLength = analyser.frequencyBinCount;
 var frequencyData = new Uint8Array(bufferLength)
 
@@ -65,10 +67,9 @@ var screenY = window.innerHeight
   var controls;
   var videoTexture;
 
-  init()
-  animate()
+  
 
-function init() {
+export function init() {
   
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog( 0x222222, 0.9, 1600 );
@@ -99,10 +100,10 @@ function init() {
   scene.add( light );
 
 
-  particleSystem1 = drawParticles(4)
+  particleSystem1 = drawParticles(32)
   particleSystem1.sortParticles = true
 
-  ///scene.add(particleSystem1)
+  scene.add(particleSystem1)
 
   particleSystem = drawParticles(8)
   particleSystem.sortParticles = true
@@ -148,12 +149,12 @@ function init() {
 
   renderer = new THREE.WebGLRenderer({
     antialias: true,
-    //alpha: true
+    alpha: true
   });
   
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( screenX, screenY );
-  renderer.setClearColor(0x222222)
+  //renderer.setClearColor(0x222222)
   
   // controls = new THREE.OrbitControls( camera, renderer.domElement );
   // controls.enableDamping = true;
@@ -200,7 +201,9 @@ function init() {
   stereo.eyeSeparation = 10;
   stereo.setSize( window.innerWidth, window.innerHeight );
 
-  document.body.appendChild( renderer.domElement );
+  startCamera()
+  audio.play()
+  document.getElementById('visualization').appendChild( renderer.domElement );
   
 
   document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -292,7 +295,7 @@ function drawParticle( particle, delay ) {
 
 
 
-function animate(time) {
+export function animate(time) {
     
   // camera.rotation.y -= 0.002
   // camera.rotation.x += 0.002
@@ -337,9 +340,9 @@ function animate(time) {
         v.setY(Math.random() * freqData - freqData / 2)
         v.setX(Math.random() * freqData - freqData / 2)
         v.setZ(freqData*0.1)
-        mesh.scale.x = particleSystem.scale.x = freqData*0.0006*(time/1000)
-        mesh.scale.y = particleSystem.scale.y = freqData*0.0006*(time/1000)
-        mesh.scale.z = particleSystem.scale.z = freqData*0.0006*(time/1000)
+        mesh.scale.x = particleSystem.scale.x = particleSystem1.scale.x = freqData*0.0006*(time/1000)
+        mesh.scale.y = particleSystem.scale.y = particleSystem1.scale.y = freqData*0.0006*(time/1000)
+        mesh.scale.z = particleSystem.scale.z = particleSystem1.scale.z =freqData*0.0006*(time/1000)
       }
     }
 
@@ -365,8 +368,8 @@ function animate(time) {
 
   
   requestAnimationFrame(animate)
-  //renderer.render(scene, camera)
-  composer.render(renderer)
+  renderer.render(scene, camera)
+  //composer.render(renderer)
 
 
   if( video.readyState === video.HAVE_ENOUGH_DATA ){
