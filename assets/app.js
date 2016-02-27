@@ -19716,20 +19716,41 @@
 	    _this.state = {
 	      mouseover: false
 	    };
+
+	    _this.mouseOver = _this.mouseOver.bind(_this);
+	    _this.mouseOut = _this.mouseOut.bind(_this);
+
 	    _this.renderScene = _this.renderScene.bind(_this);
 	    return _this;
 	  }
 
 	  _createClass(Scene, [{
-	    key: 'mouseOverAction',
-	    value: function mouseOverAction() {
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.typewrite();
+	    }
+	  }, {
+	    key: 'typewrite',
+	    value: function typewrite() {
+	      var _this2 = this;
+
+	      setTimeout(function () {
+	        _this2.setState({
+	          mouseover: !_this2.state.mouseover
+	        });
+	        _this2.typewrite();
+	      }, 5000);
+	    }
+	  }, {
+	    key: 'mouseOver',
+	    value: function mouseOver() {
 	      this.setState({
 	        mouseover: true
 	      });
 	    }
 	  }, {
-	    key: 'mouseOutAction',
-	    value: function mouseOutAction() {
+	    key: 'mouseOut',
+	    value: function mouseOut() {
 	      this.setState({
 	        mouseover: false
 	      });
@@ -19737,7 +19758,7 @@
 	  }, {
 	    key: 'renderScene',
 	    value: function renderScene(scene, camera, renderer) {
-	      var geometry = new _three2.default.IcosahedronGeometry(240);
+	      var geometry = new _three2.default.IcosahedronGeometry(320);
 	      var material = new _three2.default.MeshPhongMaterial({
 	        color: 0xffffff,
 	        wireframe: true
@@ -19751,9 +19772,9 @@
 	  }, {
 	    key: 'animate',
 	    value: function animate(scene, camera) {
-	      //scene.rotation.x += 0.01
+	      scene.rotation.x += 0.01;
 	      scene.rotation.y += 0.01;
-	      //scene.rotation.z += 0.01
+	      scene.rotation.z += 0.01;
 	    }
 	  }, {
 	    key: 'render',
@@ -19761,49 +19782,71 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'gt-screen gt-screen--home' },
+	        { className: 'gt-container' },
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'gt-screen__icosahedron' },
-	          _react2.default.createElement(_Three2.default, {
-	            ambientLightColor: 0xffffff,
-	            initScene: this.renderScene,
-	            animate: this.animate,
-	            alpha: true })
-	        ),
-	        _react2.default.createElement(
-	          'h1',
-	          { className: 'gt-screen__title' },
-	          _react2.default.createElement(_TypeWriter2.default, { word: 'glasstress' })
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'gt-screen__action',
-	            onMouseOver: this.mouseOverAction,
-	            onMouseOut: this.mouseOutAction },
+	          { className: 'gt-screen gt-screen--home' },
 	          _react2.default.createElement(
-	            'a',
-	            { href: '#', className: 'gt-button gt-button--launch' },
-	            'launch visualization*'
+	            'div',
+	            { className: 'gt-screen__icosahedron' },
+	            _react2.default.createElement(_Three2.default, {
+	              ambientLightColor: 0xffffff,
+	              fogColor: 0x222222,
+	              height: 100,
+	              initScene: this.renderScene,
+	              animate: this.animate,
+	              alpha: true })
 	          ),
 	          _react2.default.createElement(
-	            'p',
-	            { className: 'gt-text gt-text--secondary' },
-	            'or ',
+	            'h1',
+	            { className: 'gt-screen__title' },
+	            _react2.default.createElement(_TypeWriter2.default, { word: 'glasstress' })
+	          ),
+	          _react2.default.createElement(
+	            'h2',
+	            null,
+	            !this.state.mouseover && _react2.default.createElement(_TypeWriter2.default, { word: 'max/casacci' }),
+	            this.state.mouseover && _react2.default.createElement(_TypeWriter2.default, { word: 'daniele/mana' })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'gt-screen__action' },
 	            _react2.default.createElement(
 	              'a',
-	              { href: '#' },
-	              'listen to EP'
+	              { href: '#', className: 'gt-button gt-button--launch' },
+	              'launch visualization*'
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'gt-screen__footer' },
+	            _react2.default.createElement(
+	              'p',
+	              { className: 'gt-text gt-text--small' },
+	              '*It requires a WebGl capable browser and optional access to webcam'
 	            )
 	          )
 	        ),
 	        _react2.default.createElement(
 	          'div',
-	          { className: 'gt-screen__footer' },
+	          { className: 'gt-screen gt-screen--project' },
 	          _react2.default.createElement(
-	            'p',
-	            { className: 'gt-text gt-text--small' },
-	            '*It requires a WebGl capable browser and optional access to webcam'
+	            'div',
+	            { className: 'gt-screen__left' },
+	            _react2.default.createElement(
+	              'h2',
+	              { className: 'gt-screen__left-title' },
+	              'The project'
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'gt-screen__right' },
+	            _react2.default.createElement(
+	              'p',
+	              { className: 'gt-text gt-text--body' },
+	              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+	            )
 	          )
 	        )
 	      );
@@ -19951,7 +19994,8 @@
 	    _this.iterations = 0;
 	    _this.state = {
 	      char: without(_this.props.char),
-	      opacity: 0
+	      opacity: 0,
+	      scale: 0
 	    };
 
 	    return _this;
@@ -19980,7 +20024,8 @@
 	          char = alphabet[without(finalChar)];
 	          _this2.setState({
 	            char: char,
-	            opacity: 0 + 1.0 / maxIterations * iterations
+	            opacity: 0 + 1.0 / maxIterations * iterations,
+	            scale: 0 + 1.0 / maxIterations * iterations
 	          });
 	          _this2.iterations += 1;
 	          _this2.typer();
@@ -20003,7 +20048,9 @@
 	      return _react2.default.createElement(
 	        "span",
 	        { style: {
-	            opacity: this.state.opacity
+	            display: 'inline-block',
+	            opacity: this.state.opacity,
+	            transform: 'scale(' + this.state.scale + ')'
 	          } },
 	        this.state.char
 	      );
@@ -20057,7 +20104,8 @@
 	var defaultProps = {
 	  width: 320,
 	  height: 240,
-	  fog: false,
+	  fog: true,
+	  fogColor: 0xffffff,
 	  alpha: false,
 	  ambientLightColor: 0xffffff,
 	  clearColor: 0x222222,
@@ -20112,6 +20160,7 @@
 	      var alpha = _props.alpha;
 	      var ambientLightColor = _props.ambientLightColor;
 	      var clearColor = _props.clearColor;
+	      var fogColor = _props.fogColor;
 	      var width = _props.width;
 	      var height = _props.height;
 
@@ -20121,7 +20170,7 @@
 
 	      camera.position.z = 1000;
 	      scene.add(new _three2.default.AmbientLight(ambientLightColor));
-	      scene.fog = new _three2.default.Fog(0x222222, 0.1, 1600);
+	      scene.fog = new _three2.default.Fog(fogColor, 0.3, 1600);
 
 	      this.props.initScene(scene, camera);
 
@@ -61434,7 +61483,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  margin-top: auto;\n}\n\n.gt-screen__title {\n  font-size: 1em;\n  text-transform: uppercase;\n  font-weight: 200;\n  margin: 0;\n  letter-spacing: 0em;\n}\n\n.gt-screen__title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 20px;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  border: 1px solid rgba(255, 255, 255, .2);\n  display: inline-block;\n  padding: 1em 2em;\n  border-radius: 25px;\n  text-transform: uppercase;\n  font-size: .85em;\n  letter-spacing: .1em;\n  min-width: 100px;\n  text-align: center;\n}\n\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  margin-top: auto;\n}\n\n.gt-screen__title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n}\n\n.gt-screen__title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .75em;\n  letter-spacing: .15em;\n  min-width: 100px;\n  text-align: center;\n  transition: all 1s ease-in-out;\n}\n\n.gt-button--launch:hover {\n  /*transform: scale(1.005);*/\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 
@@ -61824,7 +61873,7 @@
 
 
 	// module
-	exports.push([module.id, "html,\nbody {\n  font-family: Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  background-image: url(/assets/imgs/bg@2x.jpg);\n  background-size: cover;\n  position: relative;\n}\n\nbody:after {\n  content: \"\";\n  position: absolute;\n  background: rgba(4, 0, 6, .9);\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
+	exports.push([module.id, "html,\nbody {\n  font-family: Proxima Nova Alt, Apercu, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  background-image: url(/assets/imgs/bg@2x.jpg);\n  background-size: cover;\n  position: relative;\n}\n\nbody:after {\n  content: \"\";\n  position: absolute;\n  background: rgba(10, 0, 6, .9);\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
 
 	// exports
 
