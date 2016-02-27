@@ -20,8 +20,8 @@ export default class TypeWriter extends Component {
         {
           chars.map((char, i) =>
             <Type 
-              minDelay={(i*10)+10} 
-              maxDelay={(i*10)+100} 
+              minDelay={(i*1)+1} 
+              maxDelay={(i*1)+100} 
               iterations={4}
               char={char} 
               key={i} />

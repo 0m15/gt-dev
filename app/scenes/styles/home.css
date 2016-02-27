@@ -12,7 +12,7 @@
 }
 
 .gt-screen__icosahedron {
-  margin-top: auto;
+  cursor: pointer;
 }
 
 .gt-screen__title {
@@ -21,6 +21,7 @@
   font-weight: 600;
   margin: 0;
   letter-spacing: 0em;
+  margin-top: auto;
 }
 
 .gt-screen__title span span {
@@ -54,7 +55,7 @@
   letter-spacing: .15em;
   min-width: 100px;
   text-align: center;
-  transition: all 1s ease-in-out;
+  transition: all .85s ease-out;
 }
 
 .gt-button--launch:hover {

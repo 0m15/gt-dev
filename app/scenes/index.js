@@ -1,6 +1,9 @@
 import React, { Component } from 'react'
 import TypeWriter from '../components/TypeWriter'
 import ThreeScene from '../components/Three'
+
+import { playSfx } from '../lib/sfx'
+
 import THREE from 'three'
 
 require('./styles/home.css')
@@ -24,6 +27,7 @@ export default class Scene extends Component {
   }
 
   typewrite() {
+    playSfx('sfx08')
     setTimeout(() => {
       this.setState({
         mouseover: !this.state.mouseover
@@ -33,19 +37,16 @@ export default class Scene extends Component {
   }
 
   mouseOver() {
-    this.setState({
-      mouseover: true
-    })
+    playSfx('sfx05')
   }
 
   mouseOut() {
-    this.setState({
-      mouseover: false
-    })
+    
   }
 
   renderScene(scene, camera, renderer) {
     const geometry = new THREE.IcosahedronGeometry( 320 );
+    //const geometry = new THREE.TorusKnotGeometry(320, 40, 120, 4)
     const material = new THREE.MeshPhongMaterial( { 
       color: 0xffffff, 
       wireframe: true,
@@ -67,15 +68,7 @@ export default class Scene extends Component {
 
     return <div className="gt-container">
       <div className="gt-screen gt-screen--home">
-        <div className="gt-screen__icosahedron">
-          <ThreeScene 
-            ambientLightColor={0xffffff}
-            fogColor={0x222222}
-            height={100}
-            initScene={this.renderScene} 
-            animate={this.animate}
-            alpha={true} />
-        </div>
+        
 
         <h1 className="gt-screen__title">
           <TypeWriter word="glasstress" />
@@ -86,8 +79,18 @@ export default class Scene extends Component {
           {this.state.mouseover && <TypeWriter word="daniele/mana" />}
         </h2>
 
+        <div className="gt-screen__icosahedron">
+          <ThreeScene 
+            ambientLightColor={0xffffff}
+            fogColor={0x222222}
+            height={100}
+            initScene={this.renderScene} 
+            animate={this.animate}
+            alpha={true} />
+        </div>
+
         <div className="gt-screen__action">
-          <a href="#" className="gt-button gt-button--launch">
+          <a href="#" className="gt-button gt-button--launch" onMouseOver={this.mouseOver}>
             launch visualization*
           </a>
         </div>
