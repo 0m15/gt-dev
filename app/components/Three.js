@@ -1,12 +1,14 @@
 import React, { Component } from "react"
 import ReactDOM from 'react-dom'
+
 import THREE from 'three'
 import TWEEN from 'tween'
 
 const defaultProps = {
   width: 320,
   height: 240,
-  fog: false,
+  fog: true,
+  fogColor: 0xffffff,
   alpha: false,
   ambientLightColor: 0xffffff,
   clearColor: 0x222222,
@@ -45,7 +47,13 @@ export default class ThreeScene extends Component {
   // methods
 
   initScene() {
-    const { alpha, ambientLightColor, clearColor, width, height } = this.props
+    const { 
+      alpha, 
+      ambientLightColor, 
+      clearColor, 
+      fogColor,
+      width, 
+      height } = this.props
     
     const scene = this.scene = new THREE.Scene()
     const camera = this.camera = new THREE.PerspectiveCamera( 
@@ -54,7 +62,7 @@ export default class ThreeScene extends Component {
 
     camera.position.z = 1000
     scene.add( new THREE.AmbientLight( ambientLightColor) );
-    scene.fog = new THREE.Fog( 0x222222, 0.1, 1600 );
+    scene.fog = new THREE.Fog( fogColor, 0.3, 1600 );
 
     this.props.initScene(scene, camera)
 

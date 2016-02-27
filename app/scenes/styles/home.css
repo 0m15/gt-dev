@@ -16,9 +16,9 @@
 }
 
 .gt-screen__title {
-  font-size: 1em;
+  font-size: 2.5em;
   text-transform: uppercase;
-  font-weight: 200;
+  font-weight: 600;
   margin: 0;
   letter-spacing: 0em;
 }
@@ -26,7 +26,8 @@
 .gt-screen__title span span {
   /*border-bottom: 2px solid #fff;*/
   display: inline-block;
-  min-width: 20px;
+  min-width: 40px;
+  text-align: center;
 }
 
 .gt-screen__action {
@@ -41,17 +42,75 @@
 .gt-button--launch {
   color: #fff;
   text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, .2);
+  border-top: 1px solid rgba(255, 255, 255, 0);
+  border-left: 1px solid rgba(255, 255, 255, 0);
+  border-right: 1px solid rgba(255, 255, 255, 0);
+  border-bottom: 1px solid rgba(255, 255, 255, 0);
   display: inline-block;
-  padding: 1em 2em;
-  border-radius: 25px;
+  padding: 1.25em 2em;
+  border-radius: 0;
   text-transform: uppercase;
-  font-size: .85em;
-  letter-spacing: .1em;
+  font-size: .75em;
+  letter-spacing: .15em;
   min-width: 100px;
   text-align: center;
+  transition: all 1s ease-in-out;
 }
 
+.gt-button--launch:hover {
+  /*transform: scale(1.005);*/
+  border-top: 1px solid rgba(255, 255, 255, .25);
+  border-left: 1px solid rgba(255, 255, 255, .25);
+  border-right: 1px solid rgba(255, 255, 255, .25);
+  border-bottom: 1px solid rgba(255, 255, 255, .25);
+  border-radius: 25px;
+  letter-spacing: .275em;
+}
+
+.gt-screen--project {
+  min-height: 100vh;
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, .12);
+  display: flex;
+}
+
+.gt-screen__left,
+.gt-screen__right {
+  flex: 2;
+}
+
+.gt-screen__right {
+  flex: 3;
+}
+
+.gt-screen__left-title {
+  padding: 2em 1em;
+  font-weight: 100;
+  font-size: 4em;
+}
+
+.gt-screen__right {
+  /*background: #fff;*/
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
+h2 {
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: .75em;
+}
+
+h2 span span {
+  width: 20px;
+  display: inline-block;
+  text-align: center;
+}
 
 .gt-text--secondary {
   font-size: .9em;
@@ -61,4 +120,13 @@
   font-size: .85em;
   opacity: .75;
   font-weight: 100;
+}
+
+.gt-text--body {
+  padding: 4em 6em 4em;
+  line-height: 1.5;
+  font-size: 1.5em;
+  font-weight: 100;
+  color: rgba(255, 255, 255, .9);
+  -webkit-font-smoothing: antialiased;
 }

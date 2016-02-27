@@ -12,23 +12,40 @@ export default class Scene extends Component {
     this.state = {
       mouseover: false
     }
+
+    this.mouseOver = this.mouseOver.bind(this)
+    this.mouseOut = this.mouseOut.bind(this)
+
     this.renderScene = this.renderScene.bind(this)
   }
 
-  mouseOverAction() {
+  componentDidMount() {
+    this.typewrite()
+  }
+
+  typewrite() {
+    setTimeout(() => {
+      this.setState({
+        mouseover: !this.state.mouseover
+      })
+      this.typewrite()
+    }, 5000)
+  }
+
+  mouseOver() {
     this.setState({
       mouseover: true
     })
   }
 
-  mouseOutAction() {
+  mouseOut() {
     this.setState({
       mouseover: false
     })
   }
 
   renderScene(scene, camera, renderer) {
-    const geometry = new THREE.IcosahedronGeometry( 240 );
+    const geometry = new THREE.IcosahedronGeometry( 320 );
     const material = new THREE.MeshPhongMaterial( { 
       color: 0xffffff, 
       wireframe: true,
@@ -41,40 +58,55 @@ export default class Scene extends Component {
   }
 
   animate(scene, camera) {
-    //scene.rotation.x += 0.01
+    scene.rotation.x += 0.01
     scene.rotation.y += 0.01
-    //scene.rotation.z += 0.01
+    scene.rotation.z += 0.01
   }
 
   render() {
 
-    return <div className="gt-screen gt-screen--home">
-      <div className="gt-screen__icosahedron">
-        <ThreeScene 
-          ambientLightColor={0xffffff}
-          initScene={this.renderScene} 
-          animate={this.animate}
-          alpha={true} />
+    return <div className="gt-container">
+      <div className="gt-screen gt-screen--home">
+        <div className="gt-screen__icosahedron">
+          <ThreeScene 
+            ambientLightColor={0xffffff}
+            fogColor={0x222222}
+            height={100}
+            initScene={this.renderScene} 
+            animate={this.animate}
+            alpha={true} />
+        </div>
+
+        <h1 className="gt-screen__title">
+          <TypeWriter word="glasstress" />
+        </h1>
+
+        <h2>
+          {!this.state.mouseover && <TypeWriter word="max/casacci" />}
+          {this.state.mouseover && <TypeWriter word="daniele/mana" />}
+        </h2>
+
+        <div className="gt-screen__action">
+          <a href="#" className="gt-button gt-button--launch">
+            launch visualization*
+          </a>
+        </div>
+
+        <div className="gt-screen__footer">
+          <p className="gt-text gt-text--small">*It requires a WebGl capable browser and optional access to webcam</p>
+        </div>
       </div>
 
-      <h1 className="gt-screen__title">
-        
-        <TypeWriter word="glasstress" />
-      </h1> 
+      <div className="gt-screen gt-screen--project">
+        <div className="gt-screen__left">
+          <h2 className="gt-screen__left-title">The project</h2>
+        </div>
 
-      <div className="gt-screen__action" 
-        onMouseOver={this.mouseOverAction} 
-        onMouseOut={this.mouseOutAction}>
-        <a href="#" className="gt-button gt-button--launch">
-          launch visualization*
-        </a>
-        <p className="gt-text gt-text--secondary">
-          or <a href="#">listen to EP</a>
-        </p>
-      </div>
-
-      <div className="gt-screen__footer">
-        <p className="gt-text gt-text--small">*It requires a WebGl capable browser and optional access to webcam</p>
+        <div className="gt-screen__right">
+          <p className="gt-text gt-text--body">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+          </p>
+        </div>
       </div>
     </div>
   }

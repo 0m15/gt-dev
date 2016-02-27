@@ -33,7 +33,8 @@ export default class Type extends Component {
     this.iterations = 0
     this.state = {
       char: without(this.props.char),
-      opacity: 0
+      opacity: 0,
+      scale: 0
     }
     
   }
@@ -53,7 +54,8 @@ export default class Type extends Component {
         char = alphabet[without(finalChar)]
         this.setState({ 
           char, 
-          opacity: 0 + ((1.0 / maxIterations) * iterations) 
+          opacity: 0 + ((1.0 / maxIterations) * iterations),
+          scale: 0 + ((1.0 / maxIterations) * iterations),
         })
         this.iterations += 1
         this.typer()
@@ -72,7 +74,9 @@ export default class Type extends Component {
   // methods
   render() {
     return <span style={{
-        opacity: this.state.opacity
+        display: 'inline-block',
+        opacity: this.state.opacity,
+        transform: 'scale('+this.state.scale+')'
       }}>{this.state.char}</span>
   }
 }

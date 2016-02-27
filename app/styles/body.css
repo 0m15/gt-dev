@@ -1,6 +1,6 @@
 html,
 body {
-  font-family: Fira Sans, Work Sans, Apercu, Helvetica Neue;
+  font-family: Proxima Nova Alt, Apercu, Fira Sans, Work Sans, Apercu, Helvetica Neue;
   color: #fff;
   background-image: url(/assets/imgs/bg@2x.jpg);
   background-size: cover;
@@ -10,7 +10,7 @@ body {
 body:after {
   content: "";
   position: absolute;
-  background: rgba(4, 0, 6, .9);
+  background: rgba(10, 0, 6, .9);
   top: 0;
   left: 0;
   width: 100%;
