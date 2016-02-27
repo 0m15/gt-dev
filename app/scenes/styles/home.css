@@ -1,0 +1,64 @@
+
+.gt-screen--home {
+  height: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, .12);
+  position: relative;
+  z-index: 1;
+}
+
+.gt-screen__icosahedron {
+  margin-top: auto;
+}
+
+.gt-screen__title {
+  font-size: 1em;
+  text-transform: uppercase;
+  font-weight: 200;
+  margin: 0;
+  letter-spacing: 0em;
+}
+
+.gt-screen__title span span {
+  /*border-bottom: 2px solid #fff;*/
+  display: inline-block;
+  min-width: 20px;
+}
+
+.gt-screen__action {
+  margin-top: 2em;
+  text-align: center;
+}
+
+.gt-screen__footer {
+  margin-top: auto;
+}
+
+.gt-button--launch {
+  color: #fff;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, .2);
+  display: inline-block;
+  padding: 1em 2em;
+  border-radius: 25px;
+  text-transform: uppercase;
+  font-size: .85em;
+  letter-spacing: .1em;
+  min-width: 100px;
+  text-align: center;
+}
+
+
+.gt-text--secondary {
+  font-size: .9em;
+}
+
+.gt-text--small {
+  font-size: .85em;
+  opacity: .75;
+  font-weight: 100;
+}
