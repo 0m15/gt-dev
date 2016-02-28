@@ -4,6 +4,8 @@ import ThreeScene from '../components/Three'
 import * as visualization from './collection.js'
 
 import { playSfx } from '../lib/sfx'
+import MotionButton from "../components/MotionButton";
+import Navigation from '../components/Navigation'
 
 import THREE from 'three'
 import TWEEN from 'tween'
@@ -31,7 +33,7 @@ export default class Scene extends Component {
   }
 
   typewrite() {
-    playSfx('sfx08', 0.15)
+    playSfx('sfx08', 0.2)
     setTimeout(() => {
       this.setState({
         author: !this.state.author
@@ -90,8 +92,6 @@ export default class Scene extends Component {
 
       <div id="visualization" />
       <div className="gt-screen gt-screen--home">
-        
-
         <h1 className="gt-screen__title">
           <TypeWriter word="glasstress" />
         </h1>
@@ -102,22 +102,23 @@ export default class Scene extends Component {
         </h2>
 
         <div className="gt-screen__icosahedron">
-          <ThreeScene 
-            ambientLightColor={0xffffff}
-            fogColor={0x222222}
-            height={100}
-            initScene={this.renderScene} 
-            animate={this.animate}
-            alpha={true} />
+          <Navigation />
         </div>
 
         <div className="gt-screen__action">
-          <a href="#" className="gt-button gt-button--launch" 
+          <MotionButton 
+            onMouseOver={this.mouseOver}
+            onMouseOut={this.mouseOut}
+            onClick={this.launch.bind(this)}
+            className="gt-button gt-button--launch"
+            label="launch visualization*" /> 
+
+          {/*<a href="#" className="gt-button gt-button--launch" 
             onMouseOver={this.mouseOver}
             onMouseOut={this.mouseOut}
             onClick={this.launch.bind(this)}>
             launch visualization*
-          </a>
+          </a>*/}
         </div>
 
         <div className="gt-screen__footer">
@@ -125,17 +126,6 @@ export default class Scene extends Component {
         </div>
       </div>
 
-      <div className="gt-screen gt-screen--project">
-        <div className="gt-screen__left">
-          <h2 className="gt-screen__left-title">The project</h2>
-        </div>
-
-        <div className="gt-screen__right">
-          <p className="gt-text gt-text--body">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-        </div>
-      </div>
     </div>
   }
 }
