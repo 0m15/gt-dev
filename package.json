@@ -4,7 +4,8 @@
   "description": "A minimal webpack setup for quick Front-end development with support for ES6/Babel",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gh": "webpack; git ci -am 'build'; git push origin gh-pages"
   },
   "author": "feuer",
   "license": "ISC",
