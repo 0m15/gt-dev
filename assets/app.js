@@ -61820,8 +61820,8 @@
 	  particleSystem1.rotation.z += 0.001; //targetRotationY
 
 	  requestAnimationFrame(animate);
-	  renderer.render(scene, camera);
-	  //composer.render(renderer)
+	  //renderer.render(scene, camera)
+	  composer.render(renderer);
 
 	  if (video.readyState === video.HAVE_ENOUGH_DATA) {
 	    videoTexture.needsUpdate = true;
