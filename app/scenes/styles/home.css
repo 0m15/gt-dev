@@ -11,6 +11,9 @@
   z-index: 1;
 }
 
+#visualization {
+  background: rgba(255, 255, 255, .12);
+}
 #visualization canvas {
   position: fixed;
   top: 0;

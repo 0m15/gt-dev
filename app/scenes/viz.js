@@ -57,6 +57,8 @@ var light;
 var { analyser, audio } = fft()
 
 
+const objects = []
+
 // AUDIO STUFF
 
 function getBeatsByTime() {
@@ -65,6 +67,16 @@ function getBeatsByTime() {
     beats[b.start.toFixed(1)] = { duration: b.duration, end: b.start + b.duration, confidence: b.confidence}
   })
   return beats
+}
+
+function getBarsByTime() {
+  const bars = {}
+  audioData.bars.forEach(b => {
+    bars[b.start.toFixed(1)] = { 
+      duration: b.duration, end: b.start + b.duration, confidence: b.confidence
+    }
+  })
+  return bars
 }
 
 function getSegmentsByTime() {
@@ -84,6 +96,7 @@ function getSegmentsByTime() {
 
 const beatsByTime = getBeatsByTime()
 const segmentsByTime = getSegmentsByTime()
+const barsByTime = getBarsByTime()
 
 export function init() {
 
@@ -93,23 +106,53 @@ export function init() {
   scene.fog = new THREE.Fog( 0x121212, 0.9, 1600 )
   scene.add( new THREE.AmbientLight( 0xffffff) );
 
+  // lights
+  light = new THREE.DirectionalLight( 0xffffff, 1.0 );
+  light.position.set(0, 0, 100)
+
+  scene.add(light)
+
   // camera
   camera = new THREE.PerspectiveCamera( 70, screenX / screenY, 1, 2000)
   
-  camera.position.z = 500
+  camera.position.z = 750
   camera.lookAt( scene.position );
   
 
   // main object
-  const geometry = new THREE.IcosahedronGeometry( 320 );
-  //const geometry = new THREE.TorusKnotGeometry(320, 40, 120, 4)
+  const geometry = new THREE.IcosahedronGeometry( 160 );
+  //const geometry = new THREE.SphereGeometry( 160 );
+  var customMaterial = new THREE.ShaderMaterial({
+    uniforms: {  
+
+    },
+    vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
+    fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true
+  });
   const material = new THREE.MeshPhongMaterial( { 
     color: 0xffffff, 
     wireframe: true,
+    transparent: true,
+    opacity: 0.25
+    //shading: THREE.FlatShading,
+
   });
-  mesh = new THREE.Mesh( geometry, material);
+  const materials = [customMaterial]
+  //mesh = new THREE.Mesh( geometry, customMaterial);
+  mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
 
   scene.add(mesh)
+
+
+  // particles
+  particleSystem = drawParticles(6)
+  particleSystem.sortParticles = true
+
+  scene.add(particleSystem)
+
 
   //renderer
   renderer = new THREE.WebGLRenderer({
@@ -131,38 +174,133 @@ export function init() {
 
 
 
+function drawParticles(size=6) {
+  const range = screenX
+  const geometry = new THREE.Geometry();
+  const textureLoader = new THREE.TextureLoader()
+  const texture = THREE.ImageUtils.loadTexture('/assets/tests/particle-1.png');
+  const material = new THREE.PointsMaterial({
+      size: size,
+      transparent: true,
+      opacity: 1,
+      map: texture,
+      fog: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      sizeAttenuation: true,
+      color: 0x9AE17B
+    })
+ 
+  for (var i = 0; i < 100; i++) {
+    const particle = new THREE.Vector3(0, 0, 0)
+    particle.x = Math.random() * screenX - screenX / 2, 
+    particle.y = Math.random() * screenY - screenY / 2, 
+    particle.z = Math.random() * 400 - 400 / 2;
+    
+    //drawParticle(particle)
+    geometry.vertices.push(particle)
 
-function tweenSegment(segment) {
-  tweening=true
+    //scene.add(particle)
+  }
+
+  var system = new THREE.Points(geometry, material);
+  return system
+}
   
-  const scale = segment.loudnessMax * -1 * 0.1
 
+function addSegment(segment) {
+  const radius = segment.loudnessMax * -1
+  console.log(((100-radius)/100))
+  const geometry = new THREE.IcosahedronGeometry( radius );
+  const material = new THREE.MeshPhongMaterial({
+    color: 0xF30A49, 
+    transparent: true,
+    opacity: ((100-radius)/100),
+    shading: THREE.FlatShading
+  })
+
+  var customMaterial = new THREE.ShaderMaterial({
+    uniforms: {  
+
+    },
+    vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
+    fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    transparent: true
+  });
+  const materials = [customMaterial, material]
+  //mesh = new THREE.Mesh( geometry, customMaterial);
+  const mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
+  //const mesh = new THREE.Mesh( geometry, material )
+  mesh.scale.set(1, 1, 1)
+  mesh.rotation.x += 1
+  mesh.position.set(
+    Math.random() * screenX - screenX / 2,
+    Math.random() * screenY - screenY / 2, 
+    (Math.random() * (1200 - 1200 / 2))
+  )
+  tweenSegment(mesh, segment)
+  scene.add(mesh)
+
+}
+
+function tweenSegment(mesh, segment, remove=true) {
+  tweening=true
+  const scale = segment.loudnessMax * -1 * 0.1
   var tween = new TWEEN
     .Tween(mesh.scale)
-    .to({ x: scale, y: scale, z: scale }, (segment.duration-segment.loudnessMaxTime)*100)
+    .to({ x: scale, y: scale, z: scale }, (segment.duration)*1000)
     .easing(TWEEN.Easing.Quadratic.In)
     .onComplete(function() {
       new TWEEN
         .Tween(mesh.scale)
-        .to({ x: 1, y: 1, z: 1 }, segment.loudnessMaxTime)
+        .to({ x: 0, y: 0, z: 0 }, 2000)
         .easing(TWEEN.Easing.Quadratic.Out)
         .onComplete(function() {
           tweening=false
+          if(remove)scene.remove(mesh)
         })
         .start()
     })
     .start()
 }
 
-audio.currentTime=200
+audio.currentTime=150
+
+const barInterval = 1 / (audioData.info.bpm / 60)
+let lastTime = 0
+
 export function animate(time) {
   var segment = segmentsByTime[audio.currentTime.toFixed(1)]
   
-  if(segment && segment.duration > 0.125 && !tweening) {
-    tweenSegment(segment)
+  light.intensity = 1.0
+
+
+  if(segment) {
+    light.intensity = segment ? segment.loudnessMax * -1 * 0.1 : 0.1
+
+    if(segment.duration > 0.12 && !tweening) {
+      tweenSegment(mesh, segment, false)
+    }
+
+    //if(segment.loudnessMax*-1 > 4) {
+      addSegment(segment)
+    //}
+
+  }
+  
+
+  // tempo bpm
+  if(!lastTime || audio.currentTime - lastTime >= barInterval) {
+    lastTime = audio.currentTime
   }
 
   mesh.rotation.x += 0.01
+  mesh.rotation.y += 0.01
+
+  scene.rotation.y += 0.0002
+
   requestAnimationFrame(animate)
   renderer.render(scene, camera)
 

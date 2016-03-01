@@ -61549,6 +61549,9 @@
 	var analyser = _fft.analyser;
 	var audio = _fft.audio;
 
+
+	var objects = [];
+
 	// AUDIO STUFF
 
 	function getBeatsByTime() {
@@ -61557,6 +61560,16 @@
 	    beats[b.start.toFixed(1)] = { duration: b.duration, end: b.start + b.duration, confidence: b.confidence };
 	  });
 	  return beats;
+	}
+
+	function getBarsByTime() {
+	  var bars = {};
+	  _audioData2.default.bars.forEach(function (b) {
+	    bars[b.start.toFixed(1)] = {
+	      duration: b.duration, end: b.start + b.duration, confidence: b.confidence
+	    };
+	  });
+	  return bars;
 	}
 
 	function getSegmentsByTime() {
@@ -61576,6 +61589,7 @@
 
 	var beatsByTime = getBeatsByTime();
 	var segmentsByTime = getSegmentsByTime();
+	var barsByTime = getBarsByTime();
 
 	function init() {
 
@@ -61585,22 +61599,48 @@
 	  scene.fog = new _three2.default.Fog(0x121212, 0.9, 1600);
 	  scene.add(new _three2.default.AmbientLight(0xffffff));
 
+	  // lights
+	  light = new _three2.default.DirectionalLight(0xffffff, 1.0);
+	  light.position.set(0, 0, 100);
+
+	  scene.add(light);
+
 	  // camera
 	  camera = new _three2.default.PerspectiveCamera(70, screenX / screenY, 1, 2000);
 
-	  camera.position.z = 500;
+	  camera.position.z = 750;
 	  camera.lookAt(scene.position);
 
 	  // main object
-	  var geometry = new _three2.default.IcosahedronGeometry(320);
-	  //const geometry = new THREE.TorusKnotGeometry(320, 40, 120, 4)
+	  var geometry = new _three2.default.IcosahedronGeometry(160);
+	  //const geometry = new THREE.SphereGeometry( 160 );
+	  var customMaterial = new _three2.default.ShaderMaterial({
+	    uniforms: {},
+	    vertexShader: document.getElementById('vertexShader').textContent,
+	    fragmentShader: document.getElementById('fragmentShader').textContent,
+	    side: _three2.default.BackSide,
+	    blending: _three2.default.AdditiveBlending,
+	    transparent: true
+	  });
 	  var material = new _three2.default.MeshPhongMaterial({
 	    color: 0xffffff,
-	    wireframe: true
+	    wireframe: true,
+	    transparent: true,
+	    opacity: 0.25
+	    //shading: THREE.FlatShading,
+
 	  });
-	  mesh = new _three2.default.Mesh(geometry, material);
+	  var materials = [customMaterial];
+	  //mesh = new THREE.Mesh( geometry, customMaterial);
+	  mesh = _three2.default.SceneUtils.createMultiMaterialObject(geometry, materials);
 
 	  scene.add(mesh);
+
+	  // particles
+	  particleSystem = drawParticles(6);
+	  particleSystem.sortParticles = true;
+
+	  scene.add(particleSystem);
 
 	  //renderer
 	  renderer = new _three2.default.WebGLRenderer({
@@ -61619,27 +61659,114 @@
 	  audio.play();
 	}
 
-	function tweenSegment(segment) {
+	function drawParticles() {
+	  var size = arguments.length <= 0 || arguments[0] === undefined ? 6 : arguments[0];
+
+	  var range = screenX;
+	  var geometry = new _three2.default.Geometry();
+	  var textureLoader = new _three2.default.TextureLoader();
+	  var texture = _three2.default.ImageUtils.loadTexture('/assets/tests/particle-1.png');
+	  var material = new _three2.default.PointsMaterial({
+	    size: size,
+	    transparent: true,
+	    opacity: 1,
+	    map: texture,
+	    fog: true,
+	    blending: _three2.default.AdditiveBlending,
+	    depthWrite: false,
+	    sizeAttenuation: true,
+	    color: 0x9AE17B
+	  });
+
+	  for (var i = 0; i < 100; i++) {
+	    var particle = new _three2.default.Vector3(0, 0, 0);
+	    particle.x = Math.random() * screenX - screenX / 2, particle.y = Math.random() * screenY - screenY / 2, particle.z = Math.random() * 400 - 400 / 2;
+
+	    //drawParticle(particle)
+	    geometry.vertices.push(particle);
+
+	    //scene.add(particle)
+	  }
+
+	  var system = new _three2.default.Points(geometry, material);
+	  return system;
+	}
+
+	function addSegment(segment) {
+	  var radius = segment.loudnessMax * -1;
+	  console.log((100 - radius) / 100);
+	  var geometry = new _three2.default.IcosahedronGeometry(radius);
+	  var material = new _three2.default.MeshPhongMaterial({
+	    color: 0xF30A49,
+	    transparent: true,
+	    opacity: (100 - radius) / 100,
+	    shading: _three2.default.FlatShading
+	  });
+
+	  var customMaterial = new _three2.default.ShaderMaterial({
+	    uniforms: {},
+	    vertexShader: document.getElementById('vertexShader').textContent,
+	    fragmentShader: document.getElementById('fragmentShader').textContent,
+	    side: _three2.default.BackSide,
+	    blending: _three2.default.AdditiveBlending,
+	    transparent: true
+	  });
+	  var materials = [customMaterial, material];
+	  //mesh = new THREE.Mesh( geometry, customMaterial);
+	  var mesh = _three2.default.SceneUtils.createMultiMaterialObject(geometry, materials);
+	  //const mesh = new THREE.Mesh( geometry, material )
+	  mesh.scale.set(1, 1, 1);
+	  mesh.rotation.x += 1;
+	  mesh.position.set(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, Math.random() * (1200 - 1200 / 2));
+	  tweenSegment(mesh, segment);
+	  scene.add(mesh);
+	}
+
+	function tweenSegment(mesh, segment) {
+	  var remove = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+
 	  tweening = true;
-
 	  var scale = segment.loudnessMax * -1 * 0.1;
-
-	  var tween = new _tween2.default.Tween(mesh.scale).to({ x: scale, y: scale, z: scale }, (segment.duration - segment.loudnessMaxTime) * 100).easing(_tween2.default.Easing.Quadratic.In).onComplete(function () {
-	    new _tween2.default.Tween(mesh.scale).to({ x: 1, y: 1, z: 1 }, segment.loudnessMaxTime).easing(_tween2.default.Easing.Quadratic.Out).onComplete(function () {
+	  var tween = new _tween2.default.Tween(mesh.scale).to({ x: scale, y: scale, z: scale }, segment.duration * 1000).easing(_tween2.default.Easing.Quadratic.In).onComplete(function () {
+	    new _tween2.default.Tween(mesh.scale).to({ x: 0, y: 0, z: 0 }, 2000).easing(_tween2.default.Easing.Quadratic.Out).onComplete(function () {
 	      tweening = false;
+	      if (remove) scene.remove(mesh);
 	    }).start();
 	  }).start();
 	}
 
-	audio.currentTime = 200;
+	audio.currentTime = 150;
+
+	var barInterval = 1 / (_audioData2.default.info.bpm / 60);
+	var lastTime = 0;
+
 	function animate(time) {
 	  var segment = segmentsByTime[audio.currentTime.toFixed(1)];
 
-	  if (segment && segment.duration > 0.125 && !tweening) {
-	    tweenSegment(segment);
+	  light.intensity = 1.0;
+
+	  if (segment) {
+	    light.intensity = segment ? segment.loudnessMax * -1 * 0.1 : 0.1;
+
+	    if (segment.duration > 0.12 && !tweening) {
+	      tweenSegment(mesh, segment, false);
+	    }
+
+	    //if(segment.loudnessMax*-1 > 4) {
+	    addSegment(segment);
+	    //}
+	  }
+
+	  // tempo bpm
+	  if (!lastTime || audio.currentTime - lastTime >= barInterval) {
+	    lastTime = audio.currentTime;
 	  }
 
 	  mesh.rotation.x += 0.01;
+	  mesh.rotation.y += 0.01;
+
+	  scene.rotation.y += 0.0002;
+
 	  requestAnimationFrame(animate);
 	  renderer.render(scene, camera);
 
@@ -65623,7 +65750,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-screen__title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-screen__title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 

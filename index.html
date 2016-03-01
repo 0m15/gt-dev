@@ -43,6 +43,23 @@
   <script src="http://localhost:5000/js/MaskPass.js"></script>-->
   
 
+  <script id="vertexShader" type="x-shader/x-vertex">
+  varying vec3 vNormal;
+  void main() 
+  {
+      vNormal = normalize( normalMatrix * normal );
+      gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+  }
+  </script>
+
+  <script id="fragmentShader" type="x-shader/x-vertex"> 
+  varying vec3 vNormal;
+  void main() 
+  {
+    float intensity = pow(0.4 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 1.0 ); 
+    gl_FragColor = vec4( 255.0, 1.0, 1.0, 1.0 ) * intensity;
+  }
+  </script>
 
   <script src="assets/app.js?124124121"></script>
 </body>
