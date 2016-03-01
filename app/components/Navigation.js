@@ -65,7 +65,7 @@ export default class Navigation extends Component {
                 left: 0,
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#222',
+                backgroundColor: 'rgba(0, 0, 0, .85)',
                 color: '#ababab',
                 paddingLeft: '10%'
               }}>
