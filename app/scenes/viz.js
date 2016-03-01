@@ -89,6 +89,7 @@ function getSegmentsByTime() {
       loudnessStart: b.loudness_start,
       loudnessMax: b.loudness_max,
       loudnessMaxTime: b.loudness_max_time,
+      timbre: b.timbre
     }
   })
   return segments
@@ -209,43 +210,52 @@ function drawParticles(size=6) {
   
 
 function addSegment(segment) {
-  const radius = segment.loudnessMax * -1
-  console.log(((100-radius)/100))
-  const geometry = new THREE.IcosahedronGeometry( radius );
-  const material = new THREE.MeshPhongMaterial({
-    color: 0xF30A49, 
-    transparent: true,
-    opacity: ((100-radius)/100),
-    shading: THREE.FlatShading
-  })
+  
+  console.log('add object', segment)
+  const object = new THREE.Object3D()
 
-  var customMaterial = new THREE.ShaderMaterial({
-    uniforms: {  
+  for(var i = 0; i < segment.timbre.length; i++) {
+    const timbre = segment.timbre[i]
+    const radius = segment.timbre * 1 * -1
+    const geometry = new THREE.SphereGeometry( radius, 1, 1 );
+    const material = new THREE.MeshPhongMaterial({
+      color: 0xF30A49, 
+      transparent: true,
+      opacity: ((100-timbre)/100),
+      shading: THREE.FlatShading
+    })
 
-    },
-    vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
-    fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-    side: THREE.BackSide,
-    blending: THREE.AdditiveBlending,
-    transparent: true
-  });
-  const materials = [customMaterial, material]
-  //mesh = new THREE.Mesh( geometry, customMaterial);
-  const mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
-  //const mesh = new THREE.Mesh( geometry, material )
-  mesh.scale.set(1, 1, 1)
-  mesh.rotation.x += 1
-  mesh.position.set(
-    Math.random() * screenX - screenX / 2,
-    Math.random() * screenY - screenY / 2, 
-    (Math.random() * (1200 - 1200 / 2))
-  )
-  tweenSegment(mesh, segment)
-  scene.add(mesh)
+    var customMaterial = new THREE.ShaderMaterial({
+      uniforms: {  },
+      vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
+      fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
+      transparent: true
+    });
+
+    const materials = [customMaterial, material]
+    //mesh = new THREE.Mesh( geometry, customMaterial);
+    const mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
+    //const mesh = new THREE.Mesh( geometry, material )
+    mesh.scale.set(1, 1, 1)
+    mesh.position.set( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 ).normalize();
+    mesh.position.multiplyScalar( segment.loudnessMax*-1 * 10 );
+    mesh.rotation.set( Math.random() * 2, Math.random() * 2, Math.random() * 2 );
+    mesh.scale.x = mesh.scale.y = mesh.scale.z = 1;
+    // mesh.position.set(
+    //   Math.random() * screenX - screenX / 2,
+    //   Math.random() * screenY - screenY / 2, 
+    //   (Math.random() * (1200 - 1200 / 2))
+    // )
+    tweenSegment(object, mesh, segment)
+    object.add(mesh)
+  }
+  scene.add(object)
 
 }
 
-function tweenSegment(mesh, segment, remove=true) {
+function tweenSegment(object, mesh, segment, remove=true) {
   tweening=true
   const scale = segment.loudnessMax * -1 * 0.1
   var tween = new TWEEN
@@ -259,7 +269,11 @@ function tweenSegment(mesh, segment, remove=true) {
         .easing(TWEEN.Easing.Quadratic.Out)
         .onComplete(function() {
           tweening=false
-          if(remove)scene.remove(mesh)
+          if(remove && object) object.remove(mesh)
+          if(object && !object.children.length) {
+            console.log('remove object')
+            scene.remove(object)
+          }
         })
         .start()
     })
@@ -281,7 +295,7 @@ export function animate(time) {
     light.intensity = segment ? segment.loudnessMax * -1 * 0.1 : 0.1
 
     if(segment.duration > 0.12 && !tweening) {
-      tweenSegment(mesh, segment, false)
+      tweenSegment(null, mesh, segment, false)
     }
 
     //if(segment.loudnessMax*-1 > 4) {
@@ -299,7 +313,7 @@ export function animate(time) {
   mesh.rotation.x += 0.01
   mesh.rotation.y += 0.01
 
-  scene.rotation.y += 0.0002
+  scene.rotation.y += 0.0125
 
   requestAnimationFrame(animate)
   renderer.render(scene, camera)

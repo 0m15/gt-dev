@@ -61581,7 +61581,8 @@
 	      confidence: b.confidence,
 	      loudnessStart: b.loudness_start,
 	      loudnessMax: b.loudness_max,
-	      loudnessMaxTime: b.loudness_max_time
+	      loudnessMaxTime: b.loudness_max_time,
+	      timbre: b.timbre
 	    };
 	  });
 	  return segments;
@@ -61693,44 +61694,63 @@
 	}
 
 	function addSegment(segment) {
-	  var radius = segment.loudnessMax * -1;
-	  console.log((100 - radius) / 100);
-	  var geometry = new _three2.default.IcosahedronGeometry(radius);
-	  var material = new _three2.default.MeshPhongMaterial({
-	    color: 0xF30A49,
-	    transparent: true,
-	    opacity: (100 - radius) / 100,
-	    shading: _three2.default.FlatShading
-	  });
 
-	  var customMaterial = new _three2.default.ShaderMaterial({
-	    uniforms: {},
-	    vertexShader: document.getElementById('vertexShader').textContent,
-	    fragmentShader: document.getElementById('fragmentShader').textContent,
-	    side: _three2.default.BackSide,
-	    blending: _three2.default.AdditiveBlending,
-	    transparent: true
-	  });
-	  var materials = [customMaterial, material];
-	  //mesh = new THREE.Mesh( geometry, customMaterial);
-	  var mesh = _three2.default.SceneUtils.createMultiMaterialObject(geometry, materials);
-	  //const mesh = new THREE.Mesh( geometry, material )
-	  mesh.scale.set(1, 1, 1);
-	  mesh.rotation.x += 1;
-	  mesh.position.set(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, Math.random() * (1200 - 1200 / 2));
-	  tweenSegment(mesh, segment);
-	  scene.add(mesh);
+	  console.log('add object', segment);
+	  var object = new _three2.default.Object3D();
+
+	  for (var i = 0; i < segment.timbre.length; i++) {
+	    var timbre = segment.timbre[i];
+	    var radius = segment.timbre * 1 * -1;
+	    var geometry = new _three2.default.SphereGeometry(radius, 1, 1);
+	    var material = new _three2.default.MeshPhongMaterial({
+	      color: 0xF30A49,
+	      transparent: true,
+	      opacity: (100 - timbre) / 100,
+	      shading: _three2.default.FlatShading
+	    });
+
+	    var customMaterial = new _three2.default.ShaderMaterial({
+	      uniforms: {},
+	      vertexShader: document.getElementById('vertexShader').textContent,
+	      fragmentShader: document.getElementById('fragmentShader').textContent,
+	      side: _three2.default.BackSide,
+	      blending: _three2.default.AdditiveBlending,
+	      transparent: true
+	    });
+
+	    var materials = [customMaterial, material];
+	    //mesh = new THREE.Mesh( geometry, customMaterial);
+	    var _mesh = _three2.default.SceneUtils.createMultiMaterialObject(geometry, materials);
+	    //const mesh = new THREE.Mesh( geometry, material )
+	    _mesh.scale.set(1, 1, 1);
+	    _mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+	    _mesh.position.multiplyScalar(segment.loudnessMax * -1 * 10);
+	    _mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+	    _mesh.scale.x = _mesh.scale.y = _mesh.scale.z = 1;
+	    // mesh.position.set(
+	    //   Math.random() * screenX - screenX / 2,
+	    //   Math.random() * screenY - screenY / 2,
+	    //   (Math.random() * (1200 - 1200 / 2))
+	    // )
+	    tweenSegment(object, _mesh, segment);
+	    object.add(_mesh);
+	  }
+	  scene.add(object);
 	}
 
-	function tweenSegment(mesh, segment) {
-	  var remove = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
+	function tweenSegment(object, mesh, segment) {
+	  var remove = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
 
 	  tweening = true;
 	  var scale = segment.loudnessMax * -1 * 0.1;
 	  var tween = new _tween2.default.Tween(mesh.scale).to({ x: scale, y: scale, z: scale }, segment.duration * 1000).easing(_tween2.default.Easing.Quadratic.In).onComplete(function () {
 	    new _tween2.default.Tween(mesh.scale).to({ x: 0, y: 0, z: 0 }, 2000).easing(_tween2.default.Easing.Quadratic.Out).onComplete(function () {
 	      tweening = false;
-	      if (remove) scene.remove(mesh);
+	      if (remove && object) object.remove(mesh);
+	      if (object && !object.children.length) {
+	        console.log('remove object');
+	        scene.remove(object);
+	      }
 	    }).start();
 	  }).start();
 	}
@@ -61749,7 +61769,7 @@
 	    light.intensity = segment ? segment.loudnessMax * -1 * 0.1 : 0.1;
 
 	    if (segment.duration > 0.12 && !tweening) {
-	      tweenSegment(mesh, segment, false);
+	      tweenSegment(null, mesh, segment, false);
 	    }
 
 	    //if(segment.loudnessMax*-1 > 4) {
@@ -61765,7 +61785,7 @@
 	  mesh.rotation.x += 0.01;
 	  mesh.rotation.y += 0.01;
 
-	  scene.rotation.y += 0.0002;
+	  scene.rotation.y += 0.0125;
 
 	  requestAnimationFrame(animate);
 	  renderer.render(scene, camera);
