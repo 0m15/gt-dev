@@ -1,11 +1,14 @@
 import React, { Component } from 'react'
 import TypeWriter from '../components/TypeWriter'
-import ThreeScene from '../components/Three'
-import * as visualization from './collection.js'
+import ThreeScene from '../components/ThreeScene'
+import * as visualization from './viz.js'
 
 import { playSfx } from '../lib/sfx'
 import MotionButton from "../components/MotionButton";
 import Navigation from '../components/Navigation'
+import * as audioData from '../lib/audio-data'
+
+console.log(audioData)
 
 import THREE from 'three'
 import TWEEN from 'tween'

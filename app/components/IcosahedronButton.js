@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import ThreeScene from '../components/Three'
+import ThreeScene from '../components/ThreeScene'
 
 import THREE from 'three'
 import TWEEN from 'tween'
@@ -32,6 +32,11 @@ export default class IcosahedronButton extends Component {
   }
 
   renderScene(scene, camera, renderer) {
+    this.mesh = this.drawIco()
+    scene.add(this.mesh)
+  }
+
+  drawIco() {
     const geometry = new THREE.IcosahedronGeometry( 320 );
     //const geometry = new THREE.TorusKnotGeometry(320, 40, 120, 4)
     const material = new THREE.MeshPhongMaterial( { 
@@ -42,12 +47,47 @@ export default class IcosahedronButton extends Component {
     });
     const mesh = new THREE.Mesh( geometry, material);
     mesh.scale.x = mesh.scale.y = mesh.scale.z = 1
-    scene.add(mesh)
+    return mesh
+    
+  }
+
+  drawMenu() {
+    var geometry = new THREE.Geometry();
+    geometry.vertices.push(
+      new THREE.Vector3( -200, 0, 0 ),
+      new THREE.Vector3( 200, 0, 0 ),
+      new THREE.Vector3( -200, 120, 0 ),
+      new THREE.Vector3( 200, 120, 0 ),
+      new THREE.Vector3( -200, 240, 0 ),
+      new THREE.Vector3( 200, 240, 0 )
+    );
+
+    var material = new THREE.LineBasicMaterial({
+      color: 0xffffff
+    });
+
+    var lineSegments = new THREE.LineSegments( geometry, material );
+    return lineSegments 
   }
 
   animate(scene, camera) {
     
     if(this.state.mouseover) {
+
+      // const lineSegments = this.drawMenu()
+
+      // this.mesh.geometry.vertices.forEach((v, i) => {
+      //   if(lineSegments.geometry.vertices[i]) {
+      //     v.x += lineSegments.geometry.vertices[i].x
+      //     v.y += lineSegments.geometry.vertices[i].y
+      //     v.z += lineSegments.geometry.vertices[i].z
+      //   } else {
+      //     this.mesh.geometry.vertices.pop()
+      //   }
+
+      //   this.mesh.geometry.dynamic = true;
+      //   this.mesh.geometry.verticesNeedUpdate = true;
+      // })
       scene.rotation.x += 0.01
       scene.rotation.y += 0.01
       scene.rotation.z += 0.01
@@ -68,7 +108,8 @@ export default class IcosahedronButton extends Component {
         <ThreeScene 
           ambientLightColor={0xffffff}
           fogColor={0x222222}
-          height={100}
+          height={96}
+          width={96}
           initScene={this.renderScene} 
           animate={this.animate}
           alpha={true} />

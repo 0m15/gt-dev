@@ -18,7 +18,7 @@ function startCamera() {
 
 // audio stuff
 var { analyser, audio } = fft('track.mp3')
-var bufferLength = analyser.frequencyBinCount;
+var bufferLength = 64//analyser.frequencyBinCount;
 var frequencyData = new Uint8Array(bufferLength)
 
 require('../vendor/js/ShaderPass.js')
@@ -45,67 +45,63 @@ var PARTICLE_COUNT = 250
 var screenX = window.innerWidth
 var screenY = window.innerHeight
 
-  var scene;
-  var camera;
-  var renderer;
-  var plane;
-  var particleSystem;
-  var particleSystem1;
-  var renderer;
-  var mesh;
-  var mesh1;
-  var composer;
-  var hblur;
-  var vblur;
-  var targetRotationX = 0;
-  var targetRotationY = 0;
-  var mouseX = 0;
-  var mouseY = 0;
-  var stereo;
-  var tweening = false
-  var tween;
-  var controls;
-  var videoTexture;
-
+var scene;
+var camera;
+var renderer;
+var plane;
+var particleSystem;
+var particleSystem1;
+var renderer;
+var mesh;
+var mesh1;
+var composer;
+var hblur;
+var vblur;
+var targetRotationX = 0;
+var targetRotationY = 0;
+var mouseX = 0;
+var mouseY = 0;
+var stereo;
+var tweening = false
+var tween;
+var controls;
+var videoTexture;
+var spotLight;
+var light;
   
 
 export function init() {
   
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog( 0x222222, 0.9, 1600 );
+  scene.fog = new THREE.Fog( 0x121212, 0.9, 1600 );
 
   camera = new THREE.PerspectiveCamera( 
     70, screenX / screenY, 1, 2000 
   )
   
-  camera.position.z = 1000
+  camera.position.z = 500
   
 
+  //scene.add( new THREE.AmbientLight( 0xffffff) );
 
-  scene.add( new THREE.AmbientLight( 0xC6C5B3) );
+  var emlight = new THREE.HemisphereLight( 0x4fff42, 0x080820, 1 );
+  //scene.add( emlight );
 
-  var light = new THREE.HemisphereLight( 0x9AE17B, 0x080820, 1 );
-  scene.add( light );
+  // light = new THREE.DirectionalLight( 0xff1075 );
+  // light.position.set( 1, 1, 100 );
+  // scene.add( light );
 
-  var light = new THREE.PointLight( 0x9AE17B, 1, 1000 );
-  light.position.set( 0, 50, 100 );
-  scene.add( light );
-
-  light = new THREE.DirectionalLight( 0xe6fcff);
-  light.position.set( 1, 1, 200 );
-  scene.add( light );
-
-  light = new THREE.DirectionalLight( 0xC6C5B3);
-  light.position.set( 1, 1, 1 );
-  scene.add( light );
+  spotLight = new THREE.SpotLight( 0xff1075 );
+  spotLight.position.set( 1, 1, 200 );
+  scene.add( spotLight );
 
 
-  particleSystem1 = drawParticles(32)
-  particleSystem1.sortParticles = true
+  // particleSystem1 = drawParticles(32)
+  // particleSystem1.sortParticles = true
 
-  scene.add(particleSystem1)
+  //scene.add(particleSystem1)
 
-  particleSystem = drawParticles(8)
+  particleSystem = drawParticles(1)
   particleSystem.sortParticles = true
 
   
@@ -113,23 +109,24 @@ export function init() {
   camera.lookAt( scene.position );
 
   //var geo = new THREE.SphereGeometry( 480, 4, 4);
-  //var geo = new THREE.PlaneGeometry( screenX, screenY, 0);
-  var geo = new THREE.IcosahedronGeometry( 480, 0, 0);
+  var geo = new THREE.PlaneGeometry( screenX, screenY, 0);
+  //var geo = new THREE.IcosahedronGeometry( 480);
 
-  
-  var mat = new THREE.MeshPhongMaterial({
-    color: 0x9AE17B,
-    shading: THREE.FlatShading,
-  });
 
   const texture = THREE.ImageUtils.loadTexture('/assets/tests/01.jpg');
-  
   videoTexture = new THREE.Texture( video );
+
+  var mat = new THREE.MeshPhongMaterial({
+    color: 0xff1075,
+    shading: THREE.FlatShading,
+    //map: texture,
+  });
 
   var mat3 = new THREE.MeshPhongMaterial({
     map: videoTexture,
     shading: THREE.FlatShading,
-    color: 0x9AE17B
+    transparent: true,
+    opacity: .1
   });
 
   
@@ -141,9 +138,11 @@ export function init() {
 
   mesh = THREE.SceneUtils.createMultiMaterialObject(geo, materials)
   //mesh.rotation.y = 200
+  //mesh.scale.x = mesh.scale.y = mesh.scale.z = 0.5
   scene.add(mesh)
 
   mesh1 = new THREE.Mesh( particleSystem.geometry, mat3 );
+
   //scene.add(mesh1)
 
 
@@ -154,7 +153,7 @@ export function init() {
   
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( screenX, screenY );
-  //renderer.setClearColor(0x222222)
+  renderer.setClearColor(0x121212)
   
   // controls = new THREE.OrbitControls( camera, renderer.domElement );
   // controls.enableDamping = true;
@@ -165,8 +164,9 @@ export function init() {
     minFilter: THREE.LinearFilter, 
     magFilter: THREE.LinearFilter, 
     format: THREE.RGBFormat, 
-    stencilBufer: true 
+    stencilBuffer: true 
   };
+
   var renderTarget = new THREE.WebGLRenderTarget( screenX, screenY, rtParameters );
 
   var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
@@ -174,7 +174,7 @@ export function init() {
   
   effectFXAA.uniforms[ 'resolution' ].value.set( 1 / screenX, 1 / screenY );
 
-  var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
+  //var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
 
   // tilt shift
   hblur = new THREE.ShaderPass( THREE.HorizontalTiltShiftShader );
@@ -196,26 +196,22 @@ export function init() {
   composer.addPass( hblur );
   composer.addPass( vblur );
 
-
-  stereo = new THREE.StereoEffect( composer );
-  stereo.eyeSeparation = 10;
-  stereo.setSize( window.innerWidth, window.innerHeight );
-
-  startCamera()
-  audio.play()
   document.getElementById('visualization').appendChild( renderer.domElement );
-  
-
   document.addEventListener( 'mousemove', onDocumentMouseMove, false );
   document.addEventListener( 'touchmove', onDocumentTouchMove, false );
   //window.addEventListener( 'resize', onWindowResize, false );
   //window.addEventListener('scroll', onWindowScroll, false)
+
+  startCamera()
+  audio.play() 
 }
 
 function drawParticles(size=6) {
   const range = screenX
   //const geometry = new THREE.SphereGeometry( 200, 64, 32);
-  const geometry = new THREE.SphereGeometry(480, 64, 64 );
+  const geometry = new THREE.SphereGeometry(320, 64, 64 );
+  console.log('geo.ver', geometry.vertices.length)
+  //const geometry = new THREE.Points
   const textureLoader = new THREE.TextureLoader()
 
   // instantiate a loader
@@ -245,34 +241,15 @@ function drawParticles(size=6) {
     particle.x = Math.random() * screenX - screenX / 2, 
     particle.y = Math.random() * screenY - screenY / 2, 
     particle.z = Math.random() * 1600 - 1600 / 2;
+    
     drawParticle(particle)
-    geometry.vertices.push(particle)
+    geometry.vertices[i] = particle
 
     //scene.add(particle)
   }
 
   var system = new THREE.Points(geometry, material);
   return system
-}
-
-function generateSprite() {
-
-  var canvas = document.createElement( 'canvas' );
-  canvas.width = 16;
-  canvas.height = 16;
-
-  var context = canvas.getContext( '2d' );
-  var gradient = context.createRadialGradient( canvas.width / 2, canvas.height / 2, 0, canvas.width / 2, canvas.height / 2, canvas.width / 2 );
-  gradient.addColorStop( 0, 'rgba(255,255,255,1)' );
-  gradient.addColorStop( 0.2, 'rgba(255,0,0,1)' );
-  gradient.addColorStop( 0.4, 'rgba(64,0,0,1)' );
-  gradient.addColorStop( 1, 'rgba(0,0,0,1)' );
-
-  context.fillStyle = gradient;
-  context.fillRect( 0, 0, canvas.width, canvas.height );
-
-  return canvas;
-
 }
 
 function drawParticle( particle, delay ) {
@@ -292,32 +269,78 @@ function drawParticle( particle, delay ) {
   //   .start()
 }
 
+function tweenVertex(v, fq) {
+  const y = (fq/225) * 200
+  const z = v.z
+  v.tweening = true
 
+
+  tween = new TWEEN
+    .Tween(v)
+    .to({ z: v.z * fq * 0.01 }, 1000)
+    //.delay(v.k)
+    //.easing(TWEEN.Easing.Quadratic.In)
+    .onComplete(function() {
+      new TWEEN
+        .Tween(v)
+        .to({ z: z }, 250)
+        //.easing(TWEEN.Easing.Quadratic.Out)
+        .onComplete(function() {
+          v.tweening = false
+          //v.z = z
+          particleSystem.geometry.verticesNeedUpdate = true    
+        })
+        .start()
+    })
+    .start()
+}
+
+function tweenSystem(fq) {
+  tweening = true
+  tween = new TWEEN
+    .Tween(particleSystem.scale)
+    .to({ z: fq*0.01, x: fq*0.01, y: fq*0.01 }, 500)
+    //.delay(v.k)
+    //.easing(TWEEN.Easing.Quadratic.In)
+    .onComplete(function() {
+      new TWEEN
+        .Tween(particleSystem.scale)
+        .to({ z: 1, x: 1, y: 1 }, 250)
+        //.easing(TWEEN.Easing.Quadratic.Out)
+        .onComplete(function() {
+          tweening = false
+          //v.z = z
+          //particleSystem.geometry.verticesNeedUpdate = true    
+        })
+        .start()
+    })
+    .start()
+}
+
+function tweenLight() {
+  tweening = true
+  tween = new TWEEN
+    .Tween(spotLight.position)
+    .easing(TWEEN.Easing.Quadratic.InOut)
+    .to({ x: Math.random()*screenX, y: Math.random()*screenY, z: Math.random()*200 }, 5000)
+    .onComplete(function() {
+      tweening=false
+    })
+    .start()
+}
 
 
 export function animate(time) {
-    
-  // camera.rotation.y -= 0.002
-  // camera.rotation.x += 0.002
-  // camera.rotation.z -= 0.001
-  analyser.getByteFrequencyData(frequencyData)
-  
-  var vertices = particleSystem.geometry.vertices;
-
-  particleSystem.rotation.y = mesh.rotation.y += 0.001
-  particleSystem.rotation.x = mesh.rotation.x += 0.001
-
-  //mesh1.rotation.y += 0.001
-  //mesh1.rotation.x += 0.001
-  // particleSystem.rotation.y += 0.001
-
-  TWEEN.update()
-
-
+  var vertices = particleSystem.geometry.vertices;  
   var freqData; 
   var i = 0;
 
+  if(!tweening) {
+    tweenLight()
+  }
+
   for (; i < bufferLength; i ++ ) {
+
     freqData = frequencyData[i]
 
     if(freqData > 1) {
@@ -328,87 +351,41 @@ export function animate(time) {
       hblur.uniforms[ 'h' ].value = freqData*0.15/ window.innerHeight;
     }
 
-    if(freqData > 180) {
-      //particleSystem.scale.x = particleSystem.scale.y = (freqData*0.1)
+    if(freqData > 10 && !tweening) {
+      //tweenSystem(freqData)
+      //particleSystem.scale.x = particleSystem.scale.y = freqData*0.01
     }
 
 
     for(var k = 0; k < vertices.length; k++) {
       var v = vertices[k]
       
-      if(freqData > 10 && v.k==i) {
-        v.setY(Math.random() * freqData - freqData / 2)
-        v.setX(Math.random() * freqData - freqData / 2)
-        v.setZ(freqData*0.1)
-        mesh.scale.x = particleSystem.scale.x = particleSystem1.scale.x = freqData*0.0006*(time/1000)
-        mesh.scale.y = particleSystem.scale.y = particleSystem1.scale.y = freqData*0.0006*(time/1000)
-        mesh.scale.z = particleSystem.scale.z = particleSystem1.scale.z =freqData*0.0006*(time/1000)
+      if(!v.tweening) {
+        tweenVertex(v, freqData)
+        //v.multiplyScalar(Math.random()*300)
+        //v.setZ(freqData)
       }
+
+      spotLight.exponent = freqData*1.2
+      spotLight.intensity = freqData*0.5
     }
 
-    if(freqData > 180 && !tweening) {
-      //tween.stop()
-      //tweenParticleSystem(freqData)
-    }
-
-    camera.position.z += 0.001
-
-
+    
   }
 
-  
-
-  particleSystem.geometry.verticesNeedUpdate = true;
-  particleSystem1.geometry.verticesNeedUpdate = true;
-  
-  particleSystem1.rotation.x += 0.001
-  particleSystem1.rotation.y += 0.001
-  particleSystem1.rotation.z += 0.001 //targetRotationY
-
-
-  
+  TWEEN.update()
   requestAnimationFrame(animate)
+
   //renderer.render(scene, camera)
   composer.render(renderer)
-
+  analyser.getByteFrequencyData(frequencyData)
 
   if( video.readyState === video.HAVE_ENOUGH_DATA ){
     videoTexture.needsUpdate = true;
   }
 
-  //controls.update()
-
 }
-
-function tweenParticleSystem(fq) {
-  tweening=true
   
-  tween = new TWEEN
-    .Tween(particleSystem.rotation)
-    .easing(TWEEN.Easing.Quadratic.In)
-    .to({
-      x: fq*0.01,
-      y: -fq*0.01,
-      z: fq*0.01
-    }, 5000)
-    .onComplete(() => {
-      console.log('completed')
-
-      var tween1 = new TWEEN
-        .Tween(particleSystem.rotation)
-        .easing(TWEEN.Easing.Quadratic.Out)
-        .to({
-          x: 1,
-          y: 1,
-          z: 1
-        }, 600)
-        .onComplete(() => {
-          tweening = false
-        })
-        .start()
-    })
-    .start()
-}
 
 function onWindowScroll() {
     scrollY = window.pageYOffset

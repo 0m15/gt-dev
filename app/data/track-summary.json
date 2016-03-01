@@ -1,0 +1,27 @@
+{
+  "track": {
+    "status": "complete",
+    "analyzer_version": "3.2.2",
+    "audio_summary": {
+      "time_signature": 4,
+      "tempo": 105.992,
+      "energy": 0.5324346258088499,
+      "liveness": 0.10334143008827301,
+      "analysis_url": "http://echonest-analysis.s3.amazonaws.com/TR/TRBZNTL1532F63B02C/3/full.json?AWSAccessKeyId=AKIAJRDFEY23UEVW42BQ&Expires=1456789736&Signature=oGXCs2WRJVOsK%2BhmIaisi/fbiEw%3D",
+      "speechiness": 0.0379785365396581,
+      "mode": 0,
+      "acousticness": 0.9769550942222885,
+      "danceability": 0.7123200859192249,
+      "key": 5,
+      "duration": 314.27134,
+      "loudness": -11.12,
+      "valence": 0.2748339387440249,
+      "instrumentalness": 0.9151412782934571
+    },
+    "audio_md5": "6829058ab832b5e6754b43738a0ffef0",
+    "bitrate": 128,
+    "id": "TRBZNTL1532F63B02C",
+    "samplerate": 44100,
+    "md5": "6829058ab832b5e6754b43738a0ffef0"
+  }
+}

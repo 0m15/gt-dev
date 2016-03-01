@@ -17,8 +17,8 @@ export default class MotionButton extends Component {
   render() {
     
     const { mouseover } = this.state
-    const springParams = {stiffness: 40, damping: 4}
-    const springParamsAlt = {stiffness: 120, damping: 20}
+    const springParams = {stiffness: 800, damping: 20}
+    const springParamsAlt = {stiffness: 20, damping: 20}
 
     return (
       <Motion 
@@ -26,13 +26,14 @@ export default class MotionButton extends Component {
           scale: 1, 
           x: 0,
           borderRadius: 2,
-          opacity: .2
+          opacity: .2,
+          borderColor: 'rgba(255, 255, 255, 0)'
         }} 
         style={{
           x: mouseover ? spring() : spring(0),
           scale: mouseover ? spring(1.25, springParams) : spring(1, springParams),
           borderRadius: mouseover ? spring(25) : spring(2),
-          opacity: mouseover ? spring(.1) : spring(.2),
+          opacity: mouseover ? spring(0) : spring(.125),
         }}>
         {values => 
           <button 

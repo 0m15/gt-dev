@@ -4,16 +4,20 @@ import IcosahedronButton from './IcosahedronButton'
 
 const items = [
   {
-    title: "the project",
+    title: "The Project",
+    href: "#project"
   },
   {
-    title: "artists",
+    title: "Artists",
+    href: "#artists"
   },
   {
-    title: "listen to ep",
+    title: "Get the Album",
+    href: "#listen"
   },
   {
-    title: "gallery",
+    title: "Gallery",
+    href: "#gallery"
   },
 ]
 
@@ -33,25 +37,27 @@ export default class Navigation extends Component {
   render() {
     
     const { show } = this.state
-    const springParams = {stiffness: 80, damping: 12}
-    const springParamsAlt = {stiffness: 120, damping: 20}
+    const springParams = {stiffness: 280, damping: 30}
+    const springParamsAlt = {stiffness: 200, damping: 30}
 
     return (
       <div>
         <IcosahedronButton onClick={this.show} />
-        {show && 
         <Motion 
           defaultStyle={{
             y: -100,
+            opacity: 0
           }} 
           style={{
-            y: show ? spring(0) : spring(-100),
+            y: show ? spring(0, springParamsAlt) : spring(-100, springParamsAlt),
+            opacity: show ? spring(1) : spring(0),
           }}>
           {values => 
             <div 
               {...this.props}
               style={{
                 transform: `translate3d(0, ${values.y}%, 0)`,
+                opacity: values.opacity,
                 position: 'fixed',
                 display: 'flex',
                 alignItems: 'center',
@@ -59,24 +65,34 @@ export default class Navigation extends Component {
                 left: 0,
                 width: '100%',
                 height: '100%',
-                backgroundColor: '#fff',
-                color: '#444',
+                backgroundColor: '#222',
+                color: '#ababab',
                 paddingLeft: '10%'
               }}>
-              <div>
-                <p style={{fontSize:'1.25em',fontWeight:100,cursor:'pointer',marginLeft:-28}} onClick={this.hide}>&larr; Back</p>
-                <br/>
-                <br/>
-                <StaggeredMotion
+              
+              <div style={{
+                flex:1
+              }}>
+                <p style={{
+                  fontSize:'1.25em',
+                  fontWeight:100,
+                  cursor:'pointer',
+                  marginLeft:-28,
+                  marginBottom: 40}} 
+                  onClick={this.hide}>
+                  &larr; Back
+                </p>
+
+                {show && <StaggeredMotion
                   defaultStyles={[
                     {y: -100, opacity: 0}, 
-                    {y: -250, opacity: 0}, 
-                    {y: -500, opacity: 0},
-                    {y: -750, opacity: 0}
+                    {y: -200, opacity: 0}, 
+                    {y: -300, opacity: 0},
+                    {y: -400, opacity: 0}
                     ]}
                   styles={prevInterpolatedStyles => prevInterpolatedStyles.map((_, i) => {
                     return i === 0
-                      ? {y: spring(0), opacity: spring(1)}
+                      ? {y: spring(0, springParams), opacity: spring(1, springParams)}
                       : {
                           opacity: spring(prevInterpolatedStyles[i - 1].opacity, springParams),
                           y: spring(prevInterpolatedStyles[i - 1].y, springParams)
@@ -93,17 +109,16 @@ export default class Navigation extends Component {
                           opacity: style.opacity,
                           transform: `translate3d(0, ${style.y}px, 0)`
                         }}>
-                          <a href="#" style={{color:'#444',textDecoration:'none'}}>{items[i].title}</a>
+                          <a href="#" style={{color:'#EB5033',textDecoration:'none'}}>{items[i].title}</a>
                         </div>)
                       }
                     </div>
                   }
-                </StaggeredMotion>
+                </StaggeredMotion>}
               </div>
-
             </div>
           }
-        </Motion>}
+        </Motion>
       </div>
     )
   }
