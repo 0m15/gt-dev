@@ -19697,7 +19697,9 @@
 
 	var _sfx = __webpack_require__(187);
 
-	var _MotionButton = __webpack_require__(188);
+	var _reactMotion = __webpack_require__(188);
+
+	var _MotionButton = __webpack_require__(202);
 
 	var _MotionButton2 = _interopRequireDefault(_MotionButton);
 
@@ -19741,7 +19743,8 @@
 
 	    _this.state = {
 	      mouseover: false,
-	      author: false
+	      author: false,
+	      launched: false
 	    };
 
 	    _this.mouseOver = _this.mouseOver.bind(_this);
@@ -19753,6 +19756,16 @@
 	  }
 
 	  _createClass(Scene, [{
+	    key: 'componentDidUpdate',
+	    value: function componentDidUpdate(prevProps, prevState) {
+	      if (this.state.launched && !prevState.launched) {
+	        setTimeout(function () {
+	          visualization.init();
+	          visualization.animate();
+	        }, 3000);
+	      }
+	    }
+	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this.typewrite();
@@ -19815,30 +19828,58 @@
 	  }, {
 	    key: 'launch',
 	    value: function launch() {
-	      visualization.init();
-	      visualization.animate();
+	      this.setState({
+	        launched: true
+	      });
 	    }
 	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var _this3 = this;
+
+	      var launched = this.state.launched;
+
+	      var springParams = { stiffness: 20, damping: 20 };
 
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'gt-container' },
-	        _react2.default.createElement('div', { id: 'visualization' }),
+	        launched && _react2.default.createElement('div', { id: 'visualization' }),
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'gt-screen gt-screen--home' },
 	          _react2.default.createElement(
-	            'h1',
-	            { className: 'gt-screen__title' },
-	            _react2.default.createElement(_TypeWriter2.default, { word: 'glasstress' })
-	          ),
-	          _react2.default.createElement(
-	            'h2',
-	            null,
-	            this.state.author == 0 && _react2.default.createElement(_TypeWriter2.default, { word: 'max/casacci' }),
-	            this.state.author == 1 && _react2.default.createElement(_TypeWriter2.default, { word: 'daniele/mana' })
+	            _reactMotion.Motion,
+	            { defaultStyle: {
+	                scale: 1,
+	                y: 0,
+	                opacity: 1
+	              },
+	              style: {
+	                scale: launched ? (0, _reactMotion.spring)(.75, springParams) : (0, _reactMotion.spring)(1),
+	                opacity: launched ? (0, _reactMotion.spring)(.5, springParams) : (0, _reactMotion.spring)(1),
+	                y: launched ? (0, _reactMotion.spring)(-220, springParams) : (0, _reactMotion.spring)(0)
+	              } },
+	            function (values) {
+	              return _react2.default.createElement(
+	                'div',
+	                { style: {
+	                    transform: 'translate3d(0, ' + values.y + 'px, 0) scale(' + values.scale + ')',
+	                    opacity: values.opacity
+	                  }, className: 'gt-screen__title' },
+	                _react2.default.createElement(
+	                  'h1',
+	                  { className: 'gt-title' },
+	                  _react2.default.createElement(_TypeWriter2.default, { word: 'glasstress' })
+	                ),
+	                _react2.default.createElement(
+	                  'h2',
+	                  null,
+	                  _this3.state.author == 0 && _react2.default.createElement(_TypeWriter2.default, { word: 'max/casacci' }),
+	                  _this3.state.author == 1 && _react2.default.createElement(_TypeWriter2.default, { word: 'daniele/mana' })
+	                )
+	              );
+	            }
 	          ),
 	          _react2.default.createElement(
 	            'div',
@@ -19846,14 +19887,32 @@
 	            _react2.default.createElement(_Navigation2.default, null)
 	          ),
 	          _react2.default.createElement(
-	            'div',
-	            { className: 'gt-screen__action' },
-	            _react2.default.createElement(_MotionButton2.default, {
-	              onMouseOver: this.mouseOver,
-	              onMouseOut: this.mouseOut,
-	              onClick: this.launch.bind(this),
-	              className: 'gt-button gt-button--launch',
-	              label: 'launch visualization*' })
+	            _reactMotion.Motion,
+	            { defaultStyle: {
+	                scale: 1,
+	                opacity: 1,
+	                y: 0
+	              },
+	              style: {
+	                scale: launched ? (0, _reactMotion.spring)(3, springParams) : (0, _reactMotion.spring)(1),
+	                y: launched ? (0, _reactMotion.spring)(20) : (0, _reactMotion.spring)(0),
+	                opacity: launched ? (0, _reactMotion.spring)(0) : (0, _reactMotion.spring)(1)
+	              } },
+	            function (values) {
+	              return _react2.default.createElement(
+	                'div',
+	                { style: {
+	                    transform: 'translate3d(0, ' + values.y + 'px, 0)  scale(' + values.scale + ')',
+	                    opacity: values.opacity
+	                  }, className: 'gt-screen__action' },
+	                _react2.default.createElement(_MotionButton2.default, {
+	                  onMouseOver: _this3.mouseOver,
+	                  onMouseOut: _this3.mouseOut,
+	                  onClick: _this3.launch.bind(_this3),
+	                  className: 'gt-button gt-button--launch',
+	                  label: 'launch visualization*' })
+	              );
+	            }
 	          ),
 	          _react2.default.createElement(
 	            'div',
@@ -61543,6 +61602,7 @@
 	var videoTexture;
 	var spotLight;
 	var light;
+	var object3d;
 
 	var _fft = (0, _fft3.default)();
 
@@ -61631,9 +61691,12 @@
 	    //shading: THREE.FlatShading,
 
 	  });
-	  var materials = [customMaterial];
+	  var materials = [customMaterial, material];
 	  //mesh = new THREE.Mesh( geometry, customMaterial);
 	  mesh = _three2.default.SceneUtils.createMultiMaterialObject(geometry, materials);
+
+	  object3d = new _three2.default.Object3D();
+	  scene.add(object3d);
 
 	  scene.add(mesh);
 
@@ -61695,25 +61758,23 @@
 
 	function addSegment(segment) {
 
-	  console.log('add object', segment);
-	  var object = new _three2.default.Object3D();
-
 	  for (var i = 0; i < segment.timbre.length; i++) {
 	    var timbre = segment.timbre[i];
-	    var radius = segment.timbre * 1 * -1;
+	    var radius = 2 * timbre;
 	    var geometry = new _three2.default.SphereGeometry(radius, 1, 1);
 	    var material = new _three2.default.MeshPhongMaterial({
 	      color: 0xF30A49,
 	      transparent: true,
 	      opacity: (100 - timbre) / 100,
-	      shading: _three2.default.FlatShading
+	      shading: _three2.default.FlastShading
+	      //wireframe: segment.loudnessMax < 6
 	    });
 
 	    var customMaterial = new _three2.default.ShaderMaterial({
 	      uniforms: {},
 	      vertexShader: document.getElementById('vertexShader').textContent,
 	      fragmentShader: document.getElementById('fragmentShader').textContent,
-	      side: _three2.default.BackSide,
+	      side: _three2.default.FrontSide,
 	      blending: _three2.default.AdditiveBlending,
 	      transparent: true
 	    });
@@ -61724,38 +61785,36 @@
 	    //const mesh = new THREE.Mesh( geometry, material )
 	    _mesh.scale.set(1, 1, 1);
 	    _mesh.position.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
-	    _mesh.position.multiplyScalar(segment.loudnessMax * -1 * 10);
+	    _mesh.position.multiplyScalar(segment.loudnessMax * 10);
 	    _mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
-	    _mesh.scale.x = _mesh.scale.y = _mesh.scale.z = 1;
+	    _mesh.scale.x = mesh.scale.y = mesh.scale.z = timbre * 0.01;
 	    // mesh.position.set(
 	    //   Math.random() * screenX - screenX / 2,
 	    //   Math.random() * screenY - screenY / 2,
 	    //   (Math.random() * (1200 - 1200 / 2))
 	    // )
-	    tweenSegment(object, _mesh, segment);
-	    object.add(_mesh);
+	    object3d.add(_mesh);
+	    tweenSegment(_mesh, segment);
 	  }
-	  scene.add(object);
 	}
 
-	function tweenSegment(object, mesh, segment) {
-	  var remove = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
+	function tweenSegment(mesh, segment) {
+	  var remove = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
 
 	  tweening = true;
 	  var scale = segment.loudnessMax * -1 * 0.1;
-	  var tween = new _tween2.default.Tween(mesh.scale).to({ x: scale, y: scale, z: scale }, segment.duration * 1000).easing(_tween2.default.Easing.Quadratic.In).onComplete(function () {
-	    new _tween2.default.Tween(mesh.scale).to({ x: 0, y: 0, z: 0 }, 2000).easing(_tween2.default.Easing.Quadratic.Out).onComplete(function () {
+	  var tween = new _tween2.default.Tween(mesh.scale).to({ x: scale, y: scale, z: scale }, segment.duration * 1000).easing(_tween2.default.Easing.Exponential.In).onComplete(function () {
+	    new _tween2.default.Tween(mesh.scale).to({ x: 0, y: 0, z: 0 }, 2000).easing(_tween2.default.Easing.Exponential.Out).onUpdate(function (t) {
+	      // console.log('t', t/2)
+	      // mesh.materials[1].opacity = t
+	    }).onComplete(function () {
 	      tweening = false;
-	      if (remove && object) object.remove(mesh);
-	      if (object && !object.children.length) {
-	        console.log('remove object');
-	        scene.remove(object);
-	      }
+	      if (remove) object3d.remove(mesh);
 	    }).start();
 	  }).start();
 	}
 
-	audio.currentTime = 150;
+	audio.currentTime = 0;
 
 	var barInterval = 1 / (_audioData2.default.info.bpm / 60);
 	var lastTime = 0;
@@ -61766,15 +61825,15 @@
 	  light.intensity = 1.0;
 
 	  if (segment) {
-	    light.intensity = segment ? segment.loudnessMax * -1 * 0.1 : 0.1;
+	    light.intensity = segment ? segment.loudnessMax * -1 * 0.5 : 0.5;
 
 	    if (segment.duration > 0.12 && !tweening) {
-	      tweenSegment(null, mesh, segment, false);
+	      tweenSegment(mesh, segment, false);
 	    }
 
-	    //if(segment.loudnessMax*-1 > 4) {
-	    addSegment(segment);
-	    //}
+	    if (segment.loudnessMax * -1 > 6) {
+	      addSegment(segment);
+	    }
 	  }
 
 	  // tempo bpm
@@ -61785,7 +61844,8 @@
 	  mesh.rotation.x += 0.01;
 	  mesh.rotation.y += 0.01;
 
-	  scene.rotation.y += 0.0125;
+	  //camera.position.z -= 1
+	  scene.rotation.y = light.rotation.y += 0.0025;
 
 	  requestAnimationFrame(animate);
 	  renderer.render(scene, camera);
@@ -63781,180 +63841,38 @@
 
 	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _react = __webpack_require__(1);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var _reactMotion = __webpack_require__(189);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-	var MotionButton = function (_Component) {
-	  _inherits(MotionButton, _Component);
-
-	  function MotionButton(props) {
-	    _classCallCheck(this, MotionButton);
-
-	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(MotionButton).call(this, props));
-
-	    _this.mouseover = _this.mouseover.bind(_this);
-	    _this.mouseout = _this.mouseout.bind(_this);
-
-	    _this.state = {
-	      mouseover: false
-	    };
-	    return _this;
-	  }
-
-	  _createClass(MotionButton, [{
-	    key: 'render',
-	    value: function render() {
-	      var _this2 = this;
-
-	      var mouseover = this.state.mouseover;
-
-	      var springParams = { stiffness: 800, damping: 20 };
-	      var springParamsAlt = { stiffness: 20, damping: 20 };
-
-	      return _react2.default.createElement(
-	        _reactMotion.Motion,
-	        {
-	          defaultStyle: {
-	            scale: 1,
-	            x: 0,
-	            borderRadius: 2,
-	            opacity: .2,
-	            borderColor: 'rgba(255, 255, 255, 0)'
-	          },
-	          style: {
-	            x: mouseover ? (0, _reactMotion.spring)() : (0, _reactMotion.spring)(0),
-	            scale: mouseover ? (0, _reactMotion.spring)(1.25, springParams) : (0, _reactMotion.spring)(1, springParams),
-	            borderRadius: mouseover ? (0, _reactMotion.spring)(25) : (0, _reactMotion.spring)(2),
-	            opacity: mouseover ? (0, _reactMotion.spring)(0) : (0, _reactMotion.spring)(.125)
-	          } },
-	        function (values) {
-	          return _react2.default.createElement(
-	            'button',
-	            _extends({}, _this2.props, {
-	              style: {
-	                transform: 'scale(' + values.scale + ')',
-	                border: '1px solid rgba(255, 255, 255, ' + values.opacity + ')',
-	                borderRadius: values.borderRadius
-	              },
-	              onMouseOver: _this2.mouseover,
-	              onMouseOut: _this2.mouseout }),
-	            _react2.default.createElement(
-	              _reactMotion.Motion,
-	              {
-	                defaultStyle: {
-	                  scale: 1,
-	                  letterSpacing: 2
-	                },
-	                style: {
-	                  scale: mouseover ? (0, _reactMotion.spring)(0.8, springParamsAlt) : (0, _reactMotion.spring)(1, springParamsAlt),
-	                  letterSpacing: mouseover ? (0, _reactMotion.spring)(6, springParamsAlt) : (0, _reactMotion.spring)(2, springParamsAlt)
-	                } },
-	              function (values) {
-	                return _react2.default.createElement(
-	                  'span',
-	                  {
-	                    style: {
-	                      display: 'inline-block',
-	                      transform: 'scale(' + values.scale + ')',
-	                      pointerEvents: 'none',
-	                      letterSpacing: values.letterSpacing
-	                    },
-	                    className: 'gt-button__label' },
-	                  _this2.props.label
-	                );
-	              }
-	            )
-	          );
-	        }
-	      );
-	    }
-	  }, {
-	    key: 'mouseover',
-	    value: function mouseover(e) {
-	      this.setState({
-	        mouseover: true
-	      });
-	      this.props.onMouseOver && this.props.onMouseOver();
-	    }
-	  }, {
-	    key: 'mouseout',
-	    value: function mouseout() {
-	      console.log('mouseout');
-	      this.setState({
-	        mouseover: false
-	      });
-	      this.props.onMouseOut && this.props.onMouseOut();
-	    }
-	  }, {
-	    key: 'show',
-	    value: function show() {}
-	  }, {
-	    key: 'hide',
-	    value: function hide() {}
-	  }]);
-
-	  return MotionButton;
-	}(_react.Component);
-
-	exports.default = MotionButton;
-
-/***/ },
-/* 189 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	exports.__esModule = true;
 
 	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
 
-	var _Motion = __webpack_require__(190);
+	var _Motion = __webpack_require__(189);
 
 	exports.Motion = _interopRequire(_Motion);
 
-	var _StaggeredMotion = __webpack_require__(197);
+	var _StaggeredMotion = __webpack_require__(196);
 
 	exports.StaggeredMotion = _interopRequire(_StaggeredMotion);
 
-	var _TransitionMotion = __webpack_require__(198);
+	var _TransitionMotion = __webpack_require__(197);
 
 	exports.TransitionMotion = _interopRequire(_TransitionMotion);
 
-	var _spring = __webpack_require__(200);
+	var _spring = __webpack_require__(199);
 
 	exports.spring = _interopRequire(_spring);
 
-	var _presets = __webpack_require__(201);
+	var _presets = __webpack_require__(200);
 
 	exports.presets = _interopRequire(_presets);
 
 	// deprecated, dummy warning function
 
-	var _reorderKeys = __webpack_require__(202);
+	var _reorderKeys = __webpack_require__(201);
 
 	exports.reorderKeys = _interopRequire(_reorderKeys);
 
 /***/ },
-/* 190 */
+/* 189 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -63965,27 +63883,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(191);
+	var _mapToZero = __webpack_require__(190);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(192);
+	var _stripStyle = __webpack_require__(191);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(193);
+	var _stepper3 = __webpack_require__(192);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(194);
+	var _performanceNow = __webpack_require__(193);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(195);
+	var _raf = __webpack_require__(194);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(196);
+	var _shouldStopAnimation = __webpack_require__(195);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -64200,7 +64118,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 191 */
+/* 190 */
 /***/ function(module, exports) {
 
 	
@@ -64224,7 +64142,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 192 */
+/* 191 */
 /***/ function(module, exports) {
 
 	
@@ -64250,7 +64168,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 193 */
+/* 192 */
 /***/ function(module, exports) {
 
 	
@@ -64298,7 +64216,7 @@
 	// array reference around.
 
 /***/ },
-/* 194 */
+/* 193 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
@@ -64337,10 +64255,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 195 */
+/* 194 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(194)
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(193)
 	  , root = typeof window === 'undefined' ? global : window
 	  , vendors = ['moz', 'webkit']
 	  , suffix = 'AnimationFrame'
@@ -64416,7 +64334,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 196 */
+/* 195 */
 /***/ function(module, exports) {
 
 	
@@ -64452,7 +64370,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 197 */
+/* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64463,27 +64381,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(191);
+	var _mapToZero = __webpack_require__(190);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(192);
+	var _stripStyle = __webpack_require__(191);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(193);
+	var _stepper3 = __webpack_require__(192);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(194);
+	var _performanceNow = __webpack_require__(193);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(195);
+	var _raf = __webpack_require__(194);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(196);
+	var _shouldStopAnimation = __webpack_require__(195);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -64719,7 +64637,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 198 */
+/* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64730,31 +64648,31 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(191);
+	var _mapToZero = __webpack_require__(190);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(192);
+	var _stripStyle = __webpack_require__(191);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(193);
+	var _stepper3 = __webpack_require__(192);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _mergeDiff = __webpack_require__(199);
+	var _mergeDiff = __webpack_require__(198);
 
 	var _mergeDiff2 = _interopRequireDefault(_mergeDiff);
 
-	var _performanceNow = __webpack_require__(194);
+	var _performanceNow = __webpack_require__(193);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(195);
+	var _raf = __webpack_require__(194);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(196);
+	var _shouldStopAnimation = __webpack_require__(195);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -65212,7 +65130,7 @@
 	// that you've unmounted but that's still animating. This is where it lives
 
 /***/ },
-/* 199 */
+/* 198 */
 /***/ function(module, exports) {
 
 	
@@ -65325,7 +65243,7 @@
 	// to loop through and find a key's index each time), but I no longer care
 
 /***/ },
-/* 200 */
+/* 199 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65338,7 +65256,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _presets = __webpack_require__(201);
+	var _presets = __webpack_require__(200);
 
 	var _presets2 = _interopRequireDefault(_presets);
 
@@ -65353,7 +65271,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 201 */
+/* 200 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -65368,7 +65286,7 @@
 	module.exports = exports["default"];
 
 /***/ },
-/* 202 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -65391,6 +65309,148 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
+/* 202 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactMotion = __webpack_require__(188);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var MotionButton = function (_Component) {
+	  _inherits(MotionButton, _Component);
+
+	  function MotionButton(props) {
+	    _classCallCheck(this, MotionButton);
+
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(MotionButton).call(this, props));
+
+	    _this.mouseover = _this.mouseover.bind(_this);
+	    _this.mouseout = _this.mouseout.bind(_this);
+
+	    _this.state = {
+	      mouseover: false
+	    };
+	    return _this;
+	  }
+
+	  _createClass(MotionButton, [{
+	    key: 'render',
+	    value: function render() {
+	      var _this2 = this;
+
+	      var mouseover = this.state.mouseover;
+
+	      var springParams = { stiffness: 800, damping: 20 };
+	      var springParamsAlt = { stiffness: 20, damping: 20 };
+
+	      return _react2.default.createElement(
+	        _reactMotion.Motion,
+	        {
+	          defaultStyle: {
+	            scale: 1,
+	            x: 0,
+	            borderRadius: 2,
+	            opacity: .2,
+	            borderColor: 'rgba(255, 255, 255, 0)'
+	          },
+	          style: {
+	            x: mouseover ? (0, _reactMotion.spring)() : (0, _reactMotion.spring)(0),
+	            scale: mouseover ? (0, _reactMotion.spring)(1.25, springParams) : (0, _reactMotion.spring)(1, springParams),
+	            borderRadius: mouseover ? (0, _reactMotion.spring)(25) : (0, _reactMotion.spring)(2),
+	            opacity: mouseover ? (0, _reactMotion.spring)(0) : (0, _reactMotion.spring)(.125)
+	          } },
+	        function (values) {
+	          return _react2.default.createElement(
+	            'button',
+	            _extends({}, _this2.props, {
+	              style: {
+	                transform: 'scale(' + values.scale + ')',
+	                border: '1px solid rgba(255, 255, 255, ' + values.opacity + ')',
+	                borderRadius: values.borderRadius
+	              },
+	              onMouseOver: _this2.mouseover,
+	              onMouseOut: _this2.mouseout }),
+	            _react2.default.createElement(
+	              _reactMotion.Motion,
+	              {
+	                defaultStyle: {
+	                  scale: 1,
+	                  letterSpacing: 2
+	                },
+	                style: {
+	                  scale: mouseover ? (0, _reactMotion.spring)(0.8, springParamsAlt) : (0, _reactMotion.spring)(1, springParamsAlt),
+	                  letterSpacing: mouseover ? (0, _reactMotion.spring)(6, springParamsAlt) : (0, _reactMotion.spring)(2, springParamsAlt)
+	                } },
+	              function (values) {
+	                return _react2.default.createElement(
+	                  'span',
+	                  {
+	                    style: {
+	                      display: 'inline-block',
+	                      transform: 'scale(' + values.scale + ')',
+	                      pointerEvents: 'none',
+	                      letterSpacing: values.letterSpacing
+	                    },
+	                    className: 'gt-button__label' },
+	                  _this2.props.label
+	                );
+	              }
+	            )
+	          );
+	        }
+	      );
+	    }
+	  }, {
+	    key: 'mouseover',
+	    value: function mouseover(e) {
+	      this.setState({
+	        mouseover: true
+	      });
+	      this.props.onMouseOver && this.props.onMouseOver();
+	    }
+	  }, {
+	    key: 'mouseout',
+	    value: function mouseout() {
+	      console.log('mouseout');
+	      this.setState({
+	        mouseover: false
+	      });
+	      this.props.onMouseOut && this.props.onMouseOut();
+	    }
+	  }, {
+	    key: 'show',
+	    value: function show() {}
+	  }, {
+	    key: 'hide',
+	    value: function hide() {}
+	  }]);
+
+	  return MotionButton;
+	}(_react.Component);
+
+	exports.default = MotionButton;
+
+/***/ },
 /* 203 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -65408,7 +65468,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(189);
+	var _reactMotion = __webpack_require__(188);
 
 	var _IcosahedronButton = __webpack_require__(204);
 
@@ -65770,7 +65830,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-screen__title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 

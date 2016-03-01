@@ -56,7 +56,7 @@
   varying vec3 vNormal;
   void main() 
   {
-    float intensity = pow(0.4 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 1.0 ); 
+    float intensity = pow(0.1 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 ); 
     gl_FragColor = vec4( 255.0, 1.0, 1.0, 1.0 ) * intensity;
   }
   </script>

@@ -53,6 +53,7 @@ var controls;
 var videoTexture;
 var spotLight;
 var light;
+var object3d;
   
 var { analyser, audio } = fft()
 
@@ -112,7 +113,7 @@ export function init() {
   light.position.set(0, 0, 100)
 
   scene.add(light)
-
+  
   // camera
   camera = new THREE.PerspectiveCamera( 70, screenX / screenY, 1, 2000)
   
@@ -141,12 +142,16 @@ export function init() {
     //shading: THREE.FlatShading,
 
   });
-  const materials = [customMaterial]
+  const materials = [customMaterial, material]
   //mesh = new THREE.Mesh( geometry, customMaterial);
   mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
 
-  scene.add(mesh)
+  
 
+  object3d = new THREE.Object3D()
+  scene.add(object3d)
+
+  scene.add(mesh)
 
   // particles
   particleSystem = drawParticles(6)
@@ -210,77 +215,76 @@ function drawParticles(size=6) {
   
 
 function addSegment(segment) {
-  
-  console.log('add object', segment)
-  const object = new THREE.Object3D()
 
   for(var i = 0; i < segment.timbre.length; i++) {
     const timbre = segment.timbre[i]
-    const radius = segment.timbre * 1 * -1
+    const radius = 2*timbre
     const geometry = new THREE.SphereGeometry( radius, 1, 1 );
     const material = new THREE.MeshPhongMaterial({
       color: 0xF30A49, 
       transparent: true,
       opacity: ((100-timbre)/100),
-      shading: THREE.FlatShading
+      shading: THREE.FlastShading
+      //wireframe: segment.loudnessMax < 6
     })
 
     var customMaterial = new THREE.ShaderMaterial({
       uniforms: {  },
       vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
       fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-      side: THREE.BackSide,
+      side: THREE.FrontSide,
       blending: THREE.AdditiveBlending,
       transparent: true
     });
 
     const materials = [customMaterial, material]
     //mesh = new THREE.Mesh( geometry, customMaterial);
-    const mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
+    const _mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
     //const mesh = new THREE.Mesh( geometry, material )
-    mesh.scale.set(1, 1, 1)
-    mesh.position.set( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 ).normalize();
-    mesh.position.multiplyScalar( segment.loudnessMax*-1 * 10 );
-    mesh.rotation.set( Math.random() * 2, Math.random() * 2, Math.random() * 2 );
-    mesh.scale.x = mesh.scale.y = mesh.scale.z = 1;
+    _mesh.scale.set(1, 1, 1)
+    _mesh.position.set( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 ).normalize();
+    _mesh.position.multiplyScalar( segment.loudnessMax * 10 );
+    _mesh.rotation.set( Math.random() * 2, Math.random() * 2, Math.random() * 2 );
+    _mesh.scale.x = mesh.scale.y = mesh.scale.z = timbre*0.01;
     // mesh.position.set(
     //   Math.random() * screenX - screenX / 2,
     //   Math.random() * screenY - screenY / 2, 
     //   (Math.random() * (1200 - 1200 / 2))
     // )
-    tweenSegment(object, mesh, segment)
-    object.add(mesh)
+    object3d.add(_mesh)
+    tweenSegment(_mesh, segment)
+    
   }
-  scene.add(object)
+  
 
 }
 
-function tweenSegment(object, mesh, segment, remove=true) {
+function tweenSegment(mesh, segment, remove=true) {
   tweening=true
   const scale = segment.loudnessMax * -1 * 0.1
   var tween = new TWEEN
     .Tween(mesh.scale)
     .to({ x: scale, y: scale, z: scale }, (segment.duration)*1000)
-    .easing(TWEEN.Easing.Quadratic.In)
+    .easing(TWEEN.Easing.Exponential.In)
     .onComplete(function() {
       new TWEEN
         .Tween(mesh.scale)
         .to({ x: 0, y: 0, z: 0 }, 2000)
-        .easing(TWEEN.Easing.Quadratic.Out)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onUpdate(function(t) {
+          // console.log('t', t/2)
+          // mesh.materials[1].opacity = t
+        })
         .onComplete(function() {
           tweening=false
-          if(remove && object) object.remove(mesh)
-          if(object && !object.children.length) {
-            console.log('remove object')
-            scene.remove(object)
-          }
+          if(remove) object3d.remove(mesh)
         })
         .start()
     })
     .start()
 }
 
-audio.currentTime=150
+audio.currentTime=0
 
 const barInterval = 1 / (audioData.info.bpm / 60)
 let lastTime = 0
@@ -292,15 +296,15 @@ export function animate(time) {
 
 
   if(segment) {
-    light.intensity = segment ? segment.loudnessMax * -1 * 0.1 : 0.1
+    light.intensity = segment ? segment.loudnessMax * -1 * 0.5 : 0.5
 
     if(segment.duration > 0.12 && !tweening) {
-      tweenSegment(null, mesh, segment, false)
+      tweenSegment(mesh, segment, false)
     }
 
-    //if(segment.loudnessMax*-1 > 4) {
+    if(segment.loudnessMax*-1 > 6) {
       addSegment(segment)
-    //}
+    }
 
   }
   
@@ -313,7 +317,8 @@ export function animate(time) {
   mesh.rotation.x += 0.01
   mesh.rotation.y += 0.01
 
-  scene.rotation.y += 0.0125
+  //camera.position.z -= 1
+  scene.rotation.y = light.rotation.y += 0.0025
 
   requestAnimationFrame(animate)
   renderer.render(scene, camera)

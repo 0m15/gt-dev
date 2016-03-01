@@ -4,6 +4,7 @@ import ThreeScene from '../components/ThreeScene'
 import * as visualization from './viz.js'
 
 import { playSfx } from '../lib/sfx'
+import { Motion, spring } from 'react-motion'
 import MotionButton from "../components/MotionButton";
 import Navigation from '../components/Navigation'
 import * as audioData from '../lib/audio-data'
@@ -21,7 +22,8 @@ export default class Scene extends Component {
     super(props)
     this.state = {
       mouseover: false,
-      author: false
+      author: false,
+      launched: false
     }
 
     this.mouseOver = this.mouseOver.bind(this)
@@ -29,6 +31,16 @@ export default class Scene extends Component {
 
     this.animate = this.animate.bind(this)
     this.renderScene = this.renderScene.bind(this)
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if(this.state.launched && !prevState.launched) {
+      setTimeout(() => {
+        visualization.init()
+        visualization.animate()  
+      }, 3000)
+      
+    }
   }
 
   componentDidMount() {
@@ -85,44 +97,75 @@ export default class Scene extends Component {
   }
 
   launch() {
-    visualization.init()
-    visualization.animate()
+    this.setState({
+      launched: true
+    })
   }
 
   render() {
 
+    const { launched } = this.state
+    const springParams = {stiffness: 20, damping: 20}
+
     return <div className="gt-container">
 
-      <div id="visualization" />
-      <div className="gt-screen gt-screen--home">
-        <h1 className="gt-screen__title">
-          <TypeWriter word="glasstress" />
-        </h1>
+      {launched && <div id="visualization" />}
 
-        <h2>
-          {this.state.author==0 && <TypeWriter word="max/casacci" />}
-          {this.state.author==1 && <TypeWriter word="daniele/mana" />}
-        </h2>
+      <div className="gt-screen gt-screen--home">
+        <Motion defaultStyle={{
+            scale: 1, 
+            y: 0,
+            opacity: 1,
+          }} 
+          style={{
+            scale: launched ? spring(.75, springParams) : spring(1),
+            opacity: launched ? spring(.5, springParams) : spring(1),
+            y: launched ? spring(-220, springParams) : spring(0),
+          }}>
+          {values => 
+            <div style={{
+              transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
+              opacity: values.opacity
+            }} className="gt-screen__title">
+              <h1 className="gt-title">
+                <TypeWriter word="glasstress" />
+              </h1>
+              <h2>
+                {this.state.author==0 && <TypeWriter word="max/casacci" />}
+                {this.state.author==1 && <TypeWriter word="daniele/mana" />}
+              </h2>
+            </div>}
+        </Motion>
 
         <div className="gt-screen__icosahedron">
           <Navigation />
         </div>
 
-        <div className="gt-screen__action">
-          <MotionButton 
-            onMouseOver={this.mouseOver}
-            onMouseOut={this.mouseOut}
-            onClick={this.launch.bind(this)}
-            className="gt-button gt-button--launch"
-            label="launch visualization*" /> 
+        <Motion defaultStyle={{
+            scale: 1,
+            opacity: 1, 
+            y: 0,
+          }} 
+          style={{
+            scale: launched ? spring(3, springParams) : spring(1),
+            y: launched ? spring(20) : spring(0),
+            opacity: launched ? spring(0) : spring(1)
+          }}>
+          {values => 
+            <div style={{
+              transform: `translate3d(0, ${values.y}px, 0)  scale(${values.scale})`,
+              opacity: values.opacity
+            }} className="gt-screen__action">
+              <MotionButton 
+                onMouseOver={this.mouseOver}
+                onMouseOut={this.mouseOut}
+                onClick={this.launch.bind(this)}
+                className="gt-button gt-button--launch"
+                label="launch visualization*" /> 
+            </div>}
+        </Motion>
 
-          {/*<a href="#" className="gt-button gt-button--launch" 
-            onMouseOver={this.mouseOver}
-            onMouseOut={this.mouseOut}
-            onClick={this.launch.bind(this)}>
-            launch visualization*
-          </a>*/}
-        </div>
+        
 
         <div className="gt-screen__footer">
           <p className="gt-text gt-text--small">*It requires a WebGl capable browser and optional access to webcam</p>

@@ -38,6 +38,11 @@
 }
 
 .gt-screen__title {
+  margin-top: auto;
+  text-align: center;
+}
+
+.gt-title {
   font-size: 2.5em;
   text-transform: uppercase;
   font-weight: 600;
@@ -46,7 +51,7 @@
   margin-top: auto;
 }
 
-.gt-screen__title span span {
+.gt-title span span {
   /*border-bottom: 2px solid #fff;*/
   display: inline-block;
   min-width: 40px;
@@ -60,6 +65,10 @@
 
 .gt-screen__footer {
   margin-top: auto;
+}
+
+.gt-button:focus {
+  outline: none;
 }
 
 .gt-button--launch {
