@@ -154,7 +154,7 @@ function tweenSegment(segment) {
     .start()
 }
 
-audio.currentTime=100
+audio.currentTime=200
 export function animate(time) {
   var segment = segmentsByTime[audio.currentTime.toFixed(1)]
   

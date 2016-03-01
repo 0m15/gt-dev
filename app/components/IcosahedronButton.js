@@ -107,7 +107,7 @@ export default class IcosahedronButton extends Component {
         style={{cursor:'pointer'}}>
         <ThreeScene 
           ambientLightColor={0xffffff}
-          fogColor={0x222222}
+          fogColor={0x35013F}
           height={96}
           width={96}
           initScene={this.renderScene} 
