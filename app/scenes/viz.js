@@ -70,6 +70,14 @@ function getBeatsByTime() {
   return beats
 }
 
+function getTatumsByTime() {
+  const tatums = {}
+  audioData.tatums.forEach(b => {
+    tatums[b.start.toFixed(1)] = { duration: b.duration, end: b.start + b.duration, confidence: b.confidence}
+  })
+  return tatums
+}
+
 function getBarsByTime() {
   const bars = {}
   audioData.bars.forEach(b => {
@@ -99,7 +107,9 @@ function getSegmentsByTime() {
 const beatsByTime = getBeatsByTime()
 const segmentsByTime = getSegmentsByTime()
 const barsByTime = getBarsByTime()
+const tatumsByTime = getTatumsByTime()
 
+console.log('tatums', tatumsByTime)
 export function init() {
 
   // scene
@@ -151,7 +161,7 @@ export function init() {
   object3d = new THREE.Object3D()
   scene.add(object3d)
 
-  scene.add(mesh)
+  //scene.add(mesh)
 
   // particles
   particleSystem = drawParticles(6)
@@ -216,15 +226,15 @@ function drawParticles(size=6) {
 
 function addSegment(segment) {
 
-  for(var i = 0; i < segment.timbre.length; i++) {
+  for(var i = 0; i < 1; i++) {
     const timbre = segment.timbre[i]
     const radius = 2*timbre
     const geometry = new THREE.SphereGeometry( radius, 1, 1 );
     const material = new THREE.MeshPhongMaterial({
       color: 0xF30A49, 
       transparent: true,
-      opacity: ((100-timbre)/100),
-      shading: THREE.FlastShading
+      opacity: 1,
+      shading: THREE.FlatShading,
       //wireframe: segment.loudnessMax < 6
     })
 
@@ -237,13 +247,13 @@ function addSegment(segment) {
       transparent: true
     });
 
-    const materials = [customMaterial, material]
+    const materials = [material]
     //mesh = new THREE.Mesh( geometry, customMaterial);
     const _mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
     //const mesh = new THREE.Mesh( geometry, material )
     _mesh.scale.set(1, 1, 1)
     _mesh.position.set( Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5 ).normalize();
-    _mesh.position.multiplyScalar( segment.loudnessMax * 10 );
+    _mesh.position.multiplyScalar( timbre * 3 );
     _mesh.rotation.set( Math.random() * 2, Math.random() * 2, Math.random() * 2 );
     _mesh.scale.x = mesh.scale.y = mesh.scale.z = timbre*0.01;
     // mesh.position.set(
@@ -252,28 +262,29 @@ function addSegment(segment) {
     //   (Math.random() * (1200 - 1200 / 2))
     // )
     object3d.add(_mesh)
-    tweenSegment(_mesh, segment)
+    tweenSegment(_mesh, timbre, segment.duration)
     
   }
   
 
 }
 
-function tweenSegment(mesh, segment, remove=true) {
+function tweenSegment(mesh, loudness, duration, remove=true) {
   tweening=true
-  const scale = segment.loudnessMax * -1 * 0.1
+  const scale = loudness * -1 * 0.1
   var tween = new TWEEN
     .Tween(mesh.scale)
-    .to({ x: scale, y: scale, z: scale }, (segment.duration)*1000)
+    .to({ x: scale, y: scale, z: scale }, (duration)*1000)
     .easing(TWEEN.Easing.Exponential.In)
     .onComplete(function() {
       new TWEEN
         .Tween(mesh.scale)
-        .to({ x: 0, y: 0, z: 0 }, 2000)
+        .to({ x: 3, y: 3, z: 3 }, 4000)
         .easing(TWEEN.Easing.Exponential.Out)
         .onUpdate(function(t) {
           // console.log('t', t/2)
-          // mesh.materials[1].opacity = t
+          mesh.children[0].material.transparent = true
+          mesh.children[0].material.opacity = 1-t
         })
         .onComplete(function() {
           tweening=false
@@ -299,15 +310,14 @@ export function animate(time) {
     light.intensity = segment ? segment.loudnessMax * -1 * 0.5 : 0.5
 
     if(segment.duration > 0.12 && !tweening) {
-      tweenSegment(mesh, segment, false)
+      //tweenSegment(mesh, segment, false)
     }
 
-    if(segment.loudnessMax*-1 > 6) {
+    if(segment.loudnessMax > -15) {
       addSegment(segment)
     }
 
   }
-  
 
   // tempo bpm
   if(!lastTime || audio.currentTime - lastTime >= barInterval) {

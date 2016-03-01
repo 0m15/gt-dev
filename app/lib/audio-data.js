@@ -4,6 +4,7 @@ const audioData = {
   beats: trackData.beats,
   bars: trackData.bars,
   segments: trackData.segments,
+  tatums: trackData.tatums,
   info: {
     bpm: trackData.track.tempo,
     key: trackData.track.key,
