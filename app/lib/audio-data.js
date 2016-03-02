@@ -10,7 +10,8 @@ const audioData = {
     key: trackData.track.key,
     fadeOutStart: trackData.track.start_of_fade_out,
     loudness: trackData.track.loudness
-  }
+  },
+  scenes: trackData.sections
 }
 
 module.exports= audioData

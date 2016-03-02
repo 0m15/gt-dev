@@ -38,7 +38,7 @@ export default class Scene extends Component {
       setTimeout(() => {
         visualization.init()
         visualization.animate()  
-      }, 3000)
+      }, 0)
       
     }
   }
