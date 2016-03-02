@@ -19858,7 +19858,7 @@
 	              style: {
 	                scale: launched ? (0, _reactMotion.spring)(.75, springParams) : (0, _reactMotion.spring)(1),
 	                opacity: launched ? (0, _reactMotion.spring)(.5, springParams) : (0, _reactMotion.spring)(1),
-	                y: launched ? (0, _reactMotion.spring)(-220, springParams) : (0, _reactMotion.spring)(0)
+	                y: launched ? (0, _reactMotion.spring)(-230, springParams) : (0, _reactMotion.spring)(0)
 	              } },
 	            function (values) {
 	              return _react2.default.createElement(
@@ -61603,6 +61603,7 @@
 	var spotLight;
 	var light;
 	var object3d;
+	var lastSegment = { start: 0 };
 
 	var _fft = (0, _fft3.default)();
 
@@ -61644,6 +61645,7 @@
 	  var segments = {};
 	  _audioData2.default.segments.forEach(function (b) {
 	    segments[b.start.toFixed(1)] = {
+	      start: b.start,
 	      duration: b.duration,
 	      end: b.start + b.duration,
 	      confidence: b.confidence,
@@ -61661,23 +61663,22 @@
 	var barsByTime = getBarsByTime();
 	var tatumsByTime = getTatumsByTime();
 
-	console.log('tatums', tatumsByTime);
 	function init() {
 
 	  // scene
 	  scene = new _three2.default.Scene();
 
-	  scene.fog = new _three2.default.Fog(0x121212, 0.9, 1600);
+	  scene.fog = new _three2.default.Fog(0xEB5033, 0.9, 1600);
 	  scene.add(new _three2.default.AmbientLight(0xffffff));
 
 	  // lights
 	  light = new _three2.default.DirectionalLight(0xffffff, 1.0);
-	  light.position.set(0, 0, 100);
+	  light.position.set(0, 0, 700);
 
 	  scene.add(light);
 
 	  // camera
-	  camera = new _three2.default.PerspectiveCamera(70, screenX / screenY, 1, 2000);
+	  camera = new _three2.default.PerspectiveCamera(85, screenX / screenY, 1, 2000);
 
 	  camera.position.z = 750;
 	  camera.lookAt(scene.position);
@@ -61711,7 +61712,7 @@
 	  //scene.add(mesh)
 
 	  // particles
-	  particleSystem = drawParticles(6);
+	  particleSystem = drawParticles(3);
 	  particleSystem.sortParticles = true;
 
 	  scene.add(particleSystem);
@@ -61752,7 +61753,7 @@
 	    color: 0x9AE17B
 	  });
 
-	  for (var i = 0; i < 100; i++) {
+	  for (var i = 0; i < 400; i++) {
 	    var particle = new _three2.default.Vector3(0, 0, 0);
 	    particle.x = Math.random() * screenX - screenX / 2, particle.y = Math.random() * screenY - screenY / 2, particle.z = Math.random() * 400 - 400 / 2;
 
@@ -61767,15 +61768,19 @@
 	}
 
 	function addSegment(segment) {
+	  var multiplyScalar = arguments.length <= 1 || arguments[1] === undefined ? 10 : arguments[1];
 
-	  for (var i = 0; i < 1; i++) {
+	  // loudness 0-1
+	  var loudnessMax = (-100 - segment.loudnessMax) * -1 / 100;
+
+	  for (var i = 0; i < 12; i++) {
 	    var timbre = segment.timbre[i];
-	    var radius = (100 - segment.loudnessMax) * 0.1;
-	    var geometry = new _three2.default.SphereGeometry(radius, 1, 1);
+	    var radius = 20; //timbre
+	    var geometry = loudnessMax > 0.9 ? new _three2.default.IcosahedronGeometry(radius * 2) : new _three2.default.SphereGeometry(radius, 1, 1);
 	    var material = new _three2.default.MeshPhongMaterial({
 	      color: 0xF30A49,
 	      transparent: true,
-	      opacity: 0.5,
+	      opacity: Math.random() * 1,
 	      shading: _three2.default.FlatShading
 	    });
 
@@ -61784,7 +61789,7 @@
 	      uniforms: {},
 	      vertexShader: document.getElementById('vertexShader').textContent,
 	      fragmentShader: document.getElementById('fragmentShader').textContent,
-	      side: _three2.default.FrontSide,
+	      side: _three2.default.BackSide,
 	      blending: _three2.default.AdditiveBlending,
 	      transparent: true
 	    });
@@ -61796,7 +61801,7 @@
 	    _mesh.scale.set(1, 1, 1);
 	    //_mesh.scale.x = mesh.scale.y = mesh.scale.z = timbre*0.01;
 	    _mesh.position.set(Math.random() * 10 - 10 / 2, Math.random() * 10 - 10 / 2, Math.random() * 10 - 10 / 2);
-	    _mesh.position.multiplyScalar(100 - segment.loudnessMax * -1 * 10);
+	    _mesh.position.multiplyScalar(Math.random() * multiplyScalar);
 	    _mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
 
 	    object3d.add(_mesh);
@@ -61805,7 +61810,6 @@
 	}
 
 	function tweenLight(light, loudness, duration) {
-	  console.log('tl', loudness, duration);
 	  tweening = true;
 	  var tween = new _tween2.default.Tween(light).to({ intensity: loudness * 0.2 }, duration * 1000).easing(_tween2.default.Easing.Exponential.In).onComplete(function () {
 	    tweening = false;
@@ -61817,20 +61821,27 @@
 	function tweenSegment(m, loudness, duration) {
 	  var remove = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
 
-	  m.scale.set(0, 0, 0);
-	  var scale = 1; //(100 / (100 + loudness)) * 3
-	  var tween = new _tween2.default.Tween(m.scale).to({ x: scale, y: scale, z: scale }, duration * 1000).easing(_tween2.default.Easing.Exponential.In).onComplete(function () {
-	    new _tween2.default.Tween(m.scale).to({ x: 3, y: 3, z: 3 }, 3000).easing(_tween2.default.Easing.Exponential.Out).onUpdate(function (t) {
-	      // console.log('t', t/2)
-	      m.children[0].material.transparent = true;
-	      m.children[0].material.opacity = 1 - t;
+	  m.scale.set(.25, .25, .25);
+	  var scale = loudness / 50;
+	  var tween = new _tween2.default.Tween({ scale: 1, opacity: 1, y: m.position.y }).to({ scale: scale, opacity: 0, y: m.position.y - 600 }, duration * 1000).easing(_tween2.default.Easing.Exponential.In).onUpdate(function (t) {
+	    m.scale.set(this.scale * 2, this.scale * 2, this.scale * 2);
+	  }).onComplete(function () {
+	    new _tween2.default.Tween({ scale: scale, y: m.position.y }).to({ scale: 3, y: m.position.y - 600 }, 4000).easing(_tween2.default.Easing.Exponential.Out).onUpdate(function (t) {
+	      m.scale.set(this.scale, this.scale, this.scale);
+	      //m.position.setZ(this.y)
 	    }).onComplete(function () {
 	      if (remove) object3d.remove(m);
 	    }).start();
 	  }).start();
 	}
 
-	audio.currentTime = 150;
+	function tweenObject(obj, scale, duration) {
+	  var tween = new _tween2.default.Tween(obj.scale).to({ x: scale, y: scale, z: scale }, duration).easing(_tween2.default.Easing.Exponential.In).onComplete(function () {
+	    new _tween2.default.Tween(obj.scale).to({ x: 1, y: 1, z: 1 }, duration / 2).easing(_tween2.default.Easing.Exponential.Out).start();
+	  }).start();
+	}
+
+	audio.currentTime = 50;
 
 	var barInterval = 1 / (_audioData2.default.info.bpm / 60);
 	var lastTime = 0;
@@ -61839,6 +61850,8 @@
 	  var segment = segmentsByTime[audio.currentTime.toFixed(1)];
 
 	  //light.intensity = 1.0
+
+	  document.getElementById('bpm-helper').innerHTML = "LOUDNESS:";
 
 	  if (segment) {
 
@@ -61849,8 +61862,14 @@
 	      //tweenSegment(mesh, segment, false)
 	    }
 
-	    if (segment.loudnessMax > -22) {
+	    if (segment.loudnessMax > -8 && segment.loudnessMax < -5 && segment.start != lastSegment.start) {
+	      document.getElementById('bpm-helper').innerHTML = "LOUDNESS: " + segment.loudnessMax;
 	      addSegment(segment);
+	      lastSegment = segment;
+	    }
+
+	    if (segment.loudnessMax > -22 && segment.loudnessMax < -8) {
+	      addSegment(segment, 3000);
 	    }
 	  }
 
@@ -61860,9 +61879,9 @@
 	  }
 
 	  //object3d.rotation.y += 0.01
-	  object3d.rotation.y += 0.01;
+	  //particleSystem.rotation.y += 0.0075
 
-	  //camera.position.z -= 2
+	  //camera.position.z -= 1
 	  //scene.rotation.y = light.rotation.y += 0.0025
 
 	  requestAnimationFrame(animate);
@@ -65849,7 +65868,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}\n\n#bpm-helper {\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}", ""]);
 
 	// exports
 

@@ -43,6 +43,9 @@
   <script src="http://localhost:5000/js/MaskPass.js"></script>-->
   
 
+  <div id="bpm-helper">
+
+  </div>
   <script id="vertexShader" type="x-shader/x-vertex">
   varying vec3 vNormal;
   void main() 
@@ -56,8 +59,8 @@
   varying vec3 vNormal;
   void main() 
   {
-    float intensity = pow(0.1 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 ); 
-    gl_FragColor = vec4( 255.0, 1.0, 1.0, 1.0 ) * intensity;
+    float intensity = pow(0.7 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 1.0 ); 
+    gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;
   }
   </script>
 

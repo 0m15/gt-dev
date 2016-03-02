@@ -162,3 +162,13 @@ h2 span span {
   color: rgba(255, 255, 255, .9);
   -webkit-font-smoothing: antialiased;
 }
+
+#bpm-helper {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: #222;
+  padding: 10px;
+  z-index: 1000;
+  color: #fff;
+}

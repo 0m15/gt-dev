@@ -120,7 +120,7 @@ export default class Scene extends Component {
           style={{
             scale: launched ? spring(.75, springParams) : spring(1),
             opacity: launched ? spring(.5, springParams) : spring(1),
-            y: launched ? spring(-220, springParams) : spring(0),
+            y: launched ? spring(-230, springParams) : spring(0),
           }}>
           {values => 
             <div style={{
