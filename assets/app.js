@@ -61712,16 +61712,23 @@
 	  scene.fog = new _three2.default.Fog(0x000000, 0.8, 1600);
 	  scene.add(new _three2.default.AmbientLight(0xffffff));
 
+	  var emlight = new _three2.default.HemisphereLight(0x4fff42, 0x080820, 1);
+	  scene.add(emlight);
+
+	  var spotLight = new _three2.default.PointLight(0xff1075);
+	  spotLight.position.set(0, 0, 200);
+	  scene.add(spotLight);
+
 	  // lights
 	  light = new _three2.default.DirectionalLight(0xffffff, 1.0);
-	  light.position.set(0, 0, 100);
+	  light.position.set(0, 200, 100);
 
 	  scene.add(light);
 
 	  // camera
-	  camera = new _three2.default.PerspectiveCamera(85, screenX / screenY, 1, 2000);
+	  camera = new _three2.default.PerspectiveCamera(65, screenX / screenY, 1, 2000);
 
-	  camera.position.z = 750;
+	  camera.position.z = 1200;
 	  camera.lookAt(scene.position);
 
 	  // terrain
@@ -61782,24 +61789,61 @@
 	  // append canvas
 	  document.getElementById('visualization').appendChild(renderer.domElement);
 
+	  var rtParameters = {
+	    minFilter: _three2.default.LinearFilter,
+	    magFilter: _three2.default.LinearFilter,
+	    format: _three2.default.RGBFormat,
+	    stencilBuffer: true
+	  };
+
+	  var renderTarget = new _three2.default.WebGLRenderTarget(screenX, screenY, rtParameters);
+
+	  var effectBlend = new _three2.default.ShaderPass(_three2.default.BlendShader, "tDiffuse1");
+	  var effectFXAA = new _three2.default.ShaderPass(_three2.default.FXAAShader);
+
+	  effectFXAA.uniforms['resolution'].value.set(1 / screenX, 1 / screenY);
+
+	  var effectBleach = new _three2.default.ShaderPass(_three2.default.BleachBypassShader);
+	  effectBleach.renerToScreen = true;
+
+	  // tilt shift
+	  hblur = new _three2.default.ShaderPass(_three2.default.HorizontalTiltShiftShader);
+	  vblur = new _three2.default.ShaderPass(_three2.default.VerticalTiltShiftShader);
+
+	  hblur.uniforms['h'].value = 1 / window.innerWidth;
+	  vblur.uniforms['v'].value = 1 / window.innerHeight;
+
+	  var effectBloom = new _three2.default.BloomPass(1.5, 25, 8, 256);
+	  effectBloom.renderToScreen = true;
+
+	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
+	  vblur.renderToScreen = true;
+
+	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
+	  composer.addPass(new _three2.default.RenderPass(scene, camera));
+
+	  composer.addPass(effectFXAA);
+	  composer.addPass(hblur);
+	  composer.addPass(vblur);
+
 	  // play audio
 	  audio.play();
 	}
 
 	function generateHeight(width, height) {
 
-	  var size = width * height,
-	      data = new Uint8Array(size),
-	      perlin = new ImprovedNoise(),
-	      quality = 1,
-	      z = Math.random() * 100;
+	  var size = width * height;
+	  var data = new Uint8Array(size);
+	  var perlin = new ImprovedNoise();
+	  var quality = 1;
+	  var z = Math.random() * 100;
 
 	  for (var j = 0; j < 4; j++) {
 
 	    for (var i = 0; i < size; i++) {
 
-	      var x = i % width,
-	          y = ~ ~(i / width);
+	      var x = i % width;
+	      var y = ~ ~(i / width);
 	      data[i] += Math.abs(perlin.noise(x / quality, y / quality, z) * quality * 1.75);
 	    }
 
@@ -61811,11 +61855,11 @@
 
 	function terrain() {
 	  var worldWidth = 256;
-	  var worldDepth = 256;
+	  var worldDepth = 2000;
 	  var worldHalfWidth = worldWidth / 2,
 	      worldHalfDepth = worldDepth / 2;
 	  var data = generateHeight(worldWidth, worldDepth);
-	  var geometry = new _three2.default.PlaneBufferGeometry(7500, 20000, worldWidth - 1, worldDepth - 1);
+	  var geometry = new _three2.default.PlaneBufferGeometry(7500, 50000, worldWidth - 1, worldDepth - 1);
 	  geometry.rotateX(-Math.PI / 2);
 
 	  var vertices = geometry.attributes.position.array;
@@ -61826,7 +61870,8 @@
 
 	  var material = new _three2.default.MeshPhongMaterial({
 	    color: 0xffffff,
-	    wireframe: false
+	    wireframe: true,
+	    wireframeLinewidth: 0.1
 	  });
 
 	  return new _three2.default.Mesh(geometry, material);
@@ -61875,7 +61920,7 @@
 	  for (var i = 0; i < 1; i++) {
 	    var timbre = segment.timbre[i];
 	    var _radius = timbre; //timbre
-	    var geometry = new _three2.default.SphereGeometry(_radius, 1, 1);
+	    var geometry = new _three2.default.SphereGeometry(_radius, 8, 8);
 	    var material = new _three2.default.MeshPhongMaterial({
 	      color: 0xff3870,
 	      transparent: true,
@@ -61908,28 +61953,32 @@
 	  }
 	}
 
+	var loudnessMax;
+	var center;
+
 	function addSegment(segment) {
 	  var radius = arguments.length <= 1 || arguments[1] === undefined ? 10 : arguments[1];
 	  var multiplyScalar = arguments.length <= 2 || arguments[2] === undefined ? 10 : arguments[2];
 
 	  // loudness 0-1
-	  var loudnessMax = (-100 - segment.loudnessMax) * -1 / 100;
+	  loudnessMax = (-100 - segment.loudnessMax) * -1 / 100;
 
-	  var center = new _three2.default.Vector3(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, camera.position.z - 1000);
+	  center = new _three2.default.Vector3(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, camera.position.z - 1000);
 
-	  for (var i = 0; i < 3; i++) {
+	  for (var i = 0; i < 1; i++) {
 	    var timbre = segment.timbre[i];
-	    var _radius2 = logScale([0.78, 0.97], [4, 64], loudnessMax); //loudnessMax*12//timbre
-	    var geometry = new _three2.default.SphereGeometry(_radius2, 32, 32);
-	    var geometry1 = new _three2.default.SphereGeometry(_radius2, 1, 1);
+	    var _radius2 = logScale([0.85, 0.97], [2, 64], loudnessMax); //loudnessMax*12//timbre
+	    //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
+	    var geometry1 = new _three2.default.CylinderGeometry(_radius2, 0, _radius2 * 4);
 	    var material = new _three2.default.MeshPhongMaterial({
-	      color: loudnessMax > 0.9 ? Math.random() * 0xF30A49 : 0xF30A49,
+	      //color: loudnessMax > 0.9 ? Math.random()*0xF30A49 : 0xF30A49,
+	      color: Math.random() * 0xF30A49,
 	      transparent: true,
 	      opacity: 1,
-	      shading: _three2.default.FlatShading,
-	      wireframe: false
+	      shading: _three2.default.FlatShading
 	    });
 
+	    //wireframe: true
 	    var customMaterial = new _three2.default.ShaderMaterial({
 	      uniforms: {
 	        "c": { type: "f", value: 1.0 },
@@ -61945,24 +61994,17 @@
 	    });
 
 	    var materials = [material];
-	    //mesh = new THREE.Mesh( geometry, customMaterial);
 	    var _mesh = _three2.default.SceneUtils.createMultiMaterialObject(geometry1, materials);
 
-	    //const mesh = new THREE.Mesh( geometry, material )
-	    _mesh.scale.set(1, 1, 1);
-	    //_mesh.scale.x = mesh.scale.y = mesh.scale.z = timbre*0.01;
-	    _mesh.position.set(center.x + Math.random() * 80 - 80 / 2, center.y + Math.random() * 80 - 80 / 2, center.z);
-	    //_mesh.position.multiplyScalar( Math.random()*multiplyScalar );
-	    //_mesh.position.multiplyScalar( 2 );
-	    _mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2);
+	    // _mesh.rotation.set(
+	    //   Math.random() * 2,
+	    //   Math.random() * 2,
+	    //   Math.random() * 2)
+
+	    _mesh.position.set(center.x + Math.random() * 80 - 80 / 2, screenY / 2, center.z - 200);
+
 	    object3d.add(_mesh);
-
-	    //_meshGlow.scale.multiplyScalar(1.2)
-
-	    //object3d.add(_meshGlow)
-
-	    //tweenSegment(_meshGlow, timbre, segment.duration, i*100)
-	    tweenSegment(_mesh, timbre, segment.duration, i * 100);
+	    tweenSegment(_mesh, timbre, segment.duration, i * 200);
 	  }
 	}
 
@@ -61979,21 +62021,23 @@
 	  var delay = arguments.length <= 3 || arguments[3] === undefined ? 1 : arguments[3];
 	  var remove = arguments.length <= 4 || arguments[4] === undefined ? true : arguments[4];
 
+	  var loudnessMax = (-100 - loudness) * -1 / 100;
+
+	  console.log('loudness', loudnessMax);
+
 	  m.scale.set(.25, .25, .25);
-	  var scale = loudness / 20;
-	  // var tween = new TWEEN.Tween(m.position)
-	  //   .to({z: m.position.z+100 }, 1000)
-	  //   .easing(TWEEN.Easing.Exponential.Out)
-	  //   .start()
-	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, z: m.position.y }).delay(delay).to({ scale: scale, opacity: 0, z: m.position.z + 1200 }, duration * 1000).easing(_tween2.default.Easing.Exponential.In).onUpdate(function (t) {
+	  var scale = loudnessMax * 2;
+
+	  var tween = new _tween2.default.Tween(m.position).to({ z: m.position.z + 200 }, 3000).easing(_tween2.default.Easing.Quadratic.InOut).start();
+	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, y: m.position.y }).delay(delay).to({ scale: scale, opacity: 0, y: m.position.y - Math.random() * screenY }, duration * 1000).easing(_tween2.default.Easing.Quadratic.InOut).onUpdate(function (t) {
 	    m.scale.set(this.scale, this.scale, this.scale);
 	    //m.rotation.set()
-	    //m.position.setZ(this.z)
+	    m.position.setY(this.y);
 	  }).onComplete(function () {
-	    new _tween2.default.Tween({ scale: scale, z: m.position.z, rotation: 0 }).to({ scale: 1, z: m.position.z + 600, rotation: scale }, 2000).easing(_tween2.default.Easing.Exponential.Out).onUpdate(function (t) {
-	      //m.scale.set(this.scale, this.scale, this.scale)
+	    new _tween2.default.Tween({ scale: scale, z: m.position.z, rotation: 0, opacity: 1 }).to({ scale: 1, z: m.position.z + 600, rotation: scale, opacity: 0 }, 3000).easing(_tween2.default.Easing.Exponential.Out).onUpdate(function (t) {
+	      m.scale.set(this.scale, this.scale, this.scale);
 	      //m.rotation.set(this.rotation, this.rotation, this.rotation)
-	      m.children[0].material.opacity = 1 - t;
+	      m.children[0].material.opacity = this.opacity;
 	    }).onComplete(function () {
 	      if (remove) object3d.remove(m);
 	    }).start();
@@ -62015,14 +62059,14 @@
 	  // }
 
 	  // var tween = new TWEEN
-	  //   .Tween(object3d.scale)
+	  //   .Tween(object3d.rotation)
 	  //   .to({ x: -1, y: -1, z: -1 }, scene.duration*1000)
 	  //   .easing(TWEEN.Easing.Exponential.In)
 	  //   .onComplete(function() {})
 	  //   .start()
 	}
 
-	audio.currentTime = 0;
+	audio.currentTime = 150;
 
 	var barInterval = 1 / (_audioData2.default.info.bpm / 60);
 	var lastTime = 0;
@@ -62034,7 +62078,6 @@
 	clock.start();
 
 	function animate(time) {
-	  console.log('object3d.children', object3d.children.length);
 	  currentSegment = segmentsByTime[audio.currentTime.toFixed(1)];
 	  currentScene = scenesByTime[audio.currentTime.toFixed(0)];
 
@@ -62048,15 +62091,14 @@
 
 	  if (currentSegment) {
 
-	    //light.intensity = segment ? segment.loudnessMax * -1 * 0.5 : 0.5
+	    //light.intensity = ((-100 - currentSegment.loudnessMax) * -1) / 100
 
 	    if (currentSegment.loudnessMax > -20 && !tweening) {
-
 	      //tweenSegment(mesh, segment, false)
 	    }
 
 	    if (currentSegment.loudnessMax > -22 && currentSegment.start != lastSegment.start) {
-	      document.getElementById('bpm-helper').innerHTML = "LOUDNESS: " + currentSegment.loudnessMax;
+	      //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
 	      tweenLight(light, currentSegment.loudnessMax * -1, currentSegment.duration);
 	      addSegment(currentSegment, 60, 100);
 	      lastSegment = currentSegment;
@@ -62070,14 +62112,17 @@
 
 	  // tempo bpm
 	  if (!lastTime || audio.currentTime - lastTime >= barInterval) {
-	    particleSystem.scale.set(1.1, 1.1, 1.1);
+	    //particleSystem.scale.set(1.1,1.1,1.1)
+
 	    lastTime = audio.currentTime;
 	  }
-	  cameraZ -= 4;
+
+	  cameraZ -= 6;
 	  camera.position.z = cameraZ;
 
 	  requestAnimationFrame(animate);
-	  renderer.render(scene, camera);
+	  //renderer.render(scene, camera)
+	  composer.render(renderer);
 
 	  _tween2.default.update();
 	}
@@ -65822,7 +65867,7 @@
 
 	      var show = this.state.show;
 
-	      var springParams = { stiffness: 280, damping: 30 };
+	      var springParams = { stiffness: 280, damping: 20 };
 	      var springParamsAlt = { stiffness: 200, damping: 30 };
 
 	      return _react2.default.createElement(
@@ -65833,11 +65878,11 @@
 	          _reactMotion.Motion,
 	          {
 	            defaultStyle: {
-	              y: -100,
+	              y: 100,
 	              opacity: 0
 	            },
 	            style: {
-	              y: show ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(-100, springParamsAlt),
+	              y: show ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(100, springParamsAlt),
 	              opacity: show ? (0, _reactMotion.spring)(1) : (0, _reactMotion.spring)(0)
 	            } },
 	          function (values) {
@@ -65877,10 +65922,10 @@
 	                show && _react2.default.createElement(
 	                  _reactMotion.StaggeredMotion,
 	                  {
-	                    defaultStyles: [{ y: -100, opacity: 0 }, { y: -200, opacity: 0 }, { y: -300, opacity: 0 }, { y: -400, opacity: 0 }],
+	                    defaultStyles: [{ y: -30, opacity: 0 }, { y: -40, opacity: 0 }, { y: -50, opacity: 0 }, { y: -60, opacity: 0 }],
 	                    styles: function styles(prevInterpolatedStyles) {
 	                      return prevInterpolatedStyles.map(function (_, i) {
-	                        return i === 0 ? { y: (0, _reactMotion.spring)(0, springParams), opacity: (0, _reactMotion.spring)(1, springParams) } : {
+	                        return i === 0 ? { y: (0, _reactMotion.spring)(40, springParams), opacity: (0, _reactMotion.spring)(1, springParams) } : {
 	                          opacity: (0, _reactMotion.spring)(prevInterpolatedStyles[i - 1].opacity, springParams),
 	                          y: (0, _reactMotion.spring)(prevInterpolatedStyles[i - 1].y, springParams)
 	                        };
@@ -65903,7 +65948,8 @@
 	                            } },
 	                          _react2.default.createElement(
 	                            'a',
-	                            { href: '#', style: { color: '#EB5033', textDecoration: 'none' } },
+	                            { href: '#',
+	                              style: { color: '#fff', fontWeight: 100, textDecoration: 'none' } },
 	                            items[i].title
 	                          )
 	                        );
@@ -66021,10 +66067,11 @@
 	      //const geometry = new THREE.TorusKnotGeometry(320, 40, 120, 4)
 	      var material = new _three2.default.MeshPhongMaterial({
 	        color: this.props.color || 0xffffff,
-	        wireframe: true
+	        wireframe: true,
+	        wireframeLinewidth: 0.1
+	        // transparent: true,
+	        // opacity: 1.0
 	      });
-	      // transparent: true,
-	      // opacity: 1.0
 	      var mesh = new _three2.default.Mesh(geometry, material);
 	      mesh.scale.x = mesh.scale.y = mesh.scale.z = 1;
 	      return mesh;
@@ -66082,7 +66129,7 @@
 	          style: { cursor: 'pointer' } },
 	        _react2.default.createElement(_ThreeScene2.default, {
 	          ambientLightColor: 0xffffff,
-	          fogColor: 0x35013F,
+	          fogColor: 0x121212,
 	          height: 96,
 	          width: 96,
 	          initScene: this.renderScene,
@@ -66132,7 +66179,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}\n\n#bpm-helper {\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 
@@ -66522,7 +66569,7 @@
 
 
 	// module
-	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  background-size: cover;\n  position: relative;\n}\n\n\nbody:after {\n  content: \"\";\n  position: absolute;\n  /*background: rgba(10, 0, 6, .9);*/\n  background: linear-gradient(#35013F, #EB5033);\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
+	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  background-size: cover;\n  position: relative;\n}\n\n\nbody:after {\n  content: \"\";\n  position: absolute;\n  /*background: rgba(10, 0, 6, .9);*/\n  background: linear-gradient(#35013F, #EB5033);\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n#bpm-helper {\n  display: none;\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
 
 	// exports
 

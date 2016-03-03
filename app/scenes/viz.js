@@ -157,16 +157,23 @@ export function init() {
   scene.fog = new THREE.Fog( 0x000000, 0.8, 1600 )
   scene.add( new THREE.AmbientLight( 0xffffff) );
 
+  var emlight = new THREE.HemisphereLight( 0x4fff42, 0x080820, 1 );
+  scene.add(emlight)
+
+  var spotLight = new THREE.PointLight( 0xff1075 );
+  spotLight.position.set( 0, 0, 200 );
+  scene.add( spotLight );
+
   // lights
   light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-  light.position.set(0, 0, 100)
+  light.position.set(0, 200, 100)
 
   scene.add(light)
   
   // camera
-  camera = new THREE.PerspectiveCamera( 85, screenX / screenY, 1, 2000)
+  camera = new THREE.PerspectiveCamera( 65, screenX / screenY, 1, 2000)
   
-  camera.position.z = 750
+  camera.position.z = 1200
   camera.lookAt( scene.position );
     
   // terrain
@@ -234,20 +241,62 @@ export function init() {
   // append canvas
   document.getElementById('visualization').appendChild( renderer.domElement );
 
+
+  var rtParameters = { 
+    minFilter: THREE.LinearFilter, 
+    magFilter: THREE.LinearFilter, 
+    format: THREE.RGBFormat, 
+    stencilBuffer: true 
+  };
+
+  var renderTarget = new THREE.WebGLRenderTarget( screenX, screenY, rtParameters );
+
+  var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
+  var effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+  
+  effectFXAA.uniforms[ 'resolution' ].value.set( 1 / screenX, 1 / screenY );
+
+  var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
+  effectBleach.renerToScreen=true
+
+  // tilt shift
+  hblur = new THREE.ShaderPass( THREE.HorizontalTiltShiftShader );
+  vblur = new THREE.ShaderPass( THREE.VerticalTiltShiftShader );
+  
+  hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
+  vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
+
+  var effectBloom = new THREE.BloomPass(1.5, 25, 8, 256);
+  effectBloom.renderToScreen = true
+  
+  composer = new THREE.EffectComposer( renderer, renderTarget );
+  vblur.renderToScreen = true
+
+  composer = new THREE.EffectComposer( renderer, renderTarget );
+  composer.addPass( new THREE.RenderPass( scene, camera ) );
+
+  composer.addPass( effectFXAA );
+  composer.addPass( hblur );
+  composer.addPass( vblur );
+
   // play audio
   audio.play()
 }
 
 function generateHeight( width, height ) {
 
-  var size = width * height, data = new Uint8Array( size ),
-  perlin = new ImprovedNoise(), quality = 1, z = Math.random() * 100;
+  var size = width * height
+  var data = new Uint8Array( size )
+  var perlin = new ImprovedNoise()
+  var quality = 1
+  var z = Math.random() * 100;
 
   for ( var j = 0; j < 4; j ++ ) {
 
     for ( var i = 0; i < size; i ++ ) {
 
-      var x = i % width, y = ~~ ( i / width );
+      var x = i % width
+      var y = ~~ ( i / width );
       data[ i ] += Math.abs( perlin.noise( x / quality, y / quality, z ) * quality * 1.75 );
 
     }
@@ -262,12 +311,11 @@ function generateHeight( width, height ) {
 
 function terrain() {
   var worldWidth = 256
-  var worldDepth = 256
+  var worldDepth = 2000
   var worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
   var data = generateHeight( worldWidth, worldDepth );
-  var geometry = new THREE.PlaneBufferGeometry( 7500, 20000, worldWidth - 1, worldDepth - 1 );
+  var geometry = new THREE.PlaneBufferGeometry( 7500, 50000, worldWidth - 1, worldDepth - 1 );
   geometry.rotateX( - Math.PI / 2 );
-
 
   var vertices = geometry.attributes.position.array;
 
@@ -278,7 +326,8 @@ function terrain() {
 
   var material = new THREE.MeshPhongMaterial( {
     color: 0xffffff,
-    wireframe: false,
+    wireframe: true,
+    wireframeLinewidth: 0.1
   });
 
   return new THREE.Mesh(geometry, material)
@@ -325,7 +374,7 @@ function __addSegment(segment, radius=10, multiplyScalar=10) {
   for(var i = 0; i < 1; i++) {
     const timbre = segment.timbre[i]
     const radius = timbre//timbre
-    var geometry = new THREE.SphereGeometry( radius, 1, 1 );
+    var geometry = new THREE.SphereGeometry( radius, 8, 8 );
     const material = new THREE.MeshPhongMaterial({
       color: 0xff3870, 
       transparent: true,
@@ -365,28 +414,32 @@ function __addSegment(segment, radius=10, multiplyScalar=10) {
 }
 
 
+var loudnessMax;
+var center;
+
 function addSegment(segment, radius=10, multiplyScalar=10) {
   // loudness 0-1
-  const loudnessMax = ((-100 - segment.loudnessMax) * -1) / 100
+  loudnessMax = ((-100 - segment.loudnessMax) * -1) / 100
 
-  const center = new THREE.Vector3( 
+  center = new THREE.Vector3( 
     Math.random() * screenX - screenX / 2,
     Math.random() * screenY - screenY / 2, 
     (camera.position.z)-1000
   );
 
 
-  for(var i = 0; i < 3; i++) {
+  for(var i = 0; i < 1; i++) {
     const timbre = segment.timbre[i]
-    const radius = logScale([0.78, 0.97], [4, 64], loudnessMax)//loudnessMax*12//timbre
-    var geometry = new THREE.SphereGeometry( radius, 32, 32 );
-    var geometry1 = new THREE.SphereGeometry( radius, 1, 1);
+    const radius = logScale([0.85, 0.97], [2, 64], loudnessMax)//loudnessMax*12//timbre
+    //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
+    var geometry1 = new THREE.CylinderGeometry(radius, 0, radius*4)
     const material = new THREE.MeshPhongMaterial({
-      color: loudnessMax > 0.9 ? Math.random()*0xF30A49 : 0xF30A49, 
+      //color: loudnessMax > 0.9 ? Math.random()*0xF30A49 : 0xF30A49, 
+      color: Math.random()*0xF30A49, 
       transparent: true,
       opacity: 1,
       shading: THREE.FlatShading,
-      wireframe: false
+      //wireframe: true
     })
 
     var customMaterial = new THREE.ShaderMaterial({
@@ -404,30 +457,21 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     });
 
     const materials = [material]
-    //mesh = new THREE.Mesh( geometry, customMaterial);
     const _mesh = THREE.SceneUtils.createMultiMaterialObject(geometry1, materials)
 
-    //const mesh = new THREE.Mesh( geometry, material )
-    _mesh.scale.set(1, 1, 1)
-    //_mesh.scale.x = mesh.scale.y = mesh.scale.z = timbre*0.01;
+    // _mesh.rotation.set( 
+    //   Math.random() * 2, 
+    //   Math.random() * 2, 
+    //   Math.random() * 2)
+
     _mesh.position.set(
       center.x+Math.random()*80-80/2, 
-      center.y+Math.random()*80-80/2, 
-      center.z)
-    //_mesh.position.multiplyScalar( Math.random()*multiplyScalar );
-    //_mesh.position.multiplyScalar( 2 );
-    _mesh.rotation.set( Math.random() * 2, Math.random() * 2, Math.random() * 2 );
+      screenY/2, 
+      center.z-200)
+    
+  
     object3d.add(_mesh)
-
-    //_meshGlow.scale.multiplyScalar(1.2)
-
-    
-    
-    //object3d.add(_meshGlow)
-    
-
-    //tweenSegment(_meshGlow, timbre, segment.duration, i*100)
-    tweenSegment(_mesh, timbre, segment.duration, i*100)
+    tweenSegment(_mesh, timbre, segment.duration, i*200)
 
     
   }
@@ -449,31 +493,36 @@ function tweenLight(light, loudness, duration) {
 }
 
 function tweenSegment(m, loudness, duration, delay=1, remove=true) {
+  const loudnessMax = ((-100 - loudness) * -1) / 100
+
+  console.log('loudness', loudnessMax)
+
   m.scale.set(.25,.25,.25)
-  const scale = loudness/20
-  // var tween = new TWEEN.Tween(m.position)
-  //   .to({z: m.position.z+100 }, 1000)
-  //   .easing(TWEEN.Easing.Exponential.Out)
-  //   .start()
+  const scale = loudnessMax*2
+
+  var tween = new TWEEN.Tween(m.position)
+    .to({z: m.position.z+200 }, 3000)
+    .easing(TWEEN.Easing.Quadratic.InOut)
+    .start()
   var tween = new TWEEN
-    .Tween({ scale: .1, opacity: 1, z: m.position.y })
+    .Tween({ scale: .1, opacity: 1, y: m.position.y })
     .delay(delay)
-    .to({ scale: scale, opacity: 0, z: m.position.z+1200 }, (duration)*1000)
-    .easing(TWEEN.Easing.Exponential.In)
+    .to({ scale: scale, opacity: 0, y: m.position.y-(Math.random()*screenY) }, (duration)*1000)
+    .easing(TWEEN.Easing.Quadratic.InOut)
     .onUpdate(function(t) {
       m.scale.set(this.scale, this.scale, this.scale)
       //m.rotation.set()
-      //m.position.setZ(this.z)
+      m.position.setY(this.y)
     })
     .onComplete(function() {
       new TWEEN
-        .Tween({ scale: scale, z: m.position.z, rotation:0 })
-        .to({ scale: 1, z: m.position.z+600,rotation: scale }, 2000)
+        .Tween({ scale: scale, z: m.position.z, rotation:0, opacity: 1 })
+        .to({ scale: 1, z: m.position.z+600,rotation: scale, opacity: 0 }, 3000)
         .easing(TWEEN.Easing.Exponential.Out)
         .onUpdate(function(t) {
-          //m.scale.set(this.scale, this.scale, this.scale)
+          m.scale.set(this.scale, this.scale, this.scale)
           //m.rotation.set(this.rotation, this.rotation, this.rotation)
-          m.children[0].material.opacity=1-t
+          m.children[0].material.opacity=this.opacity
         })  
         .onComplete(function() {
           if(remove) object3d.remove(m)
@@ -508,14 +557,14 @@ function addScene(scene) {
   // }
 
   // var tween = new TWEEN
-  //   .Tween(object3d.scale)
+  //   .Tween(object3d.rotation)
   //   .to({ x: -1, y: -1, z: -1 }, scene.duration*1000)
   //   .easing(TWEEN.Easing.Exponential.In)
   //   .onComplete(function() {})
   //   .start()
 }
 
-audio.currentTime=0
+audio.currentTime=150
 
 const barInterval = 1 / (audioData.info.bpm / 60)
 let lastTime = 0
@@ -528,7 +577,6 @@ var clock = new THREE.Clock( );
 clock.start()
 
 export function animate(time) {
-  console.log('object3d.children', object3d.children.length)
   currentSegment = segmentsByTime[audio.currentTime.toFixed(1)]
   currentScene = scenesByTime[audio.currentTime.toFixed(0)]  
 
@@ -542,15 +590,14 @@ export function animate(time) {
 
   if(currentSegment) {
 
-    //light.intensity = segment ? segment.loudnessMax * -1 * 0.5 : 0.5
+    //light.intensity = ((-100 - currentSegment.loudnessMax) * -1) / 100
 
     if(currentSegment.loudnessMax > -20 && !tweening) {
-      
       //tweenSegment(mesh, segment, false)
     }
 
     if(currentSegment.loudnessMax > -22 && currentSegment.start != lastSegment.start) {
-      document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
+      //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
       tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
       addSegment(currentSegment, 60, 100)
       lastSegment = currentSegment
@@ -565,14 +612,17 @@ export function animate(time) {
 
   // tempo bpm
   if(!lastTime || audio.currentTime - lastTime >= barInterval) {
-    particleSystem.scale.set(1.1,1.1,1.1)
+    //particleSystem.scale.set(1.1,1.1,1.1)
+    
     lastTime = audio.currentTime
   }
-  cameraZ -= 4
+  
+  cameraZ -= 6
   camera.position.z = cameraZ
 
   requestAnimationFrame(animate)
-  renderer.render(scene, camera)
+  //renderer.render(scene, camera)
+  composer.render(renderer)
 
   TWEEN.update()
 }

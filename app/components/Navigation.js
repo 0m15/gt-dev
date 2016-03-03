@@ -37,7 +37,7 @@ export default class Navigation extends Component {
   render() {
     
     const { show } = this.state
-    const springParams = {stiffness: 280, damping: 30}
+    const springParams = {stiffness: 280, damping: 20}
     const springParamsAlt = {stiffness: 200, damping: 30}
 
     return (
@@ -45,11 +45,11 @@ export default class Navigation extends Component {
         <IcosahedronButton onClick={this.show} />
         <Motion 
           defaultStyle={{
-            y: -100,
+            y: 100,
             opacity: 0
           }} 
           style={{
-            y: show ? spring(0, springParamsAlt) : spring(-100, springParamsAlt),
+            y: show ? spring(0, springParamsAlt) : spring(100, springParamsAlt),
             opacity: show ? spring(1) : spring(0),
           }}>
           {values => 
@@ -67,7 +67,7 @@ export default class Navigation extends Component {
                 height: '100%',
                 backgroundColor: 'rgba(0, 0, 0, .85)',
                 color: '#ababab',
-                paddingLeft: '10%'
+                paddingLeft: '10%',
               }}>
               
               <div style={{
@@ -85,14 +85,14 @@ export default class Navigation extends Component {
 
                 {show && <StaggeredMotion
                   defaultStyles={[
-                    {y: -100, opacity: 0}, 
-                    {y: -200, opacity: 0}, 
-                    {y: -300, opacity: 0},
-                    {y: -400, opacity: 0}
+                    {y: -30, opacity: 0}, 
+                    {y: -40, opacity: 0}, 
+                    {y: -50, opacity: 0},
+                    {y: -60, opacity: 0}
                     ]}
                   styles={prevInterpolatedStyles => prevInterpolatedStyles.map((_, i) => {
                     return i === 0
-                      ? {y: spring(0, springParams), opacity: spring(1, springParams)}
+                      ? {y: spring(40, springParams), opacity: spring(1, springParams)}
                       : {
                           opacity: spring(prevInterpolatedStyles[i - 1].opacity, springParams),
                           y: spring(prevInterpolatedStyles[i - 1].y, springParams)
@@ -109,7 +109,8 @@ export default class Navigation extends Component {
                           opacity: style.opacity,
                           transform: `translate3d(0, ${style.y}px, 0)`
                         }}>
-                          <a href="#" style={{color:'#EB5033',textDecoration:'none'}}>{items[i].title}</a>
+                          <a href="#" 
+                          style={{color:'#fff',fontWeight:100,textDecoration:'none'}}>{items[i].title}</a>
                         </div>)
                       }
                     </div>

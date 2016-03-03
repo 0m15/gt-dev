@@ -24,6 +24,17 @@ a:link {
   color: #fff;
 }
 
+#bpm-helper {
+  display: none;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: #222;
+  padding: 10px;
+  z-index: 1000;
+  color: #fff;
+}
+
 /*canvas {
   position: fixed;
   top: 0;

@@ -42,6 +42,7 @@ export default class IcosahedronButton extends Component {
     const material = new THREE.MeshPhongMaterial( { 
       color: this.props.color||0xffffff, 
       wireframe: true,
+      wireframeLinewidth: 0.1
       // transparent: true,
       // opacity: 1.0
     });
@@ -107,7 +108,7 @@ export default class IcosahedronButton extends Component {
         style={{cursor:'pointer'}}>
         <ThreeScene 
           ambientLightColor={0xffffff}
-          fogColor={0x35013F}
+          fogColor={0x121212}
           height={96}
           width={96}
           initScene={this.renderScene} 
