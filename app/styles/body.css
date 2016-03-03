@@ -3,20 +3,9 @@ body {
   font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;
   color: #fff;
   /*background-image: url(/assets/imgs/bg@2x.jpg);*/
+  background: linear-gradient(#35013F, #EB5033);
   background-size: cover;
   position: relative;
-}
-
-
-body:after {
-  content: "";
-  position: absolute;
-  /*background: rgba(10, 0, 6, .9);*/
-  background: linear-gradient(#35013F, #EB5033);
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
 }
 
 a,

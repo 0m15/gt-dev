@@ -25,6 +25,9 @@ require('../vendor/js/MaskPass.js')
 require('../vendor/js/StereoEffect.js')
 require('../vendor/js/OrbitControls.js')
 require('../vendor/js/ImprovedNoise.js')
+require('../vendor/js/SkyShader.js')
+require('../vendor/js/FirstPersonControls.js')
+require('../vendor/js/FresnelShader.js')
 
 var PARTICLE_COUNT = 250
 
@@ -59,7 +62,8 @@ var lastSegment = { start:0 };
 var { analyser, audio } = fft()
 var cameraZ = 0
 var sunlight;
-
+var camControls;
+var sky;
 
 const objects = []
 
@@ -149,61 +153,105 @@ const scenesByTime = getScenesByTime()
 
 console.log('scenesByTime', scenesByTime)
 
+function initSky() {
+
+  // Add Sky Mesh
+  sky = new THREE.Sky();
+  scene.add( sky.mesh );
+
+  // Add Sun Helper
+  var sunSphere = new THREE.Mesh(
+    new THREE.SphereBufferGeometry( 250, 16, 8 ),
+    new THREE.MeshBasicMaterial( { color: 0xffffff } )
+  );
+
+  sunSphere.position.y = 100;
+  sunSphere.visible = true;
+  scene.add( sunSphere );
+
+  /// GUI
+
+  var effectController  = {
+    turbidity: 1,
+    reileigh: 4,
+    mieCoefficient: 0.005,
+    mieDirectionalG: 0.8,
+    luminance: 1,
+    inclination: 0.49, // elevation / inclination
+    azimuth: 0.25, // Facing front,
+    sun: true
+  };
+
+  var distance = 400000;
+
+  // function guiChanged() {
+
+  var uniforms = sky.uniforms;
+  uniforms.turbidity.value = effectController.turbidity;
+  uniforms.reileigh.value = effectController.reileigh;
+  uniforms.luminance.value = effectController.luminance;
+  uniforms.mieCoefficient.value = effectController.mieCoefficient;
+  uniforms.mieDirectionalG.value = effectController.mieDirectionalG;
+
+  var theta = Math.PI * ( 0.47 - 0.5 );
+  var phi = 2 * Math.PI * ( 0.25 - 0.5 );
+
+  sunSphere.position.x = distance * Math.cos( phi );
+  sunSphere.position.y = distance * Math.sin( phi ) * Math.sin( theta );
+  sunSphere.position.z = distance * Math.sin( phi ) * Math.cos( theta );
+
+  sunSphere.visible = effectController.sun;
+
+  sky.uniforms.sunPosition.value.copy( sunSphere.position );
+
+}
 
 export function init() {
 
   // scene
   scene = new THREE.Scene()
   
-  scene.fog = new THREE.Fog( 0x121212, 0.8, 1600 )
+  scene.fog = new THREE.Fog( 0x121212, 0.8, 200000 )
   scene.add( new THREE.AmbientLight( 0xffffff) );
 
-  var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
-  hemiLight.color.setHSL( 0.6, 1, 0.6 );
-  hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
-  hemiLight.position.set( 0, 500, 0 );
-  scene.add(hemiLight)
+  // var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+  // hemiLight.color.setHSL( 0.6, 1, 0.6 );
+  // hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+  // hemiLight.position.set( 0, 500, 0 );
+  // scene.add(hemiLight)
 
-  var spotLight = new THREE.PointLight( 0xff1075 );
-  spotLight.position.set( 0, 0, 200 );
-  scene.add( spotLight );
+  // var spotLight = new THREE.PointLight( 0xff1075 );
+  // spotLight.position.set( 0, 0, 200 );
+  // scene.add( spotLight );
 
   // lights
   light = new THREE.DirectionalLight( 0xffffff, 1.0 );
   light.position.set(0, 200, 100)
 
   scene.add(light)
-  
-  var sphere = new THREE.SphereGeometry( 280, 16, 8 );
-  // sunLight = new THREE.PointLight( 0xff3300, 12.5, 100 );
-  // sunLight.position.setZ(-2000)
-  // sunLight.position.setY(300)
-  // sunLight.position.setX(40)
-  // sunLight.add( new THREE.Mesh( sphere, new THREE.MeshPhongMaterial( { color: 0xff3300, fog: false } ) ) );
-  // scene.add( sunLight );
 
-  var sunlight = new THREE.DirectionalLight();
-  sunlight.position.set(250, 250, 250);
-  sunlight.intensity = 0.5;
-  sunlight.castShadow = true;
-  sunlight.shadowCameraVisible = true;
-  sunlight.shadowCameraNear = 250;
-  sunlight.shadowCameraFar = 600;
-  sunlight.shadowCameraLeft = -200;
-  sunlight.shadowCameraRight = 200;
-  sunlight.shadowCameraTop = 200;
-  sunlight.shadowCameraBottom = -200;
 
   // camera
-  camera = new THREE.PerspectiveCamera( 65, screenX / screenY, 1, 2000)
+  camera = new THREE.PerspectiveCamera( 65, screenX / screenY, 1, 2000000)
   
   camera.position.z = 1200
   camera.lookAt( scene.position );
-    
+  
+  camControls = new THREE.FirstPersonControls(camera);
+  camControls.lookSpeed = 0.2;
+  camControls.movementSpeed = 1;
+  camControls.noFly = true;
+  camControls.lookVertical = true;
+  camControls.constrainVertical = true;
+  camControls.verticalMin = 1.0;
+  camControls.verticalMax = 2.0;
+  camControls.lon = -190;
+  camControls.lat = 120;
+
   // terrain
   var terrainMesh = terrain()
   terrainMesh.position.setY(20)
-  scene.add(terrainMesh)
+  //scene.add(terrainMesh)
 
   // main object
   const geometry = new THREE.IcosahedronGeometry( 160 );
@@ -236,6 +284,8 @@ export function init() {
 
   object3d = new THREE.Object3D()
   scene.add(object3d)
+
+  initSky()
 
   // const _meshGlow = new THREE.Mesh( object3d.geometry, customMaterial.clone() );
   // _meshGlow.position.setX(_mesh.position.x)
@@ -448,7 +498,7 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
   center = new THREE.Vector3( 
     Math.random() * screenX - screenX / 2,
     Math.random() * screenY - screenY / 2, 
-    (camera.position.z)-1000
+    (camera.position.z)-1200
   );
 
 
@@ -456,6 +506,11 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     const timbre = segment.timbre[i]
     const radius = logScale([0.85, 0.97], [2, 64], loudnessMax)//loudnessMax*12//timbre
     //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
+
+    var shader = THREE.FresnelShader;
+    var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+    var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms };
+    var materialA = new THREE.ShaderMaterial( parameters );
 
     var geometry1 = loudnessMax > 0.92 ? new THREE.SphereGeometry( radius, 4, 4) : new THREE.CylinderGeometry(radius, 0, radius*4)
     const material = new THREE.MeshPhongMaterial({
@@ -491,7 +546,7 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
 
     _mesh.position.set(
       center.x+Math.random()*80-80/2, 
-      screenY/2, 
+      loudnessMax <= 0.90 ? -screenY/2 : screenY/2, 
       center.z-200)
     
   
@@ -520,13 +575,11 @@ function tweenLight(light, loudness, duration) {
 function tweenSegment(m, loudness, duration, delay=1, remove=true) {
   const loudnessMax = ((-100 - loudness) * -1) / 100
 
-  console.log('loudness', loudnessMax)
-
   m.scale.set(.25,.25,.25)
-  const scale = loudnessMax*2
+  const scale = loudnessMax*2.5
 
   var tween = new TWEEN.Tween(m.position)
-    .to({z: m.position.z+200 }, 3000)
+    .to({z: m.position.z+5 }, 3000)
     .easing(TWEEN.Easing.Quadratic.InOut)
     .start()
   var tween = new TWEEN
@@ -545,9 +598,9 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
         .to({ scale: 1, z: m.position.z+600,rotation: scale, opacity: 0 }, 3000)
         .easing(TWEEN.Easing.Exponential.Out)
         .onUpdate(function(t) {
-          m.scale.set(this.scale, this.scale, this.scale)
+          //m.scale.set(this.scale, this.scale, this.scale)
           //m.rotation.set(this.rotation, this.rotation, this.rotation)
-          m.children[0].material.opacity=this.opacity
+          //m.children[0].material.opacity=this.opacity
         })  
         .onComplete(function() {
           if(remove) object3d.remove(m)
@@ -589,7 +642,7 @@ function addScene(scene) {
   //   .start()
 }
 
-audio.currentTime=150
+audio.currentTime=0
 
 const barInterval = 1 / (audioData.info.bpm / 60)
 let lastTime = 0
@@ -623,22 +676,31 @@ export function animate(time) {
 
     if(currentSegment.loudnessMax > -22 && currentSegment.start != lastSegment.start) {
       //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
-      tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
+      //tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
       addSegment(currentSegment, 60, 100)
       lastSegment = currentSegment
     }
 
     if(currentSegment.loudnessMax < -8) {
+      //sky.uniforms.reileigh.intensity += audio.currentTime/1000000
       //addSegment(currentSegment, 2, 3000)
       //lastSegment = currentSegment
     }
 
   }
+  
+  sky.uniforms.turbidity.value = audio.currentTime/100;
+  // sky.uniforms.reileigh.value = ;
+  // sky.uniforms.luminance.value = ;
+  // sky.uniforms.mieCoefficient.value = ;
+  // sky.uniforms.mieDirectionalG.value = ;
+
+  sky.uniforms.reileigh.value = 4 - (audio.currentTime/50)
 
   // tempo bpm
   if(!lastTime || audio.currentTime - lastTime >= barInterval) {
     //particleSystem.scale.set(1.1,1.1,1.1)
-    
+    sky.uniforms.turbidity.value = 1.0
     lastTime = audio.currentTime
   }
   
@@ -648,6 +710,7 @@ export function animate(time) {
   requestAnimationFrame(animate)
   renderer.render(scene, camera)
   //composer.render(renderer)
+  camControls.update(clock.getDelta())
 
   TWEEN.update()
 }

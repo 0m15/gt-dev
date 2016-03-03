@@ -60,9 +60,9 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(210); // app/index.js
+	__webpack_require__(213); // app/index.js
 
-	__webpack_require__(212);
+	__webpack_require__(215);
 
 	var app = _reactDom2.default.render(_react2.default.createElement(_scenes2.default, null), document.getElementById('gt-app'));
 
@@ -19695,15 +19695,15 @@
 
 	var visualization = _interopRequireWildcard(_viz);
 
-	var _sfx = __webpack_require__(188);
+	var _sfx = __webpack_require__(191);
 
-	var _reactMotion = __webpack_require__(189);
+	var _reactMotion = __webpack_require__(192);
 
-	var _MotionButton = __webpack_require__(203);
+	var _MotionButton = __webpack_require__(206);
 
 	var _MotionButton2 = _interopRequireDefault(_MotionButton);
 
-	var _Navigation = __webpack_require__(204);
+	var _Navigation = __webpack_require__(207);
 
 	var _Navigation2 = _interopRequireDefault(_Navigation);
 
@@ -19731,7 +19731,7 @@
 
 	console.log(audioData);
 
-	__webpack_require__(206);
+	__webpack_require__(209);
 
 	var Scene = function (_Component) {
 	  _inherits(Scene, _Component);
@@ -61574,6 +61574,9 @@
 	__webpack_require__(185);
 	__webpack_require__(186);
 	__webpack_require__(187);
+	__webpack_require__(188);
+	__webpack_require__(189);
+	__webpack_require__(190);
 
 	var PARTICLE_COUNT = 250;
 
@@ -61613,6 +61616,8 @@
 
 	var cameraZ = 0;
 	var sunlight;
+	var camControls;
+	var sky;
 
 	var objects = [];
 
@@ -61705,23 +61710,72 @@
 
 	console.log('scenesByTime', scenesByTime);
 
+	function initSky() {
+
+	  // Add Sky Mesh
+	  sky = new _three2.default.Sky();
+	  scene.add(sky.mesh);
+
+	  // Add Sun Helper
+	  var sunSphere = new _three2.default.Mesh(new _three2.default.SphereBufferGeometry(250, 16, 8), new _three2.default.MeshBasicMaterial({ color: 0xffffff }));
+
+	  sunSphere.position.y = 100;
+	  sunSphere.visible = true;
+	  scene.add(sunSphere);
+
+	  /// GUI
+
+	  var effectController = {
+	    turbidity: 1,
+	    reileigh: 4,
+	    mieCoefficient: 0.005,
+	    mieDirectionalG: 0.8,
+	    luminance: 1,
+	    inclination: 0.49, // elevation / inclination
+	    azimuth: 0.25, // Facing front,
+	    sun: true
+	  };
+
+	  var distance = 400000;
+
+	  // function guiChanged() {
+
+	  var uniforms = sky.uniforms;
+	  uniforms.turbidity.value = effectController.turbidity;
+	  uniforms.reileigh.value = effectController.reileigh;
+	  uniforms.luminance.value = effectController.luminance;
+	  uniforms.mieCoefficient.value = effectController.mieCoefficient;
+	  uniforms.mieDirectionalG.value = effectController.mieDirectionalG;
+
+	  var theta = Math.PI * (0.47 - 0.5);
+	  var phi = 2 * Math.PI * (0.25 - 0.5);
+
+	  sunSphere.position.x = distance * Math.cos(phi);
+	  sunSphere.position.y = distance * Math.sin(phi) * Math.sin(theta);
+	  sunSphere.position.z = distance * Math.sin(phi) * Math.cos(theta);
+
+	  sunSphere.visible = effectController.sun;
+
+	  sky.uniforms.sunPosition.value.copy(sunSphere.position);
+	}
+
 	function init() {
 
 	  // scene
 	  scene = new _three2.default.Scene();
 
-	  scene.fog = new _three2.default.Fog(0x121212, 0.8, 1600);
+	  scene.fog = new _three2.default.Fog(0x121212, 0.8, 200000);
 	  scene.add(new _three2.default.AmbientLight(0xffffff));
 
-	  var hemiLight = new _three2.default.HemisphereLight(0xffffff, 0xffffff, 0.6);
-	  hemiLight.color.setHSL(0.6, 1, 0.6);
-	  hemiLight.groundColor.setHSL(0.095, 1, 0.75);
-	  hemiLight.position.set(0, 500, 0);
-	  scene.add(hemiLight);
+	  // var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+	  // hemiLight.color.setHSL( 0.6, 1, 0.6 );
+	  // hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+	  // hemiLight.position.set( 0, 500, 0 );
+	  // scene.add(hemiLight)
 
-	  var spotLight = new _three2.default.PointLight(0xff1075);
-	  spotLight.position.set(0, 0, 200);
-	  scene.add(spotLight);
+	  // var spotLight = new THREE.PointLight( 0xff1075 );
+	  // spotLight.position.set( 0, 0, 200 );
+	  // scene.add( spotLight );
 
 	  // lights
 	  light = new _three2.default.DirectionalLight(0xffffff, 1.0);
@@ -61729,36 +61783,27 @@
 
 	  scene.add(light);
 
-	  var sphere = new _three2.default.SphereGeometry(280, 16, 8);
-	  // sunLight = new THREE.PointLight( 0xff3300, 12.5, 100 );
-	  // sunLight.position.setZ(-2000)
-	  // sunLight.position.setY(300)
-	  // sunLight.position.setX(40)
-	  // sunLight.add( new THREE.Mesh( sphere, new THREE.MeshPhongMaterial( { color: 0xff3300, fog: false } ) ) );
-	  // scene.add( sunLight );
-
-	  var sunlight = new _three2.default.DirectionalLight();
-	  sunlight.position.set(250, 250, 250);
-	  sunlight.intensity = 0.5;
-	  sunlight.castShadow = true;
-	  sunlight.shadowCameraVisible = true;
-	  sunlight.shadowCameraNear = 250;
-	  sunlight.shadowCameraFar = 600;
-	  sunlight.shadowCameraLeft = -200;
-	  sunlight.shadowCameraRight = 200;
-	  sunlight.shadowCameraTop = 200;
-	  sunlight.shadowCameraBottom = -200;
-
 	  // camera
-	  camera = new _three2.default.PerspectiveCamera(65, screenX / screenY, 1, 2000);
+	  camera = new _three2.default.PerspectiveCamera(65, screenX / screenY, 1, 2000000);
 
 	  camera.position.z = 1200;
 	  camera.lookAt(scene.position);
 
+	  camControls = new _three2.default.FirstPersonControls(camera);
+	  camControls.lookSpeed = 0.2;
+	  camControls.movementSpeed = 1;
+	  camControls.noFly = true;
+	  camControls.lookVertical = true;
+	  camControls.constrainVertical = true;
+	  camControls.verticalMin = 1.0;
+	  camControls.verticalMax = 2.0;
+	  camControls.lon = -190;
+	  camControls.lat = 120;
+
 	  // terrain
 	  var terrainMesh = terrain();
 	  terrainMesh.position.setY(20);
-	  scene.add(terrainMesh);
+	  //scene.add(terrainMesh)
 
 	  // main object
 	  var geometry = new _three2.default.IcosahedronGeometry(160);
@@ -61786,6 +61831,8 @@
 
 	  object3d = new _three2.default.Object3D();
 	  scene.add(object3d);
+
+	  initSky();
 
 	  // const _meshGlow = new THREE.Mesh( object3d.geometry, customMaterial.clone() );
 	  // _meshGlow.position.setX(_mesh.position.x)
@@ -61987,12 +62034,17 @@
 	  // loudness 0-1
 	  loudnessMax = (-100 - segment.loudnessMax) * -1 / 100;
 
-	  center = new _three2.default.Vector3(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, camera.position.z - 1000);
+	  center = new _three2.default.Vector3(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, camera.position.z - 1200);
 
 	  for (var i = 0; i < 3; i++) {
 	    var timbre = segment.timbre[i];
 	    var _radius2 = logScale([0.85, 0.97], [2, 64], loudnessMax); //loudnessMax*12//timbre
 	    //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
+
+	    var shader = _three2.default.FresnelShader;
+	    var uniforms = _three2.default.UniformsUtils.clone(shader.uniforms);
+	    var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms };
+	    var materialA = new _three2.default.ShaderMaterial(parameters);
 
 	    var geometry1 = loudnessMax > 0.92 ? new _three2.default.SphereGeometry(_radius2, 4, 4) : new _three2.default.CylinderGeometry(_radius2, 0, _radius2 * 4);
 	    var material = new _three2.default.MeshPhongMaterial({
@@ -62026,7 +62078,7 @@
 	    //   Math.random() * 2,
 	    //   Math.random() * 2)
 
-	    _mesh.position.set(center.x + Math.random() * 80 - 80 / 2, screenY / 2, center.z - 200);
+	    _mesh.position.set(center.x + Math.random() * 80 - 80 / 2, loudnessMax <= 0.90 ? -screenY / 2 : screenY / 2, center.z - 200);
 
 	    object3d.add(_mesh);
 	    tweenSegment(_mesh, timbre, segment.duration, i * 200);
@@ -62048,21 +62100,19 @@
 
 	  var loudnessMax = (-100 - loudness) * -1 / 100;
 
-	  console.log('loudness', loudnessMax);
-
 	  m.scale.set(.25, .25, .25);
-	  var scale = loudnessMax * 2;
+	  var scale = loudnessMax * 2.5;
 
-	  var tween = new _tween2.default.Tween(m.position).to({ z: m.position.z + 200 }, 3000).easing(_tween2.default.Easing.Quadratic.InOut).start();
+	  var tween = new _tween2.default.Tween(m.position).to({ z: m.position.z + 5 }, 3000).easing(_tween2.default.Easing.Quadratic.InOut).start();
 	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, y: m.position.y }).delay(delay).to({ scale: scale, opacity: 0, y: -140 }, duration * 1000).easing(_tween2.default.Easing.Quadratic.InOut).onUpdate(function (t) {
 	    m.scale.set(this.scale, this.scale, this.scale);
 	    //m.rotation.set()
 	    m.position.setY(this.y);
 	  }).onComplete(function () {
 	    new _tween2.default.Tween({ scale: scale, z: m.position.z, rotation: 0, opacity: 1 }).to({ scale: 1, z: m.position.z + 600, rotation: scale, opacity: 0 }, 3000).easing(_tween2.default.Easing.Exponential.Out).onUpdate(function (t) {
-	      m.scale.set(this.scale, this.scale, this.scale);
+	      //m.scale.set(this.scale, this.scale, this.scale)
 	      //m.rotation.set(this.rotation, this.rotation, this.rotation)
-	      m.children[0].material.opacity = this.opacity;
+	      //m.children[0].material.opacity=this.opacity
 	    }).onComplete(function () {
 	      if (remove) object3d.remove(m);
 	    }).start();
@@ -62091,7 +62141,7 @@
 	  //   .start()
 	}
 
-	audio.currentTime = 150;
+	audio.currentTime = 0;
 
 	var barInterval = 1 / (_audioData2.default.info.bpm / 60);
 	var lastTime = 0;
@@ -62124,21 +62174,30 @@
 
 	    if (currentSegment.loudnessMax > -22 && currentSegment.start != lastSegment.start) {
 	      //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
-	      tweenLight(light, currentSegment.loudnessMax * -1, currentSegment.duration);
+	      //tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
 	      addSegment(currentSegment, 60, 100);
 	      lastSegment = currentSegment;
 	    }
 
 	    if (currentSegment.loudnessMax < -8) {
+	      //sky.uniforms.reileigh.intensity += audio.currentTime/1000000
 	      //addSegment(currentSegment, 2, 3000)
 	      //lastSegment = currentSegment
 	    }
 	  }
 
+	  sky.uniforms.turbidity.value = audio.currentTime / 100;
+	  // sky.uniforms.reileigh.value = ;
+	  // sky.uniforms.luminance.value = ;
+	  // sky.uniforms.mieCoefficient.value = ;
+	  // sky.uniforms.mieDirectionalG.value = ;
+
+	  sky.uniforms.reileigh.value = 4 - audio.currentTime / 50;
+
 	  // tempo bpm
 	  if (!lastTime || audio.currentTime - lastTime >= barInterval) {
 	    //particleSystem.scale.set(1.1,1.1,1.1)
-
+	    sky.uniforms.turbidity.value = 1.0;
 	    lastTime = audio.currentTime;
 	  }
 
@@ -62148,6 +62207,7 @@
 	  requestAnimationFrame(animate);
 	  renderer.render(scene, camera);
 	  //composer.render(renderer)
+	  camControls.update(clock.getDelta());
 
 	  _tween2.default.update();
 	}
@@ -64172,6 +64232,403 @@
 /* 188 */
 /***/ function(module, exports) {
 
+	"use strict";
+
+	/**
+	 * @author zz85 / https://github.com/zz85
+	 *
+	 * Based on "A Practical Analytic Model for Daylight"
+	 * aka The Preetham Model, the de facto standard analytic skydome model
+	 * http://www.cs.utah.edu/~shirley/papers/sunsky/sunsky.pdf
+	 *
+	 * First implemented by Simon Wallner
+	 * http://www.simonwallner.at/projects/atmospheric-scattering
+	 *
+	 * Improved by Martin Upitis
+	 * http://blenderartists.org/forum/showthread.php?245954-preethams-sky-impementation-HDR
+	 *
+	 * Three.js integration by zz85 http://twitter.com/blurspline
+	*/
+
+	THREE.ShaderLib['sky'] = {
+
+	  uniforms: {
+
+	    luminance: { type: "f", value: 1 },
+	    turbidity: { type: "f", value: 2 },
+	    reileigh: { type: "f", value: 1 },
+	    mieCoefficient: { type: "f", value: 0.005 },
+	    mieDirectionalG: { type: "f", value: 0.8 },
+	    sunPosition: { type: "v3", value: new THREE.Vector3() }
+
+	  },
+
+	  vertexShader: ["varying vec3 vWorldPosition;", "void main() {", "vec4 worldPosition = modelMatrix * vec4( position, 1.0 );", "vWorldPosition = worldPosition.xyz;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+	  fragmentShader: ["uniform sampler2D skySampler;", "uniform vec3 sunPosition;", "varying vec3 vWorldPosition;", "vec3 cameraPos = vec3(0., 0., 0.);", "// uniform sampler2D sDiffuse;", "// const float turbidity = 10.0; //", "// const float reileigh = 2.; //", "// const float luminance = 1.0; //", "// const float mieCoefficient = 0.005;", "// const float mieDirectionalG = 0.8;", "uniform float luminance;", "uniform float turbidity;", "uniform float reileigh;", "uniform float mieCoefficient;", "uniform float mieDirectionalG;", "// constants for atmospheric scattering", "const float e = 2.71828182845904523536028747135266249775724709369995957;", "const float pi = 3.141592653589793238462643383279502884197169;", "const float n = 1.0003; // refractive index of air", "const float N = 2.545E25; // number of molecules per unit volume for air at", "// 288.15K and 1013mb (sea level -45 celsius)", "const float pn = 0.035;  // depolatization factor for standard air", "// wavelength of used primaries, according to preetham", "const vec3 lambda = vec3(680E-9, 550E-9, 450E-9);", "// mie stuff", "// K coefficient for the primaries", "const vec3 K = vec3(0.686, 0.678, 0.666);", "const float v = 4.0;", "// optical length at zenith for molecules", "const float rayleighZenithLength = 8.4E3;", "const float mieZenithLength = 1.25E3;", "const vec3 up = vec3(0.0, 1.0, 0.0);", "const float EE = 1000.0;", "const float sunAngularDiameterCos = 0.999956676946448443553574619906976478926848692873900859324;", "// 66 arc seconds -> degrees, and the cosine of that", "// earth shadow hack", "const float cutoffAngle = pi/1.95;", "const float steepness = 1.5;", "vec3 totalRayleigh(vec3 lambda)", "{", "return (8.0 * pow(pi, 3.0) * pow(pow(n, 2.0) - 1.0, 2.0) * (6.0 + 3.0 * pn)) / (3.0 * N * pow(lambda, vec3(4.0)) * (6.0 - 7.0 * pn));", "}",
+
+	  // see http://blenderartists.org/forum/showthread.php?321110-Shaders-and-Skybox-madness
+	  "// A simplied version of the total Reayleigh scattering to works on browsers that use ANGLE", "vec3 simplifiedRayleigh()", "{", "return 0.0005 / vec3(94, 40, 18);",
+	  // return 0.00054532832366 / (3.0 * 2.545E25 * pow(vec3(680E-9, 550E-9, 450E-9), vec3(4.0)) * 6.245);
+	  "}", "float rayleighPhase(float cosTheta)", "{   ", "return (3.0 / (16.0*pi)) * (1.0 + pow(cosTheta, 2.0));", "// return (1.0 / (3.0*pi)) * (1.0 + pow(cosTheta, 2.0));", "// return (3.0 / 4.0) * (1.0 + pow(cosTheta, 2.0));", "}", "vec3 totalMie(vec3 lambda, vec3 K, float T)", "{", "float c = (0.2 * T ) * 10E-18;", "return 0.434 * c * pi * pow((2.0 * pi) / lambda, vec3(v - 2.0)) * K;", "}", "float hgPhase(float cosTheta, float g)", "{", "return (1.0 / (4.0*pi)) * ((1.0 - pow(g, 2.0)) / pow(1.0 - 2.0*g*cosTheta + pow(g, 2.0), 1.5));", "}", "float sunIntensity(float zenithAngleCos)", "{", "return EE * max(0.0, 1.0 - exp(-((cutoffAngle - acos(zenithAngleCos))/steepness)));", "}", "// float logLuminance(vec3 c)", "// {", "//   return log(c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722);", "// }", "// Filmic ToneMapping http://filmicgames.com/archives/75", "float A = 0.15;", "float B = 0.50;", "float C = 0.10;", "float D = 0.20;", "float E = 0.02;", "float F = 0.30;", "float W = 1000.0;", "vec3 Uncharted2Tonemap(vec3 x)", "{", "return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;", "}", "void main() ", "{", "float sunfade = 1.0-clamp(1.0-exp((sunPosition.y/450000.0)),0.0,1.0);", "// luminance =  1.0 ;// vWorldPosition.y / 450000. + 0.5; //sunPosition.y / 450000. * 1. + 0.5;", "// gl_FragColor = vec4(sunfade, sunfade, sunfade, 1.0);", "float reileighCoefficient = reileigh - (1.0* (1.0-sunfade));", "vec3 sunDirection = normalize(sunPosition);", "float sunE = sunIntensity(dot(sunDirection, up));", "// extinction (absorbtion + out scattering) ", "// rayleigh coefficients",
+
+	  // "vec3 betaR = totalRayleigh(lambda) * reileighCoefficient;",
+	  "vec3 betaR = simplifiedRayleigh() * reileighCoefficient;", "// mie coefficients", "vec3 betaM = totalMie(lambda, K, turbidity) * mieCoefficient;", "// optical length", "// cutoff angle at 90 to avoid singularity in next formula.", "float zenithAngle = acos(max(0.0, dot(up, normalize(vWorldPosition - cameraPos))));", "float sR = rayleighZenithLength / (cos(zenithAngle) + 0.15 * pow(93.885 - ((zenithAngle * 180.0) / pi), -1.253));", "float sM = mieZenithLength / (cos(zenithAngle) + 0.15 * pow(93.885 - ((zenithAngle * 180.0) / pi), -1.253));", "// combined extinction factor  ", "vec3 Fex = exp(-(betaR * sR + betaM * sM));", "// in scattering", "float cosTheta = dot(normalize(vWorldPosition - cameraPos), sunDirection);", "float rPhase = rayleighPhase(cosTheta*0.5+0.5);", "vec3 betaRTheta = betaR * rPhase;", "float mPhase = hgPhase(cosTheta, mieDirectionalG);", "vec3 betaMTheta = betaM * mPhase;", "vec3 Lin = pow(sunE * ((betaRTheta + betaMTheta) / (betaR + betaM)) * (1.0 - Fex),vec3(1.5));", "Lin *= mix(vec3(1.0),pow(sunE * ((betaRTheta + betaMTheta) / (betaR + betaM)) * Fex,vec3(1.0/2.0)),clamp(pow(1.0-dot(up, sunDirection),5.0),0.0,1.0));", "//nightsky", "vec3 direction = normalize(vWorldPosition - cameraPos);", "float theta = acos(direction.y); // elevation --> y-axis, [-pi/2, pi/2]", "float phi = atan(direction.z, direction.x); // azimuth --> x-axis [-pi/2, pi/2]", "vec2 uv = vec2(phi, theta) / vec2(2.0*pi, pi) + vec2(0.5, 0.0);", "// vec3 L0 = texture2D(skySampler, uv).rgb+0.1 * Fex;", "vec3 L0 = vec3(0.1) * Fex;", "// composition + solar disc", "//if (cosTheta > sunAngularDiameterCos)", "float sundisk = smoothstep(sunAngularDiameterCos,sunAngularDiameterCos+0.00002,cosTheta);", "// if (normalize(vWorldPosition - cameraPos).y>0.0)", "L0 += (sunE * 19000.0 * Fex)*sundisk;", "vec3 whiteScale = 1.0/Uncharted2Tonemap(vec3(W));", "vec3 texColor = (Lin+L0);   ", "texColor *= 0.04 ;", "texColor += vec3(0.0,0.001,0.0025)*0.3;", "float g_fMaxLuminance = 1.0;", "float fLumScaled = 0.1 / luminance;     ", "float fLumCompressed = (fLumScaled * (1.0 + (fLumScaled / (g_fMaxLuminance * g_fMaxLuminance)))) / (1.0 + fLumScaled); ", "float ExposureBias = fLumCompressed;", "vec3 curr = Uncharted2Tonemap((log2(2.0/pow(luminance,4.0)))*texColor);", "vec3 color = curr*whiteScale;", "vec3 retColor = pow(color,vec3(1.0/(1.2+(1.2*sunfade))));", "gl_FragColor.rgb = retColor;", "gl_FragColor.a = 1.0;", "}"].join("\n")
+
+	};
+
+	THREE.Sky = function () {
+
+	  var skyShader = THREE.ShaderLib["sky"];
+	  var skyUniforms = THREE.UniformsUtils.clone(skyShader.uniforms);
+
+	  var skyMat = new THREE.ShaderMaterial({
+	    fragmentShader: skyShader.fragmentShader,
+	    vertexShader: skyShader.vertexShader,
+	    uniforms: skyUniforms,
+	    side: THREE.BackSide
+	  });
+
+	  var skyGeo = new THREE.SphereBufferGeometry(450000, 32, 15);
+	  var skyMesh = new THREE.Mesh(skyGeo, skyMat);
+
+	  // Expose variables
+	  this.mesh = skyMesh;
+	  this.uniforms = skyUniforms;
+	};
+
+/***/ },
+/* 189 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	/**
+	 * @author mrdoob / http://mrdoob.com/
+	 * @author alteredq / http://alteredqualia.com/
+	 * @author paulirish / http://paulirish.com/
+	 */
+
+	THREE.FirstPersonControls = function (object, domElement) {
+
+	  this.object = object;
+	  this.target = new THREE.Vector3(0, 0, 0);
+
+	  this.domElement = domElement !== undefined ? domElement : document;
+
+	  this.enabled = true;
+
+	  this.movementSpeed = 1.0;
+	  this.lookSpeed = 0.005;
+
+	  this.lookVertical = true;
+	  this.autoForward = false;
+
+	  this.activeLook = true;
+
+	  this.heightSpeed = false;
+	  this.heightCoef = 1.0;
+	  this.heightMin = 0.0;
+	  this.heightMax = 1.0;
+
+	  this.constrainVertical = false;
+	  this.verticalMin = 0;
+	  this.verticalMax = Math.PI;
+
+	  this.autoSpeedFactor = 0.0;
+
+	  this.mouseX = 0;
+	  this.mouseY = 0;
+
+	  this.lat = 0;
+	  this.lon = 0;
+	  this.phi = 0;
+	  this.theta = 0;
+
+	  this.moveForward = false;
+	  this.moveBackward = false;
+	  this.moveLeft = false;
+	  this.moveRight = false;
+
+	  this.mouseDragOn = false;
+
+	  this.viewHalfX = 0;
+	  this.viewHalfY = 0;
+
+	  if (this.domElement !== document) {
+
+	    this.domElement.setAttribute('tabindex', -1);
+	  }
+
+	  //
+
+	  this.handleResize = function () {
+
+	    if (this.domElement === document) {
+
+	      this.viewHalfX = window.innerWidth / 2;
+	      this.viewHalfY = window.innerHeight / 2;
+	    } else {
+
+	      this.viewHalfX = this.domElement.offsetWidth / 2;
+	      this.viewHalfY = this.domElement.offsetHeight / 2;
+	    }
+	  };
+
+	  this.onMouseDown = function (event) {
+
+	    if (this.domElement !== document) {
+
+	      this.domElement.focus();
+	    }
+
+	    event.preventDefault();
+	    event.stopPropagation();
+
+	    if (this.activeLook) {
+
+	      switch (event.button) {
+
+	        case 0:
+	          this.moveForward = true;break;
+	        case 2:
+	          this.moveBackward = true;break;
+
+	      }
+	    }
+
+	    this.mouseDragOn = true;
+	  };
+
+	  this.onMouseUp = function (event) {
+
+	    event.preventDefault();
+	    event.stopPropagation();
+
+	    if (this.activeLook) {
+
+	      switch (event.button) {
+
+	        case 0:
+	          this.moveForward = false;break;
+	        case 2:
+	          this.moveBackward = false;break;
+
+	      }
+	    }
+
+	    this.mouseDragOn = false;
+	  };
+
+	  this.onMouseMove = function (event) {
+
+	    if (this.domElement === document) {
+
+	      this.mouseX = event.pageX - this.viewHalfX;
+	      this.mouseY = event.pageY - this.viewHalfY;
+	    } else {
+
+	      this.mouseX = event.pageX - this.domElement.offsetLeft - this.viewHalfX;
+	      this.mouseY = event.pageY - this.domElement.offsetTop - this.viewHalfY;
+	    }
+	  };
+
+	  this.onKeyDown = function (event) {
+
+	    //event.preventDefault();
+
+	    switch (event.keyCode) {
+
+	      case 38: /*up*/
+	      case 87:
+	        /*W*/this.moveForward = true;break;
+
+	      case 37: /*left*/
+	      case 65:
+	        /*A*/this.moveLeft = true;break;
+
+	      case 40: /*down*/
+	      case 83:
+	        /*S*/this.moveBackward = true;break;
+
+	      case 39: /*right*/
+	      case 68:
+	        /*D*/this.moveRight = true;break;
+
+	      case 82:
+	        /*R*/this.moveUp = true;break;
+	      case 70:
+	        /*F*/this.moveDown = true;break;
+
+	    }
+	  };
+
+	  this.onKeyUp = function (event) {
+
+	    switch (event.keyCode) {
+
+	      case 38: /*up*/
+	      case 87:
+	        /*W*/this.moveForward = false;break;
+
+	      case 37: /*left*/
+	      case 65:
+	        /*A*/this.moveLeft = false;break;
+
+	      case 40: /*down*/
+	      case 83:
+	        /*S*/this.moveBackward = false;break;
+
+	      case 39: /*right*/
+	      case 68:
+	        /*D*/this.moveRight = false;break;
+
+	      case 82:
+	        /*R*/this.moveUp = false;break;
+	      case 70:
+	        /*F*/this.moveDown = false;break;
+
+	    }
+	  };
+
+	  this.update = function (delta) {
+
+	    if (this.enabled === false) return;
+
+	    if (this.heightSpeed) {
+
+	      var y = THREE.Math.clamp(this.object.position.y, this.heightMin, this.heightMax);
+	      var heightDelta = y - this.heightMin;
+
+	      this.autoSpeedFactor = delta * (heightDelta * this.heightCoef);
+	    } else {
+
+	      this.autoSpeedFactor = 0.0;
+	    }
+
+	    var actualMoveSpeed = delta * this.movementSpeed;
+
+	    if (this.moveForward || this.autoForward && !this.moveBackward) this.object.translateZ(-(actualMoveSpeed + this.autoSpeedFactor));
+	    if (this.moveBackward) this.object.translateZ(actualMoveSpeed);
+
+	    if (this.moveLeft) this.object.translateX(-actualMoveSpeed);
+	    if (this.moveRight) this.object.translateX(actualMoveSpeed);
+
+	    if (this.moveUp) this.object.translateY(actualMoveSpeed);
+	    if (this.moveDown) this.object.translateY(-actualMoveSpeed);
+
+	    var actualLookSpeed = delta * this.lookSpeed;
+
+	    if (!this.activeLook) {
+
+	      actualLookSpeed = 0;
+	    }
+
+	    var verticalLookRatio = 1;
+
+	    if (this.constrainVertical) {
+
+	      verticalLookRatio = Math.PI / (this.verticalMax - this.verticalMin);
+	    }
+
+	    this.lon += this.mouseX * actualLookSpeed;
+	    if (this.lookVertical) this.lat -= this.mouseY * actualLookSpeed * verticalLookRatio;
+
+	    this.lat = Math.max(-85, Math.min(85, this.lat));
+	    this.phi = THREE.Math.degToRad(90 - this.lat);
+
+	    this.theta = THREE.Math.degToRad(this.lon);
+
+	    if (this.constrainVertical) {
+
+	      this.phi = THREE.Math.mapLinear(this.phi, 0, Math.PI, this.verticalMin, this.verticalMax);
+	    }
+
+	    var targetPosition = this.target,
+	        position = this.object.position;
+
+	    targetPosition.x = position.x + 100 * Math.sin(this.phi) * Math.cos(this.theta);
+	    targetPosition.y = position.y + 100 * Math.cos(this.phi);
+	    targetPosition.z = position.z + 100 * Math.sin(this.phi) * Math.sin(this.theta);
+
+	    this.object.lookAt(targetPosition);
+	  };
+
+	  function contextmenu(event) {
+
+	    event.preventDefault();
+	  }
+
+	  this.dispose = function () {
+
+	    this.domElement.removeEventListener('contextmenu', contextmenu, false);
+	    this.domElement.removeEventListener('mousedown', _onMouseDown, false);
+	    this.domElement.removeEventListener('mousemove', _onMouseMove, false);
+	    this.domElement.removeEventListener('mouseup', _onMouseUp, false);
+
+	    window.removeEventListener('keydown', _onKeyDown, false);
+	    window.removeEventListener('keyup', _onKeyUp, false);
+	  };
+
+	  var _onMouseMove = bind(this, this.onMouseMove);
+	  var _onMouseDown = bind(this, this.onMouseDown);
+	  var _onMouseUp = bind(this, this.onMouseUp);
+	  var _onKeyDown = bind(this, this.onKeyDown);
+	  var _onKeyUp = bind(this, this.onKeyUp);
+
+	  this.domElement.addEventListener('contextmenu', contextmenu, false);
+	  this.domElement.addEventListener('mousemove', _onMouseMove, false);
+	  this.domElement.addEventListener('mousedown', _onMouseDown, false);
+	  this.domElement.addEventListener('mouseup', _onMouseUp, false);
+
+	  window.addEventListener('keydown', _onKeyDown, false);
+	  window.addEventListener('keyup', _onKeyUp, false);
+
+	  function bind(scope, fn) {
+
+	    return function () {
+
+	      fn.apply(scope, arguments);
+	    };
+	  }
+
+	  this.handleResize();
+	};
+
+/***/ },
+/* 190 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	/**
+	 * @author alteredq / http://alteredqualia.com/
+	 *
+	 * Based on Nvidia Cg tutorial
+	 */
+
+	THREE.FresnelShader = {
+
+	  uniforms: {
+
+	    "mRefractionRatio": { type: "f", value: 1.02 },
+	    "mFresnelBias": { type: "f", value: 0.1 },
+	    "mFresnelPower": { type: "f", value: 2.0 },
+	    "mFresnelScale": { type: "f", value: 1.0 },
+	    "tCube": { type: "t", value: null }
+
+	  },
+
+	  vertexShader: ["uniform float mRefractionRatio;", "uniform float mFresnelBias;", "uniform float mFresnelScale;", "uniform float mFresnelPower;", "varying vec3 vReflect;", "varying vec3 vRefract[3];", "varying float vReflectionFactor;", "void main() {", "vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );", "vec4 worldPosition = modelMatrix * vec4( position, 1.0 );", "vec3 worldNormal = normalize( mat3( modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz ) * normal );", "vec3 I = worldPosition.xyz - cameraPosition;", "vReflect = reflect( I, worldNormal );", "vRefract[0] = refract( normalize( I ), worldNormal, mRefractionRatio );", "vRefract[1] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.99 );", "vRefract[2] = refract( normalize( I ), worldNormal, mRefractionRatio * 0.98 );", "vReflectionFactor = mFresnelBias + mFresnelScale * pow( 1.0 + dot( normalize( I ), worldNormal ), mFresnelPower );", "gl_Position = projectionMatrix * mvPosition;", "}"].join("\n"),
+
+	  fragmentShader: ["uniform samplerCube tCube;", "varying vec3 vReflect;", "varying vec3 vRefract[3];", "varying float vReflectionFactor;", "void main() {", "vec4 reflectedColor = textureCube( tCube, vec3( -vReflect.x, vReflect.yz ) );", "vec4 refractedColor = vec4( 1.0 );", "refractedColor.r = textureCube( tCube, vec3( -vRefract[0].x, vRefract[0].yz ) ).r;", "refractedColor.g = textureCube( tCube, vec3( -vRefract[1].x, vRefract[1].yz ) ).g;", "refractedColor.b = textureCube( tCube, vec3( -vRefract[2].x, vRefract[2].yz ) ).b;", "gl_FragColor = mix( refractedColor, reflectedColor, clamp( vReflectionFactor, 0.0, 1.0 ) );", "}"].join("\n")
+
+	};
+
+/***/ },
+/* 191 */
+/***/ function(module, exports) {
+
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
@@ -64189,7 +64646,7 @@
 	}
 
 /***/ },
-/* 189 */
+/* 192 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64198,34 +64655,34 @@
 
 	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
 
-	var _Motion = __webpack_require__(190);
+	var _Motion = __webpack_require__(193);
 
 	exports.Motion = _interopRequire(_Motion);
 
-	var _StaggeredMotion = __webpack_require__(197);
+	var _StaggeredMotion = __webpack_require__(200);
 
 	exports.StaggeredMotion = _interopRequire(_StaggeredMotion);
 
-	var _TransitionMotion = __webpack_require__(198);
+	var _TransitionMotion = __webpack_require__(201);
 
 	exports.TransitionMotion = _interopRequire(_TransitionMotion);
 
-	var _spring = __webpack_require__(200);
+	var _spring = __webpack_require__(203);
 
 	exports.spring = _interopRequire(_spring);
 
-	var _presets = __webpack_require__(201);
+	var _presets = __webpack_require__(204);
 
 	exports.presets = _interopRequire(_presets);
 
 	// deprecated, dummy warning function
 
-	var _reorderKeys = __webpack_require__(202);
+	var _reorderKeys = __webpack_require__(205);
 
 	exports.reorderKeys = _interopRequire(_reorderKeys);
 
 /***/ },
-/* 190 */
+/* 193 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64236,27 +64693,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(191);
+	var _mapToZero = __webpack_require__(194);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(192);
+	var _stripStyle = __webpack_require__(195);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(193);
+	var _stepper3 = __webpack_require__(196);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(194);
+	var _performanceNow = __webpack_require__(197);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(195);
+	var _raf = __webpack_require__(198);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(196);
+	var _shouldStopAnimation = __webpack_require__(199);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -64471,7 +64928,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 191 */
+/* 194 */
 /***/ function(module, exports) {
 
 	
@@ -64495,7 +64952,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 192 */
+/* 195 */
 /***/ function(module, exports) {
 
 	
@@ -64521,7 +64978,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 193 */
+/* 196 */
 /***/ function(module, exports) {
 
 	
@@ -64569,7 +65026,7 @@
 	// array reference around.
 
 /***/ },
-/* 194 */
+/* 197 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
@@ -64608,10 +65065,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 195 */
+/* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(194)
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(197)
 	  , root = typeof window === 'undefined' ? global : window
 	  , vendors = ['moz', 'webkit']
 	  , suffix = 'AnimationFrame'
@@ -64687,7 +65144,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 196 */
+/* 199 */
 /***/ function(module, exports) {
 
 	
@@ -64723,7 +65180,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 197 */
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64734,27 +65191,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(191);
+	var _mapToZero = __webpack_require__(194);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(192);
+	var _stripStyle = __webpack_require__(195);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(193);
+	var _stepper3 = __webpack_require__(196);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(194);
+	var _performanceNow = __webpack_require__(197);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(195);
+	var _raf = __webpack_require__(198);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(196);
+	var _shouldStopAnimation = __webpack_require__(199);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -64990,7 +65447,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 198 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65001,31 +65458,31 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(191);
+	var _mapToZero = __webpack_require__(194);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(192);
+	var _stripStyle = __webpack_require__(195);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(193);
+	var _stepper3 = __webpack_require__(196);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _mergeDiff = __webpack_require__(199);
+	var _mergeDiff = __webpack_require__(202);
 
 	var _mergeDiff2 = _interopRequireDefault(_mergeDiff);
 
-	var _performanceNow = __webpack_require__(194);
+	var _performanceNow = __webpack_require__(197);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(195);
+	var _raf = __webpack_require__(198);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(196);
+	var _shouldStopAnimation = __webpack_require__(199);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -65483,7 +65940,7 @@
 	// that you've unmounted but that's still animating. This is where it lives
 
 /***/ },
-/* 199 */
+/* 202 */
 /***/ function(module, exports) {
 
 	
@@ -65596,7 +66053,7 @@
 	// to loop through and find a key's index each time), but I no longer care
 
 /***/ },
-/* 200 */
+/* 203 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65609,7 +66066,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _presets = __webpack_require__(201);
+	var _presets = __webpack_require__(204);
 
 	var _presets2 = _interopRequireDefault(_presets);
 
@@ -65624,7 +66081,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 201 */
+/* 204 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -65639,7 +66096,7 @@
 	module.exports = exports["default"];
 
 /***/ },
-/* 202 */
+/* 205 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -65662,7 +66119,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 203 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65679,7 +66136,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(189);
+	var _reactMotion = __webpack_require__(192);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -65804,7 +66261,7 @@
 	exports.default = MotionButton;
 
 /***/ },
-/* 204 */
+/* 207 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65821,9 +66278,9 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(189);
+	var _reactMotion = __webpack_require__(192);
 
-	var _IcosahedronButton = __webpack_require__(205);
+	var _IcosahedronButton = __webpack_require__(208);
 
 	var _IcosahedronButton2 = _interopRequireDefault(_IcosahedronButton);
 
@@ -65991,7 +66448,7 @@
 	exports.default = Navigation;
 
 /***/ },
-/* 205 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66151,16 +66608,16 @@
 	exports.default = IcosahedronButton;
 
 /***/ },
-/* 206 */
+/* 209 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(207);
+	var content = __webpack_require__(210);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(209)(content, {});
+	var update = __webpack_require__(212)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -66177,21 +66634,21 @@
 	}
 
 /***/ },
-/* 207 */
+/* 210 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(208)();
+	exports = module.exports = __webpack_require__(211)();
 	// imports
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: rgba(255, 255, 255, .12);\n}\n#visualization canvas {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  background: rgba(255, 255, 255, .12);\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 
 
 /***/ },
-/* 208 */
+/* 211 */
 /***/ function(module, exports) {
 
 	/*
@@ -66247,7 +66704,7 @@
 
 
 /***/ },
-/* 209 */
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -66501,16 +66958,16 @@
 
 
 /***/ },
-/* 210 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(211);
+	var content = __webpack_require__(214);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(209)(content, {});
+	var update = __webpack_require__(212)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -66527,10 +66984,10 @@
 	}
 
 /***/ },
-/* 211 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(208)();
+	exports = module.exports = __webpack_require__(211)();
 	// imports
 
 
@@ -66541,16 +66998,16 @@
 
 
 /***/ },
-/* 212 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(213);
+	var content = __webpack_require__(216);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(209)(content, {});
+	var update = __webpack_require__(212)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -66567,15 +67024,15 @@
 	}
 
 /***/ },
-/* 213 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(208)();
+	exports = module.exports = __webpack_require__(211)();
 	// imports
 
 
 	// module
-	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  background-size: cover;\n  position: relative;\n}\n\n\nbody:after {\n  content: \"\";\n  position: absolute;\n  /*background: rgba(10, 0, 6, .9);*/\n  background: linear-gradient(#35013F, #EB5033);\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n#bpm-helper {\n  display: none;\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
+	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  background: linear-gradient(#35013F, #EB5033);\n  background-size: cover;\n  position: relative;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n#bpm-helper {\n  display: none;\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
 
 	// exports
 

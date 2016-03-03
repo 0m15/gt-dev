@@ -12,11 +12,12 @@
 }
 
 #visualization {
-  background: rgba(255, 255, 255, .12);
+  background: #000;
 }
+
 #visualization canvas {
   position: fixed;
-  top: 0;
+  /*top: 100px;*/
   left: 0;
   width: 100%;
   height: 100%;
