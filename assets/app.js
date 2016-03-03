@@ -61710,7 +61710,7 @@
 	  // scene
 	  scene = new _three2.default.Scene();
 
-	  scene.fog = new _three2.default.Fog(0x000000, 0.8, 1600);
+	  scene.fog = new _three2.default.Fog(0x121212, 0.8, 1600);
 	  scene.add(new _three2.default.AmbientLight(0xffffff));
 
 	  var hemiLight = new _three2.default.HemisphereLight(0xffffff, 0xffffff, 0.6);
@@ -61805,7 +61805,7 @@
 	    antialias: true
 	  });
 
-	  // alpha: true
+	  //alpha: true
 	  renderer.gammaInput = true;
 	  renderer.gammaOutput = true;
 
@@ -61887,7 +61887,7 @@
 
 	  var material = new _three2.default.MeshPhongMaterial({
 	    color: 0x121212,
-	    wireframe: false,
+	    wireframe: true,
 	    wireframeLinewidth: 0.1
 	  });
 
@@ -61993,7 +61993,8 @@
 	    var timbre = segment.timbre[i];
 	    var _radius2 = logScale([0.85, 0.97], [2, 64], loudnessMax); //loudnessMax*12//timbre
 	    //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
-	    var geometry1 = new _three2.default.CylinderGeometry(_radius2, 0, _radius2 * 4);
+
+	    var geometry1 = loudnessMax > 0.92 ? new _three2.default.SphereGeometry(_radius2, 4, 4) : new _three2.default.CylinderGeometry(_radius2, 0, _radius2 * 4);
 	    var material = new _three2.default.MeshPhongMaterial({
 	      //color: loudnessMax > 0.9 ? Math.random()*0xF30A49 : 0xF30A49,
 	      color: Math.random() * 0xF30A49,

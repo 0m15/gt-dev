@@ -155,7 +155,7 @@ export function init() {
   // scene
   scene = new THREE.Scene()
   
-  scene.fog = new THREE.Fog( 0x000000, 0.8, 1600 )
+  scene.fog = new THREE.Fog( 0x121212, 0.8, 1600 )
   scene.add( new THREE.AmbientLight( 0xffffff) );
 
   var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
@@ -254,7 +254,7 @@ export function init() {
   //renderer
   renderer = new THREE.WebGLRenderer({
     antialias: true,
-    // alpha: true
+    //alpha: true
   });
   
   renderer.gammaInput = true;
@@ -343,7 +343,7 @@ function terrain() {
 
   var material = new THREE.MeshPhongMaterial( {
     color: 0x121212,
-    wireframe: false,
+    wireframe: true,
     wireframeLinewidth: 0.1
   });
 
@@ -456,7 +456,8 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     const timbre = segment.timbre[i]
     const radius = logScale([0.85, 0.97], [2, 64], loudnessMax)//loudnessMax*12//timbre
     //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
-    var geometry1 = new THREE.CylinderGeometry(radius, 0, radius*4)
+
+    var geometry1 = loudnessMax > 0.92 ? new THREE.SphereGeometry( radius, 4, 4) : new THREE.CylinderGeometry(radius, 0, radius*4)
     const material = new THREE.MeshPhongMaterial({
       //color: loudnessMax > 0.9 ? Math.random()*0xF30A49 : 0xF30A49, 
       color: Math.random()*0xF30A49, 
