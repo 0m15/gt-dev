@@ -58,6 +58,7 @@ var object3d;
 var lastSegment = { start:0 };
 var { analyser, audio } = fft()
 var cameraZ = 0
+var sunlight;
 
 
 const objects = []
@@ -157,8 +158,11 @@ export function init() {
   scene.fog = new THREE.Fog( 0x000000, 0.8, 1600 )
   scene.add( new THREE.AmbientLight( 0xffffff) );
 
-  var emlight = new THREE.HemisphereLight( 0x4fff42, 0x080820, 1 );
-  scene.add(emlight)
+  var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+  hemiLight.color.setHSL( 0.6, 1, 0.6 );
+  hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+  hemiLight.position.set( 0, 500, 0 );
+  scene.add(hemiLight)
 
   var spotLight = new THREE.PointLight( 0xff1075 );
   spotLight.position.set( 0, 0, 200 );
@@ -170,6 +174,26 @@ export function init() {
 
   scene.add(light)
   
+  var sphere = new THREE.SphereGeometry( 280, 16, 8 );
+  // sunLight = new THREE.PointLight( 0xff3300, 12.5, 100 );
+  // sunLight.position.setZ(-2000)
+  // sunLight.position.setY(300)
+  // sunLight.position.setX(40)
+  // sunLight.add( new THREE.Mesh( sphere, new THREE.MeshPhongMaterial( { color: 0xff3300, fog: false } ) ) );
+  // scene.add( sunLight );
+
+  var sunlight = new THREE.DirectionalLight();
+  sunlight.position.set(250, 250, 250);
+  sunlight.intensity = 0.5;
+  sunlight.castShadow = true;
+  sunlight.shadowCameraVisible = true;
+  sunlight.shadowCameraNear = 250;
+  sunlight.shadowCameraFar = 600;
+  sunlight.shadowCameraLeft = -200;
+  sunlight.shadowCameraRight = 200;
+  sunlight.shadowCameraTop = 200;
+  sunlight.shadowCameraBottom = -200;
+
   // camera
   camera = new THREE.PerspectiveCamera( 65, screenX / screenY, 1, 2000)
   
@@ -178,7 +202,7 @@ export function init() {
     
   // terrain
   var terrainMesh = terrain()
-  terrainMesh.position.setY(-1000)
+  terrainMesh.position.setY(20)
   scene.add(terrainMesh)
 
   // main object
@@ -233,10 +257,13 @@ export function init() {
     // alpha: true
   });
   
+  renderer.gammaInput = true;
+  renderer.gammaOutput = true;
 
+  //renderer.setClearColor(0x121212)
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( screenX, screenY );
-  //renderer.setClearColor(0x121212)
+  
 
   // append canvas
   document.getElementById('visualization').appendChild( renderer.domElement );
@@ -249,35 +276,25 @@ export function init() {
     stencilBuffer: true 
   };
 
-  var renderTarget = new THREE.WebGLRenderTarget( screenX, screenY, rtParameters );
+  var renderModel = new THREE.RenderPass( scene, camera );
+  var effectBloom = new THREE.BloomPass( 4, 32 );
+  var effectCopy = new THREE.ShaderPass( THREE.CopyShader );
 
-  var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
   var effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-  
-  effectFXAA.uniforms[ 'resolution' ].value.set( 1 / screenX, 1 / screenY );
 
-  var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
-  effectBleach.renerToScreen=true
+  var width = window.innerWidth || 2;
+  var height = window.innerHeight || 2;
 
-  // tilt shift
-  hblur = new THREE.ShaderPass( THREE.HorizontalTiltShiftShader );
-  vblur = new THREE.ShaderPass( THREE.VerticalTiltShiftShader );
-  
-  hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
-  vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
+  effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
 
-  var effectBloom = new THREE.BloomPass(1.5, 25, 8, 256);
-  effectBloom.renderToScreen = true
-  
-  composer = new THREE.EffectComposer( renderer, renderTarget );
-  vblur.renderToScreen = true
+  effectCopy.renderToScreen = true;
 
-  composer = new THREE.EffectComposer( renderer, renderTarget );
-  composer.addPass( new THREE.RenderPass( scene, camera ) );
+  composer = new THREE.EffectComposer( renderer );
 
-  composer.addPass( effectFXAA );
-  composer.addPass( hblur );
-  composer.addPass( vblur );
+  composer.addPass( renderModel );
+  //composer.addPass( effectFXAA );
+  //composer.addPass( effectBloom );
+  //composer.addPass( effectCopy );
 
   // play audio
   audio.play()
@@ -314,7 +331,7 @@ function terrain() {
   var worldDepth = 2000
   var worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
   var data = generateHeight( worldWidth, worldDepth );
-  var geometry = new THREE.PlaneBufferGeometry( 7500, 50000, worldWidth - 1, worldDepth - 1 );
+  var geometry = new THREE.PlaneBufferGeometry( 7500, 50000, worldWidth-1, worldDepth-1);
   geometry.rotateX( - Math.PI / 2 );
 
   var vertices = geometry.attributes.position.array;
@@ -325,12 +342,19 @@ function terrain() {
   }
 
   var material = new THREE.MeshPhongMaterial( {
-    color: 0xffffff,
-    wireframe: true,
+    color: 0x121212,
+    wireframe: false,
     wireframeLinewidth: 0.1
   });
 
   return new THREE.Mesh(geometry, material)
+
+  // var groundGeo = new THREE.PlaneBufferGeometry( 10000, 20000 );
+  // var groundMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x050505 } );
+  // var ground = new THREE.Mesh( groundGeo, groundMat );
+  // ground.rotation.x = -Math.PI/2;
+  // ground.position.y = -200;
+  // return ground
 }
 
 function drawParticles(size=6) {
@@ -428,7 +452,7 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
   );
 
 
-  for(var i = 0; i < 1; i++) {
+  for(var i = 0; i < 3; i++) {
     const timbre = segment.timbre[i]
     const radius = logScale([0.85, 0.97], [2, 64], loudnessMax)//loudnessMax*12//timbre
     //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
@@ -507,7 +531,7 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
   var tween = new TWEEN
     .Tween({ scale: .1, opacity: 1, y: m.position.y })
     .delay(delay)
-    .to({ scale: scale, opacity: 0, y: m.position.y-(Math.random()*screenY) }, (duration)*1000)
+    .to({ scale: scale, opacity: 0, y: -140 }, (duration)*1000)
     .easing(TWEEN.Easing.Quadratic.InOut)
     .onUpdate(function(t) {
       m.scale.set(this.scale, this.scale, this.scale)
@@ -617,12 +641,12 @@ export function animate(time) {
     lastTime = audio.currentTime
   }
   
-  cameraZ -= 6
+  cameraZ -= 12
   camera.position.z = cameraZ
 
   requestAnimationFrame(animate)
-  //renderer.render(scene, camera)
-  composer.render(renderer)
+  renderer.render(scene, camera)
+  //composer.render(renderer)
 
   TWEEN.update()
 }

@@ -61612,6 +61612,7 @@
 	var audio = _fft.audio;
 
 	var cameraZ = 0;
+	var sunlight;
 
 	var objects = [];
 
@@ -61712,8 +61713,11 @@
 	  scene.fog = new _three2.default.Fog(0x000000, 0.8, 1600);
 	  scene.add(new _three2.default.AmbientLight(0xffffff));
 
-	  var emlight = new _three2.default.HemisphereLight(0x4fff42, 0x080820, 1);
-	  scene.add(emlight);
+	  var hemiLight = new _three2.default.HemisphereLight(0xffffff, 0xffffff, 0.6);
+	  hemiLight.color.setHSL(0.6, 1, 0.6);
+	  hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+	  hemiLight.position.set(0, 500, 0);
+	  scene.add(hemiLight);
 
 	  var spotLight = new _three2.default.PointLight(0xff1075);
 	  spotLight.position.set(0, 0, 200);
@@ -61725,6 +61729,26 @@
 
 	  scene.add(light);
 
+	  var sphere = new _three2.default.SphereGeometry(280, 16, 8);
+	  // sunLight = new THREE.PointLight( 0xff3300, 12.5, 100 );
+	  // sunLight.position.setZ(-2000)
+	  // sunLight.position.setY(300)
+	  // sunLight.position.setX(40)
+	  // sunLight.add( new THREE.Mesh( sphere, new THREE.MeshPhongMaterial( { color: 0xff3300, fog: false } ) ) );
+	  // scene.add( sunLight );
+
+	  var sunlight = new _three2.default.DirectionalLight();
+	  sunlight.position.set(250, 250, 250);
+	  sunlight.intensity = 0.5;
+	  sunlight.castShadow = true;
+	  sunlight.shadowCameraVisible = true;
+	  sunlight.shadowCameraNear = 250;
+	  sunlight.shadowCameraFar = 600;
+	  sunlight.shadowCameraLeft = -200;
+	  sunlight.shadowCameraRight = 200;
+	  sunlight.shadowCameraTop = 200;
+	  sunlight.shadowCameraBottom = -200;
+
 	  // camera
 	  camera = new _three2.default.PerspectiveCamera(65, screenX / screenY, 1, 2000);
 
@@ -61733,7 +61757,7 @@
 
 	  // terrain
 	  var terrainMesh = terrain();
-	  terrainMesh.position.setY(-1000);
+	  terrainMesh.position.setY(20);
 	  scene.add(terrainMesh);
 
 	  // main object
@@ -61782,9 +61806,12 @@
 	  });
 
 	  // alpha: true
+	  renderer.gammaInput = true;
+	  renderer.gammaOutput = true;
+
+	  //renderer.setClearColor(0x121212)
 	  renderer.setPixelRatio(window.devicePixelRatio);
 	  renderer.setSize(screenX, screenY);
-	  //renderer.setClearColor(0x121212)
 
 	  // append canvas
 	  document.getElementById('visualization').appendChild(renderer.domElement);
@@ -61796,35 +61823,25 @@
 	    stencilBuffer: true
 	  };
 
-	  var renderTarget = new _three2.default.WebGLRenderTarget(screenX, screenY, rtParameters);
+	  var renderModel = new _three2.default.RenderPass(scene, camera);
+	  var effectBloom = new _three2.default.BloomPass(4, 32);
+	  var effectCopy = new _three2.default.ShaderPass(_three2.default.CopyShader);
 
-	  var effectBlend = new _three2.default.ShaderPass(_three2.default.BlendShader, "tDiffuse1");
 	  var effectFXAA = new _three2.default.ShaderPass(_three2.default.FXAAShader);
 
-	  effectFXAA.uniforms['resolution'].value.set(1 / screenX, 1 / screenY);
+	  var width = window.innerWidth || 2;
+	  var height = window.innerHeight || 2;
 
-	  var effectBleach = new _three2.default.ShaderPass(_three2.default.BleachBypassShader);
-	  effectBleach.renerToScreen = true;
+	  effectFXAA.uniforms['resolution'].value.set(1 / width, 1 / height);
 
-	  // tilt shift
-	  hblur = new _three2.default.ShaderPass(_three2.default.HorizontalTiltShiftShader);
-	  vblur = new _three2.default.ShaderPass(_three2.default.VerticalTiltShiftShader);
+	  effectCopy.renderToScreen = true;
 
-	  hblur.uniforms['h'].value = 1 / window.innerWidth;
-	  vblur.uniforms['v'].value = 1 / window.innerHeight;
+	  composer = new _three2.default.EffectComposer(renderer);
 
-	  var effectBloom = new _three2.default.BloomPass(1.5, 25, 8, 256);
-	  effectBloom.renderToScreen = true;
-
-	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
-	  vblur.renderToScreen = true;
-
-	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
-	  composer.addPass(new _three2.default.RenderPass(scene, camera));
-
-	  composer.addPass(effectFXAA);
-	  composer.addPass(hblur);
-	  composer.addPass(vblur);
+	  composer.addPass(renderModel);
+	  //composer.addPass( effectFXAA );
+	  //composer.addPass( effectBloom );
+	  //composer.addPass( effectCopy );
 
 	  // play audio
 	  audio.play();
@@ -61869,12 +61886,19 @@
 	  }
 
 	  var material = new _three2.default.MeshPhongMaterial({
-	    color: 0xffffff,
-	    wireframe: true,
+	    color: 0x121212,
+	    wireframe: false,
 	    wireframeLinewidth: 0.1
 	  });
 
 	  return new _three2.default.Mesh(geometry, material);
+
+	  // var groundGeo = new THREE.PlaneBufferGeometry( 10000, 20000 );
+	  // var groundMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x050505 } );
+	  // var ground = new THREE.Mesh( groundGeo, groundMat );
+	  // ground.rotation.x = -Math.PI/2;
+	  // ground.position.y = -200;
+	  // return ground
 	}
 
 	function drawParticles() {
@@ -61965,7 +61989,7 @@
 
 	  center = new _three2.default.Vector3(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, camera.position.z - 1000);
 
-	  for (var i = 0; i < 1; i++) {
+	  for (var i = 0; i < 3; i++) {
 	    var timbre = segment.timbre[i];
 	    var _radius2 = logScale([0.85, 0.97], [2, 64], loudnessMax); //loudnessMax*12//timbre
 	    //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
@@ -62029,7 +62053,7 @@
 	  var scale = loudnessMax * 2;
 
 	  var tween = new _tween2.default.Tween(m.position).to({ z: m.position.z + 200 }, 3000).easing(_tween2.default.Easing.Quadratic.InOut).start();
-	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, y: m.position.y }).delay(delay).to({ scale: scale, opacity: 0, y: m.position.y - Math.random() * screenY }, duration * 1000).easing(_tween2.default.Easing.Quadratic.InOut).onUpdate(function (t) {
+	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, y: m.position.y }).delay(delay).to({ scale: scale, opacity: 0, y: -140 }, duration * 1000).easing(_tween2.default.Easing.Quadratic.InOut).onUpdate(function (t) {
 	    m.scale.set(this.scale, this.scale, this.scale);
 	    //m.rotation.set()
 	    m.position.setY(this.y);
@@ -62117,12 +62141,12 @@
 	    lastTime = audio.currentTime;
 	  }
 
-	  cameraZ -= 6;
+	  cameraZ -= 12;
 	  camera.position.z = cameraZ;
 
 	  requestAnimationFrame(animate);
-	  //renderer.render(scene, camera)
-	  composer.render(renderer);
+	  renderer.render(scene, camera);
+	  //composer.render(renderer)
 
 	  _tween2.default.update();
 	}
