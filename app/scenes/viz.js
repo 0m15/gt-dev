@@ -151,8 +151,6 @@ const barsByTime = getBarsByTime()
 const tatumsByTime = getTatumsByTime()
 const scenesByTime = getScenesByTime()
 
-console.log('scenesByTime', scenesByTime)
-
 function initSky() {
 
   // Add Sky Mesh
@@ -161,28 +159,28 @@ function initSky() {
 
   // Add Sun Helper
   var sunSphere = new THREE.Mesh(
-    new THREE.SphereBufferGeometry( 250, 16, 8 ),
-    new THREE.MeshBasicMaterial( { color: 0xffffff } )
+    new THREE.SphereBufferGeometry( 2000, 16, 8 ),
+    new THREE.MeshBasicMaterial( { color: 0xff6600 } )
   );
 
   sunSphere.position.y = 100;
   sunSphere.visible = true;
-  scene.add( sunSphere );
+  //scene.add( sunSphere );
 
   /// GUI
 
   var effectController  = {
     turbidity: 1,
-    reileigh: 4,
-    mieCoefficient: 0.005,
+    reileigh: 0,
+    mieCoefficient: 0.0011,
     mieDirectionalG: 0.8,
     luminance: 1,
-    inclination: 0.49, // elevation / inclination
+    inclination: 0.42, // elevation / inclination
     azimuth: 0.25, // Facing front,
     sun: true
   };
 
-  var distance = 400000;
+  var distance = 4000;
 
   // function guiChanged() {
 
@@ -208,117 +206,84 @@ function initSky() {
 
 export function init() {
 
-  // scene
+  // SCENE
   scene = new THREE.Scene()
   
-  scene.fog = new THREE.Fog( 0x121212, 0.8, 200000 )
+  //scene.fog = new THREE.Fog( 0x121212, 0.1, 200000 )
   scene.add( new THREE.AmbientLight( 0xffffff) );
 
-  // var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
-  // hemiLight.color.setHSL( 0.6, 1, 0.6 );
-  // hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
-  // hemiLight.position.set( 0, 500, 0 );
-  // scene.add(hemiLight)
 
-  // var spotLight = new THREE.PointLight( 0xff1075 );
-  // spotLight.position.set( 0, 0, 200 );
-  // scene.add( spotLight );
-
-  // lights
-  light = new THREE.DirectionalLight( 0xffffff, 1.0 );
-  light.position.set(0, 200, 100)
-
-  scene.add(light)
-
-
-  // camera
+  // CAMERA
   camera = new THREE.PerspectiveCamera( 65, screenX / screenY, 1, 2000000)
-  
-  camera.position.z = 1200
+  camera.position.z = 1800
+  //camera.position.x = -300
+  camera.position.y = 300
   camera.lookAt( scene.position );
   
-  camControls = new THREE.FirstPersonControls(camera);
-  camControls.lookSpeed = 0.2;
-  camControls.movementSpeed = 1;
-  camControls.noFly = true;
-  camControls.lookVertical = true;
-  camControls.constrainVertical = true;
-  camControls.verticalMin = 1.0;
-  camControls.verticalMax = 2.0;
-  camControls.lon = -190;
-  camControls.lat = 120;
 
-  // terrain
-  var terrainMesh = terrain()
-  terrainMesh.position.setY(20)
-  //scene.add(terrainMesh)
-
-  // main object
-  const geometry = new THREE.IcosahedronGeometry( 160 );
-  //const geometry = new THREE.SphereGeometry( 160 );
-  var customMaterial = new THREE.ShaderMaterial({
-    uniforms: {  
-
-    },
-    vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
-    fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-    side: THREE.BackSide,
-    blending: THREE.AdditiveBlending,
-    transparent: true
-  });
-  const material = new THREE.MeshPhongMaterial( { 
-    color: 0xffffff, 
-    wireframe: false,
-    transparent: true,
-    opacity: 0.25
-    //shading: THREE.FlatShading,
-
-  });
-
-
-  const materials = [customMaterial, material]
-  //mesh = new THREE.Mesh( geometry, customMaterial);
-  mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
+  // FIRST PERSON CONTROLS
+  // camControls = new THREE.FirstPersonControls(camera);
+  // camControls.lookSpeed = 0.1;
+  // camControls.movementSpeed = 1;
+  // camControls.noFly = true;
+  // camControls.lookVertical = true;
+  // camControls.constrainVertical = true;
+  // camControls.verticalMin = 1.0;
+  // camControls.verticalMax = 2.0;
 
   
+  // LIGHTS
+  light = new THREE.DirectionalLight( 0xffffff, 0.1 );
+  light.castShadow = true;
+  light.position.set(0, 1200, -3000)
+  light.shadow.camera.near = -100000;
+  light.shadow.camera.far = 10000;
+  light.shadow.camera.right = 1600;
+  light.shadow.camera.left = -1600;
+  light.shadow.camera.top  = 20000;
+  light.shadow.camera.bottom = -12000;
+  light.shadow.mapSize.width = 1024;
+  light.shadow.mapSize.height = 1024;
 
+  scene.add(light)
+  //scene.add(new THREE.CameraHelper( light.shadow.camera ))
+
+  // MAIN OBJECT3D
   object3d = new THREE.Object3D()
   scene.add(object3d)
 
-  initSky()
 
-  // const _meshGlow = new THREE.Mesh( object3d.geometry, customMaterial.clone() );
-  // _meshGlow.position.setX(_mesh.position.x)
-  // _meshGlow.position.setY(_mesh.position.y)
-  // _meshGlow.position.setZ(_mesh.position.z)
+  // TERRAIN
+  var terrainMesh = terrain()
+  terrainMesh.position.setY(-400)
+  terrainMesh.castShadow = false
+  terrainMesh.receiveShadow = true
+  scene.add(terrainMesh)
 
-  //scene.add(mesh)
-
-  // particles
-  particleSystem = drawParticles(3)
-  particleSystem.sortParticles = true
-
-  //scene.add(particleSystem)
-
-
-  //renderer
+  //initSky()
+  
+  // RENDERER
   renderer = new THREE.WebGLRenderer({
     antialias: true,
     //alpha: true
   });
-  
-  renderer.gammaInput = true;
-  renderer.gammaOutput = true;
 
-  //renderer.setClearColor(0x121212)
-  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setPixelRatio( 1 );
   renderer.setSize( screenX, screenY );
-  
+  renderer.setClearColor(0x121212);
+
+  // RENDERER SHADOW
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // renderer.gammaInput = true
+  // renderer.gammaOutput = true
+  renderer.autoClear = false;
 
   // append canvas
   document.getElementById('visualization').appendChild( renderer.domElement );
 
 
+  // RENDER PASS
   var rtParameters = { 
     minFilter: THREE.LinearFilter, 
     magFilter: THREE.LinearFilter, 
@@ -326,27 +291,44 @@ export function init() {
     stencilBuffer: true 
   };
 
-  var renderModel = new THREE.RenderPass( scene, camera );
-  var effectBloom = new THREE.BloomPass( 4, 32 );
-  var effectCopy = new THREE.ShaderPass( THREE.CopyShader );
+  var renderTarget = new THREE.WebGLRenderTarget( screenX, screenY, rtParameters );
 
+  var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
   var effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
+  
+  effectFXAA.uniforms[ 'resolution' ].value.set( 1 / screenX, 1 / screenY );
 
-  var width = window.innerWidth || 2;
-  var height = window.innerHeight || 2;
+  //var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
 
-  effectFXAA.uniforms[ 'resolution' ].value.set( 1 / width, 1 / height );
+  // tilt shift
+  hblur = new THREE.ShaderPass( THREE.HorizontalTiltShiftShader );
+  vblur = new THREE.ShaderPass( THREE.VerticalTiltShiftShader );
+  
+  hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
+  vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
 
-  effectCopy.renderToScreen = true;
+  var effectBloom = new THREE.BloomPass(1, 25, 5);
+  effectBloom.renderToScreen = true
+  
+  composer = new THREE.EffectComposer( renderer, renderTarget );
+  vblur.renderToScreen = true
 
-  composer = new THREE.EffectComposer( renderer );
+  composer = new THREE.EffectComposer( renderer, renderTarget );
+  composer.addPass( new THREE.RenderPass( scene, camera ) );
 
-  composer.addPass( renderModel );
-  //composer.addPass( effectFXAA );
-  //composer.addPass( effectBloom );
-  //composer.addPass( effectCopy );
+  composer.addPass( effectFXAA );
+  composer.addPass( effectBloom );
+  composer.addPass( hblur );
+  composer.addPass( vblur );
 
-  // play audio
+
+  // Mouse control
+  // controls = new THREE.OrbitControls( camera, renderer.domElement );
+  // controls.target.set( 0, 0, 0 );
+  // controls.update();
+
+
+  // PLAY AUDIO
   audio.play()
 }
 
@@ -355,7 +337,7 @@ function generateHeight( width, height ) {
   var size = width * height
   var data = new Uint8Array( size )
   var perlin = new ImprovedNoise()
-  var quality = 1
+  var quality = 0.1
   var z = Math.random() * 100;
 
   for ( var j = 0; j < 4; j ++ ) {
@@ -364,6 +346,7 @@ function generateHeight( width, height ) {
 
       var x = i % width
       var y = ~~ ( i / width );
+
       data[ i ] += Math.abs( perlin.noise( x / quality, y / quality, z ) * quality * 1.75 );
 
     }
@@ -377,11 +360,12 @@ function generateHeight( width, height ) {
 }
 
 function terrain() {
-  var worldWidth = 256
-  var worldDepth = 2000
+  var worldWidth = 64
+  var worldDepth = 1024
   var worldHalfWidth = worldWidth / 2, worldHalfDepth = worldDepth / 2;
   var data = generateHeight( worldWidth, worldDepth );
-  var geometry = new THREE.PlaneBufferGeometry( 7500, 50000, worldWidth-1, worldDepth-1);
+  //var geometry = new THREE.PlaneBufferGeometry( 7500, 50000, worldWidth-1, worldDepth-1);
+  var geometry = new THREE.PlaneBufferGeometry( 7500, 250000, worldWidth-1, worldDepth-1);
   geometry.rotateX( - Math.PI / 2 );
 
   var vertices = geometry.attributes.position.array;
@@ -392,9 +376,10 @@ function terrain() {
   }
 
   var material = new THREE.MeshPhongMaterial( {
-    color: 0x121212,
-    wireframe: true,
-    wireframeLinewidth: 0.1
+    color: 0x111111,
+    specular: 0x44FADD,
+    shading: THREE.FlatShading,
+    //wireframe: true
   });
 
   return new THREE.Mesh(geometry, material)
@@ -405,86 +390,6 @@ function terrain() {
   // ground.rotation.x = -Math.PI/2;
   // ground.position.y = -200;
   // return ground
-}
-
-function drawParticles(size=6) {
-  const range = screenX
-  const geometry = new THREE.Geometry();
-  const textureLoader = new THREE.TextureLoader()
-  const texture = THREE.ImageUtils.loadTexture('/assets/tests/particle-1.png');
-  const material = new THREE.PointsMaterial({
-      size: size,
-      transparent: true,
-      opacity: 1,
-      map: texture,
-      fog: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      sizeAttenuation: true,
-      color: 0x9AE17B
-    })
- 
-  for (var i = 0; i < 400; i++) {
-    const particle = new THREE.Vector3(0, 0, 0)
-    particle.x = Math.random() * screenX - screenX / 2, 
-    particle.y = Math.random() * screenY - screenY / 2, 
-    particle.z = Math.random() * 400 - 400 / 2;
-    
-    //drawParticle(particle)
-    geometry.vertices.push(particle)
-
-    //scene.add(particle)
-  }
-
-  var system = new THREE.Points(geometry, material);
-  return system
-}
-  
-
-function __addSegment(segment, radius=10, multiplyScalar=10) {
-  // loudness 0-1
-  const loudnessMax = ((-100 - segment.loudnessMax) * -1) / 100
-  
-  for(var i = 0; i < 1; i++) {
-    const timbre = segment.timbre[i]
-    const radius = timbre//timbre
-    var geometry = new THREE.SphereGeometry( radius, 8, 8 );
-    const material = new THREE.MeshPhongMaterial({
-      color: 0xff3870, 
-      transparent: true,
-      opacity: 1,
-      shading: THREE.FlatShading,
-      wireframe: false
-    })
-
-    var customMaterial = new THREE.ShaderMaterial({
-      uniforms: {  },
-      vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
-      fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending,
-      transparent: true
-    });
-
-    const materials = [customMaterial]
-    //mesh = new THREE.Mesh( geometry, customMaterial);
-    const _mesh = THREE.SceneUtils.createMultiMaterialObject(geometry, materials)
-    //const mesh = new THREE.Mesh( geometry, material )
-    _mesh.scale.set(1, 1, 1)
-    //_mesh.scale.x = mesh.scale.y = mesh.scale.z = timbre*0.01;
-    _mesh.position.set(
-      Math.random() * 10 - 10 / 2,
-      Math.random() * 10 - 10 / 2, 
-      Math.random() * 10 - 10 / 2
-    )
-    _mesh.position.multiplyScalar( Math.random()*multiplyScalar );
-    _mesh.rotation.set( Math.random() * 2, Math.random() * 2, Math.random() * 2 );
-    
-    
-    object3d.add(_mesh)
-    tweenSegment(_mesh, timbre, segment.duration, i*100)
-    
-  }
 }
 
 
@@ -498,13 +403,13 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
   center = new THREE.Vector3( 
     Math.random() * screenX - screenX / 2,
     Math.random() * screenY - screenY / 2, 
-    (camera.position.z)-1200
+    (camera.position.z)-2000
   );
 
 
   for(var i = 0; i < 3; i++) {
     const timbre = segment.timbre[i]
-    const radius = logScale([0.85, 0.97], [2, 64], loudnessMax)//loudnessMax*12//timbre
+    const radius = logScale([0.72, 0.97], [1, 64], loudnessMax)//loudnessMax*12//timbre
     //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
 
     var shader = THREE.FresnelShader;
@@ -512,13 +417,16 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms };
     var materialA = new THREE.ShaderMaterial( parameters );
 
-    var geometry1 = loudnessMax > 0.92 ? new THREE.SphereGeometry( radius, 4, 4) : new THREE.CylinderGeometry(radius, 0, radius*4)
+    var geometry1 = i > 0
+      ? new THREE.SphereGeometry( radius, 4, 4) 
+      : new THREE.CylinderGeometry(0, radius, radius*6)
     const material = new THREE.MeshPhongMaterial({
       //color: loudnessMax > 0.9 ? Math.random()*0xF30A49 : 0xF30A49, 
       color: Math.random()*0xF30A49, 
       transparent: true,
-      opacity: 1,
+      opacity: loudnessMax,
       shading: THREE.FlatShading,
+      specular: Math.random()*0xF30A49,
       //wireframe: true
     })
 
@@ -531,13 +439,14 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
       },
       vertexShader:   document.getElementById( 'vertexShader'   ).textContent,
       fragmentShader: document.getElementById( 'fragmentShader' ).textContent,
-      side: THREE.FrontSide,
+      side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
       transparent: true
     });
 
-    const materials = [material]
+    const materials = [customMaterial, material]
     const _mesh = THREE.SceneUtils.createMultiMaterialObject(geometry1, materials)
+    //const _mesh = new THREE.Mesh(geometry1, materials)
 
     // _mesh.rotation.set( 
     //   Math.random() * 2, 
@@ -545,13 +454,15 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     //   Math.random() * 2)
 
     _mesh.position.set(
-      center.x+Math.random()*80-80/2, 
+      center.x + Math.random() * 180 - 180, 
       loudnessMax <= 0.90 ? -screenY/2 : screenY/2, 
-      center.z-200)
+      center.z-200-(i*100))
     
+    _mesh.castShadow = true
+    _mesh.receiveShadow = false
   
     object3d.add(_mesh)
-    tweenSegment(_mesh, timbre, segment.duration, i*200)
+    tweenSegment(_mesh, loudnessMax, segment.duration, i*(segment.duration/3)*1000)
 
     
   }
@@ -576,11 +487,11 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
   const loudnessMax = ((-100 - loudness) * -1) / 100
 
   m.scale.set(.25,.25,.25)
-  const scale = loudnessMax*2.5
+  const scale = loudnessMax*6
 
   var tween = new TWEEN.Tween(m.position)
-    .to({z: m.position.z+5 }, 3000)
-    .easing(TWEEN.Easing.Quadratic.InOut)
+    .to({z: m.position.z+25 }, 3000)
+    .easing(TWEEN.Easing.Elastic.Out)
     .start()
   var tween = new TWEEN
     .Tween({ scale: .1, opacity: 1, y: m.position.y })
@@ -595,7 +506,7 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
     .onComplete(function() {
       new TWEEN
         .Tween({ scale: scale, z: m.position.z, rotation:0, opacity: 1 })
-        .to({ scale: 1, z: m.position.z+600,rotation: scale, opacity: 0 }, 3000)
+        .to({ scale: 0, z: m.position.z+600,rotation: scale, opacity: 0 }, 3000)
         .easing(TWEEN.Easing.Exponential.Out)
         .onUpdate(function(t) {
           //m.scale.set(this.scale, this.scale, this.scale)
@@ -664,24 +575,25 @@ export function animate(time) {
   if(currentScene && currentScene != lastScene) {
     addScene(currentScene)
     lastScene = currentScene 
-  }
+  } 
 
   if(currentSegment) {
 
-    //light.intensity = ((-100 - currentSegment.loudnessMax) * -1) / 100
 
-    if(currentSegment.loudnessMax > -20 && !tweening) {
-      //tweenSegment(mesh, segment, false)
-    }
+    if(currentSegment.start != lastSegment.start) {
+      console.log('i', loudnessMax)
+      light.intensity = loudnessMax*0.6
 
-    if(currentSegment.loudnessMax > -22 && currentSegment.start != lastSegment.start) {
       //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
       //tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
       addSegment(currentSegment, 60, 100)
       lastSegment = currentSegment
     }
 
-    if(currentSegment.loudnessMax < -8) {
+    if(currentSegment.loudnessMax > -22) {
+      //vblur.uniforms[ 'v' ].value = loudnessMax
+      
+      
       //sky.uniforms.reileigh.intensity += audio.currentTime/1000000
       //addSegment(currentSegment, 2, 3000)
       //lastSegment = currentSegment
@@ -689,29 +601,29 @@ export function animate(time) {
 
   }
   
-  sky.uniforms.turbidity.value = audio.currentTime/100;
+  //sky.uniforms.turbidity.value = audio.currentTime/100;
   // sky.uniforms.reileigh.value = ;
   // sky.uniforms.luminance.value = ;
   // sky.uniforms.mieCoefficient.value = ;
   // sky.uniforms.mieDirectionalG.value = ;
 
-  sky.uniforms.reileigh.value = 4 - (audio.currentTime/50)
+  //sky.uniforms.reileigh.value = 4 - (audio.currentTime/50)
 
   // tempo bpm
   if(!lastTime || audio.currentTime - lastTime >= barInterval) {
     //particleSystem.scale.set(1.1,1.1,1.1)
-    sky.uniforms.turbidity.value = 1.0
+    //sky.uniforms.turbidity.value = 1.0
     lastTime = audio.currentTime
   }
   
-  cameraZ -= 12
+  cameraZ -= 16
   camera.position.z = cameraZ
 
   requestAnimationFrame(animate)
-  renderer.render(scene, camera)
-  //composer.render(renderer)
-  camControls.update(clock.getDelta())
-
+  //renderer.render(scene, camera)
+  composer.render(renderer)
+  //camControls.update(clock.getDelta())
+  renderer.shadowMap.needsUpdate = true
   TWEEN.update()
 }
 

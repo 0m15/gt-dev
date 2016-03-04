@@ -6,7 +6,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, .12);
+  /*background: rgba(255, 255, 255, .12);*/
   position: relative;
   z-index: 1;
 }
