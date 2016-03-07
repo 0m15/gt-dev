@@ -61602,7 +61602,9 @@
 	var tatumsByTime = (0, _audioData.getTatumsByTime)();
 	var scenesByTime = (0, _audioData.getScenesByTime)();
 
-	// SCALES
+	// UTILS
+
+	function deg2rad() {}
 
 	function logScale() {
 	  var domain = arguments.length <= 0 || arguments[0] === undefined ? [0, 100] : arguments[0];
@@ -61656,6 +61658,46 @@
 	  return skyboxMesh;
 	}
 
+	_three2.default.DisplacementShader = {
+
+	  uniforms: {
+	    texture1: { type: "t", value: null },
+	    scale: { type: "f", value: 1.0 }
+	  },
+
+	  vertexShader: ["varying vec2 vUv;", "varying float noise;", "varying vec3 fNormal;", "uniform sampler2D texture1;", "uniform float scale;", "void main() {", "vUv = uv;", "fNormal = normal;", "vec4 noiseTex = texture2D( texture1, vUv );", "noise = noiseTex.r;",
+	  //adding the normal scales it outward
+	  //(normal scale equals sphere diameter)
+	  "vec3 newPosition = position + normal * noise * scale;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );", "}"].join("\n"),
+
+	  fragmentShader: ["varying vec2 vUv;", "varying float noise;", "varying vec3 fNormal;", "void main( void ) {",
+
+	  // compose the colour using the normals then
+	  // whatever is heightened by the noise is lighter
+	  "gl_FragColor = vec4( fNormal * noise, 1. );", "}"].join("\n")
+
+	};
+	var sphereMaterial;
+
+	function sphere() {
+	  // const uniforms = THREE.Uniform
+	  // const geometry = new THREE.SphereGeometry(20, 200, 200)
+	  // sphereMaterial = new THREE.ShaderMaterial({
+	  //   uniforms: {
+	  //     tExplosion: {
+	  //       type: "t",
+	  //       value: THREE.ImageUtils.loadTexture( 'assets/textures/green.png' )
+	  //     },
+	  //     time: { type: "f", value: 0.0 },
+	  //     weight: { type: "f", value: 10.0 }
+	  //   },
+	  //   vertexShader: document.getElementById( 'vertexShader' ).textContent,
+	  //   fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+	  // } );
+
+	  // return new THREE.Mesh(geometry, sphereMaterial)
+	}
+
 	function init() {
 
 	  // SCENE
@@ -61668,28 +61710,22 @@
 	  camera = new _three2.default.PerspectiveCamera(65, screenX / screenY, 1, 200000);
 
 	  camera.position.z = 20000;
-
-	  // 0
-	  //camera.position.y = 4000
-
-	  // 1
-	  camera.position.y = 1200;
-	  // 2 camera.position.y = 1200
-
 	  camera.lookAt(scene.position);
 
 	  // 0
-	  // camera.rotation.y = -0.8
-	  // camera.rotation.x = -0.5
-	  // camera.position.x = -4000
+	  //camera.rotation.y = 0.1
+	  // camera.rotation.x = -0.7
+	  // camera.position.y = 4000
+	  // camera.position.x = 0
 
 	  // 1
 	  camera.rotation.y = 0.4;
 	  camera.rotation.x = 0.1;
+	  camera.position.y = 1200;
 	  camera.position.x = 4000;
 
 	  // 2
-	  //camera.rotation.y = 1
+	  // camera.rotation.y = 1
 	  // camera.rotation.x = -1.25
 	  // camera.position.x = 0
 	  // camera.position.y = 8000
@@ -61711,6 +61747,11 @@
 	  scene.add(new _three2.default.CameraHelper(light.shadow.camera));
 	  tweenLight();
 
+	  // MAIN SPHERE
+	  var sphereMesh = sphere();
+	  //sphereMesh.position.z = 12000
+	  //scene.add(sphereMesh)
+
 	  // MAIN OBJECT3D
 	  object3d = new _three2.default.Object3D();
 	  scene.add(object3d);
@@ -61720,7 +61761,7 @@
 	  terrainMesh.position.setY(-400);
 	  terrainMesh.castShadow = false;
 	  terrainMesh.receiveShadow = true;
-	  scene.add(terrainMesh);
+	  //scene.add(terrainMesh)
 
 	  //sky = initSky()
 	  //scene.add(sky)
@@ -61756,8 +61797,8 @@
 	  var renderTarget = new _three2.default.WebGLRenderTarget(screenX, screenY, rtParameters);
 
 	  var effectBlend = new _three2.default.ShaderPass(_three2.default.BlendShader, "tDiffuse1");
-	  var effectFXAA = new _three2.default.ShaderPass(_three2.default.FXAAShader);
 
+	  var effectFXAA = new _three2.default.ShaderPass(_three2.default.FXAAShader);
 	  effectFXAA.uniforms['resolution'].value.set(1 / screenX, 1 / screenY);
 
 	  var effectBleach = new _three2.default.ShaderPass(_three2.default.BleachBypassShader);
@@ -61766,21 +61807,23 @@
 	  hblur = new _three2.default.ShaderPass(_three2.default.HorizontalTiltShiftShader);
 	  vblur = new _three2.default.ShaderPass(_three2.default.VerticalTiltShiftShader);
 
-	  hblur.uniforms['h'].value = 1 / window.innerWidth;
-	  vblur.uniforms['v'].value = 1 / window.innerHeight;
+	  // hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
+	  // vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
 
+	  vblur.renderToScreen = true;
 	  var effectBloom = new _three2.default.BloomPass(1, 32, 5);
 	  effectBloom.renderToScreen = true;
 
 	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
-	  vblur.renderToScreen = true;
+	  //vblur.renderToScreen = true
 
-	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
+	  //composer = new THREE.EffectComposer( renderer, renderTarget );
+
 	  composer.addPass(new _three2.default.RenderPass(scene, camera));
 
 	  composer.addPass(effectFXAA);
 	  composer.addPass(effectBloom);
-	  composer.addPass(hblur);
+	  //composer.addPass( hblur );
 	  composer.addPass(vblur);
 	  composer.addPass(effectBleach);
 
@@ -61913,25 +61956,35 @@
 	    //   Math.random() * 2,
 	    //   Math.random() * 2)
 
-	    _mesh.position.set(center.x + Math.random() * 2400 - 1200, loudnessMax <= 0.90 ? -screenY / 2 : screenY / 2, center.z + 800 - i * 100);
+	    _mesh.position.set(-1200 + i * 600, //center.x + Math.random() * 2400 - 1200,
+	    loudnessMax <= 0.90 ? -screenY / 2 : screenY / 2, center.z + 800);
 
 	    _mesh.castShadow = true;
 	    _mesh.receiveShadow = false;
 
 	    object3d.add(_mesh);
-	    tweenSegment(_mesh, loudnessMax, segment.duration, i * (segment.duration / 3) * 1000);
+	    tweenSegment(_mesh, loudnessMax, segment.duration, i * (segment.duration / segmentLength) * 1000);
 	  }
 	}
 
 	function addTatum(tatum) {
 	  var geometry = new _three2.default.Geometry();
-	  geometry.vertices.push(new _three2.default.Vector3(400, 100, camera.position.z - 4000), new _three2.default.Vector3(400, 600, camera.position.z - 4000));
+	  geometry.vertices.push(new _three2.default.Vector3(400, 0, camera.position.z - 8000), new _three2.default.Vector3(400, 600, camera.position.z - 8000));
 	  var material = new _three2.default.LineBasicMaterial({
 	    color: Math.random() * 0xffffff
 	  });
 
 	  var mesh = new _three2.default.Line(geometry, material);
-	  object3d.add(mesh);
+	  //object3d.add(mesh)
+
+	  var hgeometry = new _three2.default.Geometry();
+	  hgeometry.vertices.push(new _three2.default.Vector3(-200, 0, camera.position.z - 8000), new _three2.default.Vector3(200, 0, camera.position.z - 8000));
+
+	  var hmesh = new _three2.default.Line(hgeometry, material);
+
+	  object3d.add(hmesh);
+
+	  new _tween2.default.Tween(hmesh.scale).to({ x: 200 }, 2300).start();
 	}
 
 	function tweenSegment(m, loudness, duration) {
@@ -61955,7 +62008,7 @@
 	  //   .easing(TWEEN.Easing.Elastic.Out)
 	  //   .start()
 
-	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, y: m.position.y }).delay(delay).to({ scale: scale, opacity: opacity, y: -140 }, duration * 1000).easing(_tween2.default.Easing.Elastic.InOut).onUpdate(function (t) {
+	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, y: m.position.y }).delay(delay).to({ scale: scale, opacity: opacity, y: 0 }, duration * 1000).easing(_tween2.default.Easing.Elastic.InOut).onUpdate(function (t) {
 	    m.scale.set(this.scale, this.scale, this.scale);
 	    //m.rotation.set()
 	    m.position.setY(this.y);
@@ -62024,7 +62077,7 @@
 	  sceneIdx += 1;
 	}
 
-	audio.currentTime = 0;
+	//audio.currentTime=0
 
 	var barInterval = 1 / (_audioData.audioData.info.bpm / 60);
 	var lastTime = 0;
@@ -62037,8 +62090,9 @@
 	var barCount = 0;
 	var startTweenLight = false;
 	clock.start();
-
+	var start = Date.now();
 	function animate(time) {
+	  //sphereMaterial.uniforms[ 'time' ].value = .0001 * ( Date.now() - start );
 	  currentSegment = segmentsByTime[audio.currentTime.toFixed(1)];
 	  currentScene = scenesByTime[audio.currentTime.toFixed(0)];
 	  currentBar = barsByTime[audio.currentTime.toFixed(1)];
@@ -62065,7 +62119,7 @@
 
 	    if (currentSegment.start != lastSegment.start) {
 	      //light.intensity = currentSegment.loudnessMax*2
-	      vblur.uniforms['v'].value = currentSegment.loudnessMax * 0.001;
+	      //vblur.uniforms[ 'v' ].value = currentSegment.loudnessMax*0.001
 
 	      //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
 	      //tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
@@ -62100,7 +62154,6 @@
 	  cameraZ -= 36;
 
 	  camera.position.z = cameraZ;
-	  //camera.position.y += 0.1
 
 	  requestAnimationFrame(animate);
 	  //renderer.render(scene, camera)

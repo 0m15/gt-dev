@@ -54,7 +54,11 @@ const tatumsByTime = getTatumsByTime()
 const scenesByTime = getScenesByTime()
 
 
-// SCALES
+// UTILS
+
+function deg2rad() {
+
+}
 
 function logScale(domain=[0,100], values=[100,1000], value=1) {
   // position will be between 0 and 100
@@ -111,6 +115,76 @@ function initSky() {
   return skyboxMesh
 }
 
+THREE.DisplacementShader = {
+
+  uniforms: {
+            texture1: { type: "t", value: null },
+            scale: { type: "f", value: 1.0 },
+  },
+
+  vertexShader: [
+
+                        "varying vec2 vUv;",
+                        "varying float noise;",
+                        "varying vec3 fNormal;",
+                        "uniform sampler2D texture1;",
+                        "uniform float scale;",
+
+                        "void main() {",
+
+                            "vUv = uv;",
+                            "fNormal = normal;",
+
+                            "vec4 noiseTex = texture2D( texture1, vUv );",
+
+                            "noise = noiseTex.r;",
+                            //adding the normal scales it outward
+                            //(normal scale equals sphere diameter)
+                            "vec3 newPosition = position + normal * noise * scale;",
+
+                            "gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );",
+
+                        "}"
+
+  ].join("\n"),
+
+  fragmentShader: [
+
+      "varying vec2 vUv;",
+                        "varying float noise;",
+                        "varying vec3 fNormal;",
+
+      "void main( void ) {",
+
+                            // compose the colour using the normals then 
+                            // whatever is heightened by the noise is lighter
+                            "gl_FragColor = vec4( fNormal * noise, 1. );",
+
+                        "}"
+
+  ].join("\n")
+
+};
+var sphereMaterial;
+
+function sphere() {
+  // const uniforms = THREE.Uniform
+  // const geometry = new THREE.SphereGeometry(20, 200, 200)
+  // sphereMaterial = new THREE.ShaderMaterial({
+  //   uniforms: { 
+  //     tExplosion: { 
+  //       type: "t",
+  //       value: THREE.ImageUtils.loadTexture( 'assets/textures/green.png' ) 
+  //     },
+  //     time: { type: "f", value: 0.0 },
+  //     weight: { type: "f", value: 10.0 }
+  //   },
+  //   vertexShader: document.getElementById( 'vertexShader' ).textContent,
+  //   fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+  // } );
+
+  // return new THREE.Mesh(geometry, sphereMaterial)
+}
 
 export function init() {
 
@@ -125,28 +199,22 @@ export function init() {
   camera = new THREE.PerspectiveCamera( 65, screenX / screenY, 1, 200000)
   
   camera.position.z = 20000
-  
-  // 0 
-  //camera.position.y = 4000
-  
-  // 1 
-  camera.position.y = 1200
-  // 2 camera.position.y = 1200
-
   camera.lookAt( scene.position );
 
   // 0
-  // camera.rotation.y = -0.8
-  // camera.rotation.x = -0.5
-  // camera.position.x = -4000
+  //camera.rotation.y = 0.1
+  // camera.rotation.x = -0.7
+  // camera.position.y = 4000
+  // camera.position.x = 0
 
   // 1
   camera.rotation.y = 0.4
   camera.rotation.x = 0.1
+  camera.position.y = 1200
   camera.position.x = 4000
 
   // 2
-  //camera.rotation.y = 1
+  // camera.rotation.y = 1
   // camera.rotation.x = -1.25
   // camera.position.x = 0
   // camera.position.y = 8000
@@ -168,6 +236,12 @@ export function init() {
   scene.add(new THREE.CameraHelper( light.shadow.camera ))
   tweenLight()
 
+
+  // MAIN SPHERE
+  const sphereMesh = sphere()
+  //sphereMesh.position.z = 12000
+  //scene.add(sphereMesh)
+
   // MAIN OBJECT3D
   object3d = new THREE.Object3D()
   scene.add(object3d)
@@ -178,7 +252,7 @@ export function init() {
   terrainMesh.position.setY(-400)
   terrainMesh.castShadow = false
   terrainMesh.receiveShadow = true
-  scene.add(terrainMesh)
+  //scene.add(terrainMesh)
 
   //sky = initSky()
   //scene.add(sky)
@@ -214,34 +288,37 @@ export function init() {
   };
 
   var renderTarget = new THREE.WebGLRenderTarget( screenX, screenY, rtParameters );
-
-  var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
-  var effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
   
+  var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
+  
+  var effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
   effectFXAA.uniforms[ 'resolution' ].value.set( 1 / screenX, 1 / screenY );
 
   var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
-
 
   // tilt shift
   hblur = new THREE.ShaderPass( THREE.HorizontalTiltShiftShader );
   vblur = new THREE.ShaderPass( THREE.VerticalTiltShiftShader );
   
-  hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
-  vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
+  // hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
+  // vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
 
+  vblur.renderToScreen = true
   var effectBloom = new THREE.BloomPass(1, 32, 5);
   effectBloom.renderToScreen = true
-  
-  composer = new THREE.EffectComposer( renderer, renderTarget );
-  vblur.renderToScreen = true
+
 
   composer = new THREE.EffectComposer( renderer, renderTarget );
+  //vblur.renderToScreen = true
+
+
+  //composer = new THREE.EffectComposer( renderer, renderTarget );
+  
   composer.addPass( new THREE.RenderPass( scene, camera ) );
 
   composer.addPass( effectFXAA );
   composer.addPass( effectBloom );
-  composer.addPass( hblur );
+  //composer.addPass( hblur );
   composer.addPass( vblur );
   composer.addPass( effectBleach );
 
@@ -385,15 +462,15 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     //   Math.random() * 2)
 
     _mesh.position.set(
-      center.x + Math.random() * 2400 - 1200, 
+      -1200+(i*600), //center.x + Math.random() * 2400 - 1200, 
       loudnessMax <= 0.90 ? -screenY/2 : screenY/2, 
-      center.z+800-(i*100))
+      center.z+800)
     
     _mesh.castShadow = true
     _mesh.receiveShadow = false
   
     object3d.add(_mesh)
-    tweenSegment(_mesh, loudnessMax, segment.duration, i*(segment.duration/3)*1000)
+    tweenSegment(_mesh, loudnessMax, segment.duration, i*(segment.duration/segmentLength)*1000)
 
     
   }
@@ -403,15 +480,30 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
 function addTatum(tatum) {
   const geometry = new THREE.Geometry()
   geometry.vertices.push(
-    new THREE.Vector3( 400, 100, camera.position.z-4000 ),
-    new THREE.Vector3( 400, 600, camera.position.z-4000)
+    new THREE.Vector3( 400, 0, camera.position.z-8000 ),
+    new THREE.Vector3( 400, 600, camera.position.z-8000)
   )
   const material =  new THREE.LineBasicMaterial({
     color: Math.random() * 0xffffff
   });
 
   const mesh = new THREE.Line(geometry, material)
-  object3d.add(mesh)
+  //object3d.add(mesh)
+
+  const hgeometry = new THREE.Geometry()
+  hgeometry.vertices.push(
+    new THREE.Vector3( -200, 0, camera.position.z-8000 ),
+    new THREE.Vector3( 200, 0, camera.position.z-8000)
+  )
+
+  const hmesh = new THREE.Line(hgeometry, material)
+
+  object3d.add(hmesh)
+
+  new TWEEN
+    .Tween(hmesh.scale)
+    .to({ x: 200 }, 2300)
+    .start()
 }
 
 function tweenSegment(m, loudness, duration, delay=1, remove=true) {
@@ -436,7 +528,7 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
   var tween = new TWEEN
     .Tween({ scale: .1, opacity: 1, y: m.position.y })
     .delay(delay)
-    .to({ scale: scale, opacity: opacity, y: -140 }, (duration)*1000)
+    .to({ scale: scale, opacity: opacity, y: 0 }, (duration)*1000)
     .easing(TWEEN.Easing.Elastic.InOut)
     .onUpdate(function(t) {
       m.scale.set(this.scale, this.scale, this.scale)
@@ -531,7 +623,7 @@ function addScene(scene) {
   sceneIdx += 1;
 }
 
-audio.currentTime=0
+//audio.currentTime=0
 
 const barInterval = 1 / (audioData.info.bpm / 60)
 let lastTime = 0
@@ -544,8 +636,9 @@ var clock = new THREE.Clock( );
 var barCount = 0;
 var startTweenLight = false;
 clock.start()
-
+var start = Date.now()
 export function animate(time) {
+  //sphereMaterial.uniforms[ 'time' ].value = .0001 * ( Date.now() - start );
   currentSegment = segmentsByTime[audio.currentTime.toFixed(1)]
   currentScene = scenesByTime[audio.currentTime.toFixed(0)]  
   currentBar = barsByTime[audio.currentTime.toFixed(1)]
@@ -577,7 +670,7 @@ export function animate(time) {
 
     if(currentSegment.start != lastSegment.start) {
       //light.intensity = currentSegment.loudnessMax*2
-      vblur.uniforms[ 'v' ].value = currentSegment.loudnessMax*0.001
+      //vblur.uniforms[ 'v' ].value = currentSegment.loudnessMax*0.001
 
       //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
       //tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
@@ -616,7 +709,6 @@ export function animate(time) {
 
   
   camera.position.z = cameraZ
-  //camera.position.y += 0.1
 
 
 
