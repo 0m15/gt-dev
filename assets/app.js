@@ -19813,8 +19813,9 @@
 	      var pageIdx = _state.pageIdx;
 	      var showNavigation = _state.showNavigation;
 
-	      var springParams = { stiffness: 20, damping: 20 };
-	      var springParamsAlt = { stiffness: 80, damping: 16 };
+	      var springParamsA = { stiffness: 60, damping: 12, precision: 0.1 };
+	      var springParams = { stiffness: 20, damping: 20, precision: 0.1 };
+	      var springParamsAlt = { stiffness: 80, damping: 16, precision: 0.1 };
 
 	      var headerMotionStyle = {
 	        scale: (0, _reactMotion.spring)(1),
@@ -19822,23 +19823,26 @@
 	        y: (0, _reactMotion.spring)(0)
 	      };
 
-	      var buttonMotionStyle = headerMotionStyle;
+	      var buttonMotionStyle = {
+	        scale: (0, _reactMotion.spring)(1),
+	        opacity: (0, _reactMotion.spring)(1),
+	        y: (0, _reactMotion.spring)(0)
+	      };
 
 	      if (launched) {
 	        headerMotionStyle.scale = (0, _reactMotion.spring)(.7, springParams);
 	        headerMotionStyle.opacity = (0, _reactMotion.spring)(.25, springParams);
 	        headerMotionStyle.y = (0, _reactMotion.spring)(-310, springParams);
-	        buttonMotionStyle = headerMotionStyle;
 
-	        // scale: launched ? spring(3, springParams) : spring(1),
-	        //           y: launched ? spring(20) : spring(0),
-	        //           opacity: launched ? spring(0) : spring(1)
+	        buttonMotionStyle.scale = (0, _reactMotion.spring)(3, springParams);
+	        buttonMotionStyle.y = (0, _reactMotion.spring)(200, springParams);
+	        buttonMotionStyle.opacity = (0, _reactMotion.spring)(0, springParams);
 	      }
 
 	      if (showNavigation) {
-	        headerMotionStyle.scale = (0, _reactMotion.spring)(.75, springParamsAlt);
-	        headerMotionStyle.opacity = (0, _reactMotion.spring)(.45, springParamsAlt);
-	        headerMotionStyle.y = (0, _reactMotion.spring)(0, springParamsAlt);
+	        headerMotionStyle.scale = (0, _reactMotion.spring)(.75, springParamsA);
+	        headerMotionStyle.opacity = (0, _reactMotion.spring)(.45, springParamsA);
+	        headerMotionStyle.y = (0, _reactMotion.spring)(0, springParamsA);
 	        buttonMotionStyle = headerMotionStyle;
 	      }
 
@@ -66472,6 +66476,7 @@
 	                  alignItems: 'center',
 	                  justifyContent: 'flex-end',
 	                  textAlign: 'right',
+	                  top: 0,
 	                  left: 0,
 	                  width: '100%',
 	                  height: '100%',
@@ -66693,7 +66698,7 @@
 	          onMouseOver: this.mouseOver,
 	          onMouseOut: this.mouseOut,
 	          onClick: this.props.onClick,
-	          style: { cursor: 'pointer' } },
+	          style: { cursor: 'pointer', position: 'relative', zIndex: 1 } },
 	        _react2.default.createElement(_ThreeScene2.default, {
 	          ambientLightColor: 0xffffff,
 	          fogColor: 0x212121,
@@ -67217,7 +67222,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: 0;\n  right: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 2em;\n    right: 2em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: 0;\n  right: 0;\n  z-index: 9999;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 2em;\n    right: 2em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 

@@ -90,7 +90,7 @@ export default class IcosahedronButton extends Component {
         onMouseOver={this.mouseOver} 
         onMouseOut={this.mouseOut} 
         onClick={this.props.onClick} 
-        style={{cursor:'pointer'}}>
+        style={{cursor:'pointer', position:'relative', zIndex:1}}>
         <ThreeScene 
           ambientLightColor={0xffffff}
           fogColor={0x212121}
