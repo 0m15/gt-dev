@@ -5,19 +5,23 @@ import IcosahedronButton from './IcosahedronButton'
 const items = [
   {
     title: "The Project",
-    href: "#project"
+    href: "project",
+    id: 0
   },
   {
     title: "Artists",
-    href: "#artists"
+    href: "artists",
+    id: 1
   },
   {
     title: "Get the Album",
-    href: "#listen"
+    href: "listen",
+    id: 2
   },
   {
     title: "Gallery",
-    href: "#gallery"
+    href: "gallery",
+    id: 3
   },
 ]
 
@@ -28,6 +32,8 @@ export default class Navigation extends Component {
 
     this.show = this.show.bind(this)
     this.hide = this.hide.bind(this)
+    this.toggle = this.toggle.bind(this)
+    this.navigate = this.navigate.bind(this)
 
     this.state = {
       show: false
@@ -42,7 +48,7 @@ export default class Navigation extends Component {
 
     return (
       <div>
-        <IcosahedronButton onClick={this.show} />
+        <IcosahedronButton onClick={this.toggle} />
         <Motion 
           defaultStyle={{
             y: 100,
@@ -56,32 +62,24 @@ export default class Navigation extends Component {
             <div 
               {...this.props}
               style={{
-                transform: `translate3d(0, ${values.y}%, 0)`,
+                //transform: `translate3d(0, ${values.y}%, 0)`,
                 opacity: values.opacity,
                 position: 'fixed',
                 display: 'flex',
                 alignItems: 'center',
-                top: 0,
+                justifyContent: 'flex-end',
+                textAlign: 'right',
                 left: 0,
                 width: '100%',
                 height: '100%',
-                backgroundColor: 'rgba(0, 0, 0, .85)',
                 color: '#ababab',
-                paddingLeft: '10%',
+                pointerEvents: show ? 'inherit' : 'none'
               }}>
               
               <div style={{
-                flex:1
+                flex:1,
+                paddingRight: '2em'
               }}>
-                <p style={{
-                  fontSize:'1.25em',
-                  fontWeight:100,
-                  cursor:'pointer',
-                  marginLeft:-28,
-                  marginBottom: 40}} 
-                  onClick={this.hide}>
-                  &larr; Back
-                </p>
 
                 {show && <StaggeredMotion
                   defaultStyles={[
@@ -109,8 +107,10 @@ export default class Navigation extends Component {
                           opacity: style.opacity,
                           transform: `translate3d(0, ${style.y}px, 0)`
                         }}>
-                          <a href="#" 
-                          style={{color:'#fff',fontWeight:100,textDecoration:'none'}}>{items[i].title}</a>
+                          <a 
+                            onClick={this.navigate.bind(this, items[i])}
+                            href={"#" + items[i].href}
+                            style={{color:'#fff',fontWeight:100,textDecoration:'none'}}>{items[i].title}</a>
                         </div>)
                       }
                     </div>
@@ -124,16 +124,28 @@ export default class Navigation extends Component {
     )
   }
 
+  navigate(href, e) {
+    e.preventDefault()
+    this.hide()
+    this.props.onNavigate(href)
+  }
+
+  toggle() {
+    this.state.show ? this.hide() : this.show()
+  }
+
   show(e) {
     this.setState({
       show: true
     })
+    this.props.onToggle(true)
   }
 
   hide() {
     this.setState({
       show: false
     }) 
+    this.props.onToggle(false)
   }
 
 }

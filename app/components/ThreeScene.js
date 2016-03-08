@@ -60,9 +60,9 @@ export default class ThreeScene extends Component {
       70, width / height, 1, 2000 
     )
 
-    camera.position.z = 1000
+    camera.position.z = 750
     scene.add( new THREE.AmbientLight( ambientLightColor) );
-    scene.fog = new THREE.Fog( fogColor, 0.3, 1600 );
+    scene.fog = new THREE.Fog( fogColor, 0.3, 1100 );
 
     this.props.initScene(scene, camera)
 

@@ -42,7 +42,7 @@ export default class IcosahedronButton extends Component {
     const material = new THREE.MeshPhongMaterial( { 
       color: this.props.color||0xffffff, 
       wireframe: true,
-      wireframeLinewidth: 0.1
+      wireframeLinewidth: 1
       // transparent: true,
       // opacity: 1.0
     });
@@ -72,30 +72,15 @@ export default class IcosahedronButton extends Component {
   }
 
   animate(scene, camera) {
-    
+    var am = 0.002
+
     if(this.state.mouseover) {
-
-      // const lineSegments = this.drawMenu()
-
-      // this.mesh.geometry.vertices.forEach((v, i) => {
-      //   if(lineSegments.geometry.vertices[i]) {
-      //     v.x += lineSegments.geometry.vertices[i].x
-      //     v.y += lineSegments.geometry.vertices[i].y
-      //     v.z += lineSegments.geometry.vertices[i].z
-      //   } else {
-      //     this.mesh.geometry.vertices.pop()
-      //   }
-
-      //   this.mesh.geometry.dynamic = true;
-      //   this.mesh.geometry.verticesNeedUpdate = true;
-      // })
-      scene.rotation.x += 0.01
-      scene.rotation.y += 0.01
-      scene.rotation.z += 0.01
+      am = 0.01
     }
 
-    //TWEEN.udpate()
-
+    scene.rotation.x += am
+    scene.rotation.y += am
+    scene.rotation.z += am
   }
 
   render() {
@@ -108,9 +93,9 @@ export default class IcosahedronButton extends Component {
         style={{cursor:'pointer'}}>
         <ThreeScene 
           ambientLightColor={0xffffff}
-          fogColor={0x121212}
-          height={96}
-          width={96}
+          fogColor={0x212121}
+          height={72}
+          width={72}
           initScene={this.renderScene} 
           animate={this.animate}
           alpha={true} />

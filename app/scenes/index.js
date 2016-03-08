@@ -7,9 +7,7 @@ import { playSfx } from '../lib/sfx'
 import { Motion, spring } from 'react-motion'
 import MotionButton from "../components/MotionButton";
 import Navigation from '../components/Navigation'
-import * as audioData from '../lib/audio-data'
-
-console.log(audioData)
+import Paper from '../components/Paper'
 
 import THREE from 'three'
 import TWEEN from 'tween'
@@ -23,14 +21,14 @@ export default class Scene extends Component {
     this.state = {
       mouseover: false,
       author: false,
-      launched: false
+      launched: false,
+      pageIdx: -1,
+      showNavigation: false
     }
 
     this.mouseOver = this.mouseOver.bind(this)
     this.mouseOut = this.mouseOut.bind(this)
 
-    this.animate = this.animate.bind(this)
-    this.renderScene = this.renderScene.bind(this)
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -70,32 +68,6 @@ export default class Scene extends Component {
     }) 
   }
 
-  renderScene(scene, camera, renderer) {
-    const geometry = new THREE.IcosahedronGeometry( 320 );
-    //const geometry = new THREE.TorusKnotGeometry(320, 40, 120, 4)
-    const material = new THREE.MeshPhongMaterial( { 
-      color: 0xffffff, 
-      wireframe: true,
-      // transparent: true,
-      // opacity: 1.0
-    });
-    const mesh = new THREE.Mesh( geometry, material);
-    mesh.scale.x = mesh.scale.y = mesh.scale.z = 1
-    scene.add(mesh)
-  }
-
-  animate(scene, camera) {
-    
-    if(this.state.mouseover) {
-      scene.rotation.x += 0.01
-      scene.rotation.y += 0.01
-      scene.rotation.z += 0.01
-    }
-
-    //TWEEN.udpate()
-
-  }
-
   launch() {
     this.setState({
       launched: true
@@ -104,74 +76,150 @@ export default class Scene extends Component {
 
   render() {
 
-    const { launched } = this.state
+    const { launched, pageIdx, showNavigation } = this.state
     const springParams = {stiffness: 20, damping: 20}
+    const springParamsAlt = {stiffness: 80, damping: 16}
 
-    return <div className="gt-container">
+    let headerMotionStyle = {
+      scale: spring(1), 
+      opacity: spring(1),
+      y: spring(0)
+    }
+
+    let buttonMotionStyle = headerMotionStyle
+
+    if(launched) {
+      headerMotionStyle.scale = spring(.7, springParams)
+      headerMotionStyle.opacity =spring(.25, springParams)
+      headerMotionStyle.y = spring(-310, springParams)
+      buttonMotionStyle = headerMotionStyle
+
+      // scale: launched ? spring(3, springParams) : spring(1),
+      //           y: launched ? spring(20) : spring(0),
+      //           opacity: launched ? spring(0) : spring(1)
+    }
+
+    if(showNavigation) {
+      headerMotionStyle.scale = spring(.75, springParamsAlt)
+      headerMotionStyle.opacity = spring(.45, springParamsAlt)
+      headerMotionStyle.y = spring(0, springParamsAlt)
+      buttonMotionStyle = headerMotionStyle
+    }
+
+    return <div>
 
       {launched && <div id="visualization" />}
 
-      <div className="gt-screen gt-screen--home">
-        <Motion defaultStyle={{
-            scale: 1, 
-            y: 0,
-            opacity: 1,
-          }} 
-          style={{
-            scale: launched ? spring(.7, springParams) : spring(1),
-            opacity: launched ? spring(.25, springParams) : spring(1),
-            y: launched ? spring(-310, springParams) : spring(0),
-          }}>
+      <Motion
+        defaultStyle={{
+          scale: 1, 
+          opacity: 1,
+          y: 0
+        }} 
+        style={{
+          scale: pageIdx > -1 ? spring(.9, springParamsAlt) : spring(1),
+          opacity: pageIdx > - 1 ? spring(0, springParamsAlt) : spring(1),
+          y: pageIdx > -1 ? spring(-100, springParamsAlt) : spring(0),
+        }}>
+        {values => 
+          <div 
+            style={{
+              opacity: values.opacity,
+              transform: `translate3d(0, ${values.y}%, 0) scale(${values.scale})`,
+            }}
+            className="gt-screen gt-screen--home">
+            <Motion 
+              defaultStyle={{
+                scale: 1, 
+                y: 0,
+                opacity: 1,
+              }} 
+              style={headerMotionStyle}>
+              {values => 
+                <div style={{
+                  transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
+                  opacity: values.opacity
+                }} className="gt-screen__title">
+                  <h1 className="gt-title">
+                    <TypeWriter word="glasstress" />
+                  </h1>
+                  <h2>
+                    {this.state.author==0 && <TypeWriter word="max/casacci" />}
+                    {this.state.author==1 && <TypeWriter word="daniele/mana" />}
+                  </h2>
+                </div>}
+            </Motion>
+
+            <div className="gt-screen__icosahedron">
+              <Navigation 
+                onToggle={this.toggleNavigation.bind(this)}
+                onNavigate={this.navigate.bind(this)} />
+            </div>
+
+            <Motion defaultStyle={{
+                scale: 1,
+                opacity: 1, 
+                y: 0,
+              }} 
+              style={buttonMotionStyle}>
+              {values => 
+                <div style={{
+                  transform: `translate3d(0, ${values.y}px, 0)  scale(${values.scale})`,
+                  opacity: values.opacity
+                }} className="gt-screen__action">
+                  <MotionButton 
+                    onMouseOver={this.mouseOver}
+                    onMouseOut={this.mouseOut}
+                    onClick={this.launch.bind(this)}
+                    className="gt-button gt-button--launch"
+                    label="launch visualization*" /> 
+                </div>}
+            </Motion>
+
+
+            <div className="gt-screen__footer">
+              <p className="gt-text gt-text--small">detect webgl</p>
+            </div>
+          </div>}
+      </Motion>
+
+      {this.state.pageIdx > -1 &&
+        <Motion
+        defaultStyle={{
+          scale: 1, 
+          opacity: 1,
+          y: 0
+        }} 
+        style={{
+          scale: pageIdx > -1 ? spring(1, springParamsAlt) : spring(.9),
+          opacity: pageIdx > - 1 ? spring(1, springParamsAlt) : spring(0),
+          y: pageIdx > -1 ? spring(-100, springParamsAlt) : spring(0),
+        }}>
           {values => 
-            <div style={{
-              transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
-              opacity: values.opacity
-            }} className="gt-screen__title">
-              <h1 className="gt-title">
-                <TypeWriter word="glasstress" />
-              </h1>
-              <h2>
-                {this.state.author==0 && <TypeWriter word="max/casacci" />}
-                {this.state.author==1 && <TypeWriter word="daniele/mana" />}
-              </h2>
-            </div>}
-        </Motion>
-
-        <div className="gt-screen__icosahedron">
-          <Navigation />
-        </div>
-
-        <Motion defaultStyle={{
-            scale: 1,
-            opacity: 1, 
-            y: 0,
-          }} 
-          style={{
-            scale: launched ? spring(3, springParams) : spring(1),
-            y: launched ? spring(20) : spring(0),
-            opacity: launched ? spring(0) : spring(1)
+          <Paper style={{
+            transform: `translate3d(0, ${values.y}%, 0) scale(${values.scale})`,
+            opacity: values.opacity
           }}>
-          {values => 
-            <div style={{
-              transform: `translate3d(0, ${values.y}px, 0)  scale(${values.scale})`,
-              opacity: values.opacity
-            }} className="gt-screen__action">
-              <MotionButton 
-                onMouseOver={this.mouseOver}
-                onMouseOut={this.mouseOut}
-                onClick={this.launch.bind(this)}
-                className="gt-button gt-button--launch"
-                label="launch visualization*" /> 
-            </div>}
+            
+          </Paper>}
         </Motion>
-
-        
-
-        <div className="gt-screen__footer">
-          <p className="gt-text gt-text--small">*It requires a WebGl capable browser and optional access to webcam</p>
-        </div>
-      </div>
+      }
 
     </div>
+  }
+
+  toggleNavigation(shown) {
+    console.log('toggle', shown)
+    this.setState({
+      showNavigation: shown
+    })
+  }
+
+  navigate(item) {
+    const pageIdx = item.id
+    setTimeout(() => {
+      this.setState({ pageIdx })    
+    }, 250)
+    
   }
 }

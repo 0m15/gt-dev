@@ -60,9 +60,9 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(214); // app/index.js
+	__webpack_require__(217); // app/index.js
 
-	__webpack_require__(216);
+	__webpack_require__(219);
 
 	var app = _reactDom2.default.render(_react2.default.createElement(_scenes2.default, null), document.getElementById('gt-app'));
 
@@ -19707,9 +19707,9 @@
 
 	var _Navigation2 = _interopRequireDefault(_Navigation);
 
-	var _audioData = __webpack_require__(167);
+	var _Paper = __webpack_require__(210);
 
-	var audioData = _interopRequireWildcard(_audioData);
+	var _Paper2 = _interopRequireDefault(_Paper);
 
 	var _three = __webpack_require__(163);
 
@@ -19729,9 +19729,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	console.log(audioData);
-
-	__webpack_require__(210);
+	__webpack_require__(215);
 
 	var Scene = function (_Component) {
 	  _inherits(Scene, _Component);
@@ -19744,14 +19742,14 @@
 	    _this.state = {
 	      mouseover: false,
 	      author: false,
-	      launched: false
+	      launched: false,
+	      pageIdx: -1,
+	      showNavigation: false
 	    };
 
 	    _this.mouseOver = _this.mouseOver.bind(_this);
 	    _this.mouseOut = _this.mouseOut.bind(_this);
 
-	    _this.animate = _this.animate.bind(_this);
-	    _this.renderScene = _this.renderScene.bind(_this);
 	    return _this;
 	  }
 
@@ -19799,33 +19797,6 @@
 	      });
 	    }
 	  }, {
-	    key: 'renderScene',
-	    value: function renderScene(scene, camera, renderer) {
-	      var geometry = new _three2.default.IcosahedronGeometry(320);
-	      //const geometry = new THREE.TorusKnotGeometry(320, 40, 120, 4)
-	      var material = new _three2.default.MeshPhongMaterial({
-	        color: 0xffffff,
-	        wireframe: true
-	      });
-	      // transparent: true,
-	      // opacity: 1.0
-	      var mesh = new _three2.default.Mesh(geometry, material);
-	      mesh.scale.x = mesh.scale.y = mesh.scale.z = 1;
-	      scene.add(mesh);
-	    }
-	  }, {
-	    key: 'animate',
-	    value: function animate(scene, camera) {
-
-	      if (this.state.mouseover) {
-	        scene.rotation.x += 0.01;
-	        scene.rotation.y += 0.01;
-	        scene.rotation.z += 0.01;
-	      }
-
-	      //TWEEN.udpate()
-	    }
-	  }, {
 	    key: 'launch',
 	    value: function launch() {
 	      this.setState({
@@ -19837,94 +19808,178 @@
 	    value: function render() {
 	      var _this3 = this;
 
-	      var launched = this.state.launched;
+	      var _state = this.state;
+	      var launched = _state.launched;
+	      var pageIdx = _state.pageIdx;
+	      var showNavigation = _state.showNavigation;
 
 	      var springParams = { stiffness: 20, damping: 20 };
+	      var springParamsAlt = { stiffness: 80, damping: 16 };
+
+	      var headerMotionStyle = {
+	        scale: (0, _reactMotion.spring)(1),
+	        opacity: (0, _reactMotion.spring)(1),
+	        y: (0, _reactMotion.spring)(0)
+	      };
+
+	      var buttonMotionStyle = headerMotionStyle;
+
+	      if (launched) {
+	        headerMotionStyle.scale = (0, _reactMotion.spring)(.7, springParams);
+	        headerMotionStyle.opacity = (0, _reactMotion.spring)(.25, springParams);
+	        headerMotionStyle.y = (0, _reactMotion.spring)(-310, springParams);
+	        buttonMotionStyle = headerMotionStyle;
+
+	        // scale: launched ? spring(3, springParams) : spring(1),
+	        //           y: launched ? spring(20) : spring(0),
+	        //           opacity: launched ? spring(0) : spring(1)
+	      }
+
+	      if (showNavigation) {
+	        headerMotionStyle.scale = (0, _reactMotion.spring)(.75, springParamsAlt);
+	        headerMotionStyle.opacity = (0, _reactMotion.spring)(.45, springParamsAlt);
+	        headerMotionStyle.y = (0, _reactMotion.spring)(0, springParamsAlt);
+	        buttonMotionStyle = headerMotionStyle;
+	      }
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'gt-container' },
+	        null,
 	        launched && _react2.default.createElement('div', { id: 'visualization' }),
 	        _react2.default.createElement(
-	          'div',
-	          { className: 'gt-screen gt-screen--home' },
-	          _react2.default.createElement(
-	            _reactMotion.Motion,
-	            { defaultStyle: {
-	                scale: 1,
-	                y: 0,
-	                opacity: 1
-	              },
-	              style: {
-	                scale: launched ? (0, _reactMotion.spring)(.7, springParams) : (0, _reactMotion.spring)(1),
-	                opacity: launched ? (0, _reactMotion.spring)(.25, springParams) : (0, _reactMotion.spring)(1),
-	                y: launched ? (0, _reactMotion.spring)(-310, springParams) : (0, _reactMotion.spring)(0)
-	              } },
-	            function (values) {
-	              return _react2.default.createElement(
+	          _reactMotion.Motion,
+	          {
+	            defaultStyle: {
+	              scale: 1,
+	              opacity: 1,
+	              y: 0
+	            },
+	            style: {
+	              scale: pageIdx > -1 ? (0, _reactMotion.spring)(.9, springParamsAlt) : (0, _reactMotion.spring)(1),
+	              opacity: pageIdx > -1 ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(1),
+	              y: pageIdx > -1 ? (0, _reactMotion.spring)(-100, springParamsAlt) : (0, _reactMotion.spring)(0)
+	            } },
+	          function (values) {
+	            return _react2.default.createElement(
+	              'div',
+	              {
+	                style: {
+	                  opacity: values.opacity,
+	                  transform: 'translate3d(0, ' + values.y + '%, 0) scale(' + values.scale + ')'
+	                },
+	                className: 'gt-screen gt-screen--home' },
+	              _react2.default.createElement(
+	                _reactMotion.Motion,
+	                {
+	                  defaultStyle: {
+	                    scale: 1,
+	                    y: 0,
+	                    opacity: 1
+	                  },
+	                  style: headerMotionStyle },
+	                function (values) {
+	                  return _react2.default.createElement(
+	                    'div',
+	                    { style: {
+	                        transform: 'translate3d(0, ' + values.y + 'px, 0) scale(' + values.scale + ')',
+	                        opacity: values.opacity
+	                      }, className: 'gt-screen__title' },
+	                    _react2.default.createElement(
+	                      'h1',
+	                      { className: 'gt-title' },
+	                      _react2.default.createElement(_TypeWriter2.default, { word: 'glasstress' })
+	                    ),
+	                    _react2.default.createElement(
+	                      'h2',
+	                      null,
+	                      _this3.state.author == 0 && _react2.default.createElement(_TypeWriter2.default, { word: 'max/casacci' }),
+	                      _this3.state.author == 1 && _react2.default.createElement(_TypeWriter2.default, { word: 'daniele/mana' })
+	                    )
+	                  );
+	                }
+	              ),
+	              _react2.default.createElement(
 	                'div',
-	                { style: {
-	                    transform: 'translate3d(0, ' + values.y + 'px, 0) scale(' + values.scale + ')',
-	                    opacity: values.opacity
-	                  }, className: 'gt-screen__title' },
+	                { className: 'gt-screen__icosahedron' },
+	                _react2.default.createElement(_Navigation2.default, {
+	                  onToggle: _this3.toggleNavigation.bind(_this3),
+	                  onNavigate: _this3.navigate.bind(_this3) })
+	              ),
+	              _react2.default.createElement(
+	                _reactMotion.Motion,
+	                { defaultStyle: {
+	                    scale: 1,
+	                    opacity: 1,
+	                    y: 0
+	                  },
+	                  style: buttonMotionStyle },
+	                function (values) {
+	                  return _react2.default.createElement(
+	                    'div',
+	                    { style: {
+	                        transform: 'translate3d(0, ' + values.y + 'px, 0)  scale(' + values.scale + ')',
+	                        opacity: values.opacity
+	                      }, className: 'gt-screen__action' },
+	                    _react2.default.createElement(_MotionButton2.default, {
+	                      onMouseOver: _this3.mouseOver,
+	                      onMouseOut: _this3.mouseOut,
+	                      onClick: _this3.launch.bind(_this3),
+	                      className: 'gt-button gt-button--launch',
+	                      label: 'launch visualization*' })
+	                  );
+	                }
+	              ),
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'gt-screen__footer' },
 	                _react2.default.createElement(
-	                  'h1',
-	                  { className: 'gt-title' },
-	                  _react2.default.createElement(_TypeWriter2.default, { word: 'glasstress' })
-	                ),
-	                _react2.default.createElement(
-	                  'h2',
-	                  null,
-	                  _this3.state.author == 0 && _react2.default.createElement(_TypeWriter2.default, { word: 'max/casacci' }),
-	                  _this3.state.author == 1 && _react2.default.createElement(_TypeWriter2.default, { word: 'daniele/mana' })
+	                  'p',
+	                  { className: 'gt-text gt-text--small' },
+	                  'detect webgl'
 	                )
-	              );
-	            }
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'gt-screen__icosahedron' },
-	            _react2.default.createElement(_Navigation2.default, null)
-	          ),
-	          _react2.default.createElement(
-	            _reactMotion.Motion,
-	            { defaultStyle: {
-	                scale: 1,
-	                opacity: 1,
-	                y: 0
-	              },
-	              style: {
-	                scale: launched ? (0, _reactMotion.spring)(3, springParams) : (0, _reactMotion.spring)(1),
-	                y: launched ? (0, _reactMotion.spring)(20) : (0, _reactMotion.spring)(0),
-	                opacity: launched ? (0, _reactMotion.spring)(0) : (0, _reactMotion.spring)(1)
-	              } },
-	            function (values) {
-	              return _react2.default.createElement(
-	                'div',
-	                { style: {
-	                    transform: 'translate3d(0, ' + values.y + 'px, 0)  scale(' + values.scale + ')',
-	                    opacity: values.opacity
-	                  }, className: 'gt-screen__action' },
-	                _react2.default.createElement(_MotionButton2.default, {
-	                  onMouseOver: _this3.mouseOver,
-	                  onMouseOut: _this3.mouseOut,
-	                  onClick: _this3.launch.bind(_this3),
-	                  className: 'gt-button gt-button--launch',
-	                  label: 'launch visualization*' })
-	              );
-	            }
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'gt-screen__footer' },
-	            _react2.default.createElement(
-	              'p',
-	              { className: 'gt-text gt-text--small' },
-	              '*It requires a WebGl capable browser and optional access to webcam'
-	            )
-	          )
+	              )
+	            );
+	          }
+	        ),
+	        this.state.pageIdx > -1 && _react2.default.createElement(
+	          _reactMotion.Motion,
+	          {
+	            defaultStyle: {
+	              scale: 1,
+	              opacity: 1,
+	              y: 0
+	            },
+	            style: {
+	              scale: pageIdx > -1 ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(.9),
+	              opacity: pageIdx > -1 ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(0),
+	              y: pageIdx > -1 ? (0, _reactMotion.spring)(-100, springParamsAlt) : (0, _reactMotion.spring)(0)
+	            } },
+	          function (values) {
+	            return _react2.default.createElement(_Paper2.default, { style: {
+	                transform: 'translate3d(0, ' + values.y + '%, 0) scale(' + values.scale + ')',
+	                opacity: values.opacity
+	              } });
+	          }
 	        )
 	      );
+	    }
+	  }, {
+	    key: 'toggleNavigation',
+	    value: function toggleNavigation(shown) {
+	      console.log('toggle', shown);
+	      this.setState({
+	        showNavigation: shown
+	      });
+	    }
+	  }, {
+	    key: 'navigate',
+	    value: function navigate(item) {
+	      var _this4 = this;
+
+	      var pageIdx = item.id;
+	      setTimeout(function () {
+	        _this4.setState({ pageIdx: pageIdx });
+	      }, 250);
 	    }
 	  }]);
 
@@ -20243,9 +20298,9 @@
 	      var scene = this.scene = new _three2.default.Scene();
 	      var camera = this.camera = new _three2.default.PerspectiveCamera(70, width / height, 1, 2000);
 
-	      camera.position.z = 1000;
+	      camera.position.z = 750;
 	      scene.add(new _three2.default.AmbientLight(ambientLightColor));
-	      scene.fog = new _three2.default.Fog(fogColor, 0.3, 1600);
+	      scene.fog = new _three2.default.Fog(fogColor, 0.3, 1100);
 
 	      this.props.initScene(scene, camera);
 
@@ -66345,16 +66400,20 @@
 
 	var items = [{
 	  title: "The Project",
-	  href: "#project"
+	  href: "project",
+	  id: 0
 	}, {
 	  title: "Artists",
-	  href: "#artists"
+	  href: "artists",
+	  id: 1
 	}, {
 	  title: "Get the Album",
-	  href: "#listen"
+	  href: "listen",
+	  id: 2
 	}, {
 	  title: "Gallery",
-	  href: "#gallery"
+	  href: "gallery",
+	  id: 3
 	}];
 
 	var Navigation = function (_Component) {
@@ -66367,6 +66426,8 @@
 
 	    _this.show = _this.show.bind(_this);
 	    _this.hide = _this.hide.bind(_this);
+	    _this.toggle = _this.toggle.bind(_this);
+	    _this.navigate = _this.navigate.bind(_this);
 
 	    _this.state = {
 	      show: false
@@ -66387,7 +66448,7 @@
 	      return _react2.default.createElement(
 	        'div',
 	        null,
-	        _react2.default.createElement(_IcosahedronButton2.default, { onClick: this.show }),
+	        _react2.default.createElement(_IcosahedronButton2.default, { onClick: this.toggle }),
 	        _react2.default.createElement(
 	          _reactMotion.Motion,
 	          {
@@ -66404,35 +66465,25 @@
 	              'div',
 	              _extends({}, _this2.props, {
 	                style: {
-	                  transform: 'translate3d(0, ' + values.y + '%, 0)',
+	                  //transform: `translate3d(0, ${values.y}%, 0)`,
 	                  opacity: values.opacity,
 	                  position: 'fixed',
 	                  display: 'flex',
 	                  alignItems: 'center',
-	                  top: 0,
+	                  justifyContent: 'flex-end',
+	                  textAlign: 'right',
 	                  left: 0,
 	                  width: '100%',
 	                  height: '100%',
-	                  backgroundColor: 'rgba(0, 0, 0, .85)',
 	                  color: '#ababab',
-	                  paddingLeft: '10%'
+	                  pointerEvents: show ? 'inherit' : 'none'
 	                } }),
 	              _react2.default.createElement(
 	                'div',
 	                { style: {
-	                    flex: 1
+	                    flex: 1,
+	                    paddingRight: '2em'
 	                  } },
-	                _react2.default.createElement(
-	                  'p',
-	                  { style: {
-	                      fontSize: '1.25em',
-	                      fontWeight: 100,
-	                      cursor: 'pointer',
-	                      marginLeft: -28,
-	                      marginBottom: 40 },
-	                    onClick: _this2.hide },
-	                  '← Back'
-	                ),
 	                show && _react2.default.createElement(
 	                  _reactMotion.StaggeredMotion,
 	                  {
@@ -66462,7 +66513,9 @@
 	                            } },
 	                          _react2.default.createElement(
 	                            'a',
-	                            { href: '#',
+	                            {
+	                              onClick: _this2.navigate.bind(_this2, items[i]),
+	                              href: "#" + items[i].href,
 	                              style: { color: '#fff', fontWeight: 100, textDecoration: 'none' } },
 	                            items[i].title
 	                          )
@@ -66478,11 +66531,24 @@
 	      );
 	    }
 	  }, {
+	    key: 'navigate',
+	    value: function navigate(href, e) {
+	      e.preventDefault();
+	      this.hide();
+	      this.props.onNavigate(href);
+	    }
+	  }, {
+	    key: 'toggle',
+	    value: function toggle() {
+	      this.state.show ? this.hide() : this.show();
+	    }
+	  }, {
 	    key: 'show',
 	    value: function show(e) {
 	      this.setState({
 	        show: true
 	      });
+	      this.props.onToggle(true);
 	    }
 	  }, {
 	    key: 'hide',
@@ -66490,6 +66556,7 @@
 	      this.setState({
 	        show: false
 	      });
+	      this.props.onToggle(false);
 	    }
 	  }]);
 
@@ -66582,7 +66649,7 @@
 	      var material = new _three2.default.MeshPhongMaterial({
 	        color: this.props.color || 0xffffff,
 	        wireframe: true,
-	        wireframeLinewidth: 0.1
+	        wireframeLinewidth: 1
 	        // transparent: true,
 	        // opacity: 1.0
 	      });
@@ -66606,29 +66673,15 @@
 	  }, {
 	    key: 'animate',
 	    value: function animate(scene, camera) {
+	      var am = 0.002;
 
 	      if (this.state.mouseover) {
-
-	        // const lineSegments = this.drawMenu()
-
-	        // this.mesh.geometry.vertices.forEach((v, i) => {
-	        //   if(lineSegments.geometry.vertices[i]) {
-	        //     v.x += lineSegments.geometry.vertices[i].x
-	        //     v.y += lineSegments.geometry.vertices[i].y
-	        //     v.z += lineSegments.geometry.vertices[i].z
-	        //   } else {
-	        //     this.mesh.geometry.vertices.pop()
-	        //   }
-
-	        //   this.mesh.geometry.dynamic = true;
-	        //   this.mesh.geometry.verticesNeedUpdate = true;
-	        // })
-	        scene.rotation.x += 0.01;
-	        scene.rotation.y += 0.01;
-	        scene.rotation.z += 0.01;
+	        am = 0.01;
 	      }
 
-	      //TWEEN.udpate()
+	      scene.rotation.x += am;
+	      scene.rotation.y += am;
+	      scene.rotation.z += am;
 	    }
 	  }, {
 	    key: 'render',
@@ -66643,9 +66696,9 @@
 	          style: { cursor: 'pointer' } },
 	        _react2.default.createElement(_ThreeScene2.default, {
 	          ambientLightColor: 0xffffff,
-	          fogColor: 0x121212,
-	          height: 96,
-	          width: 96,
+	          fogColor: 0x212121,
+	          height: 72,
+	          width: 72,
 	          initScene: this.renderScene,
 	          animate: this.animate,
 	          alpha: true })
@@ -66662,20 +66715,141 @@
 /* 210 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactMotion = __webpack_require__(193);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	__webpack_require__(211);
+
+	var Paper = function (_Component) {
+	  _inherits(Paper, _Component);
+
+	  function Paper() {
+	    _classCallCheck(this, Paper);
+
+	    return _possibleConstructorReturn(this, Object.getPrototypeOf(Paper).apply(this, arguments));
+	  }
+
+	  _createClass(Paper, [{
+	    key: 'render',
+	    value: function render() {
+	      var springParams = { stiffness: 60, damping: 20 };
+	      var springParamsAlt = { stiffness: 40, damping: 20 };
+	      return _react2.default.createElement(
+	        'div',
+	        _extends({ className: 'gt-paper' }, this.props),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'gt-paper-grid' },
+	          _react2.default.createElement('div', { className: 'gt-paper__aside' }),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'gt-paper__content' },
+	            _react2.default.createElement(
+	              _reactMotion.Motion,
+	              {
+	                defaultStyle: {
+	                  y: 600,
+	                  opacity: 0
+	                },
+	                style: {
+	                  y: (0, _reactMotion.spring)(0, springParams),
+	                  opacity: (0, _reactMotion.spring)(1, springParams)
+	                } },
+	              function (values) {
+	                return _react2.default.createElement(
+	                  'div',
+	                  {
+	                    style: {
+	                      transform: 'translate3d(0, ' + values.y + 'px, 0)',
+	                      opacity: values.opacity
+	                    },
+	                    className: 'gt-paper__content-header' },
+	                  _react2.default.createElement(
+	                    'h1',
+	                    null,
+	                    'title'
+	                  )
+	                );
+	              }
+	            ),
+	            _react2.default.createElement(
+	              _reactMotion.Motion,
+	              {
+	                defaultStyle: {
+	                  y: 800,
+	                  opacity: 0
+	                },
+	                style: {
+	                  y: (0, _reactMotion.spring)(0, springParamsAlt),
+	                  opacity: (0, _reactMotion.spring)(1, springParamsAlt)
+	                } },
+	              function (values) {
+	                return _react2.default.createElement(
+	                  'div',
+	                  {
+	                    style: {
+	                      transform: 'translate3d(0, ' + values.y + 'px, 0)',
+	                      opacity: values.opacity
+	                    },
+	                    className: 'gt-paper__content-body' },
+	                  _react2.default.createElement(
+	                    'p',
+	                    null,
+	                    'body'
+	                  )
+	                );
+	              }
+	            )
+	          )
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Paper;
+	}(_react.Component);
+
+	exports.default = Paper;
+
+/***/ },
+/* 211 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(211);
+	var content = __webpack_require__(212);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(213)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./home.css", function() {
-				var newContent = require("!!./../../../node_modules/css-loader/index.js!./home.css");
+			module.hot.accept("!!./../../node_modules/css-loader/index.js!./Paper.css", function() {
+				var newContent = require("!!./../../node_modules/css-loader/index.js!./Paper.css");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -66685,21 +66859,21 @@
 	}
 
 /***/ },
-/* 211 */
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(212)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: .5em;\n  left: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 4em;\n    left: 4em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, ".gt-paper {}\n\n.gt-paper-grid {\n  display: flex;\n  width: 100%;\n  min-height: 100vh;\n}\n\n.gt-paper__content {\n  padding: 2em;\n}\n\n.gt-paper__content,\n.gt-paper__aside {\n  flex: 1;\n}\n\n.gt-paper__content-header {\n  border-top: 1px solid rgba(255, 255, 255, .125);\n  padding-bottom: 3em;\n}\n\n.gt-paper__content-header h1 {\n  font-size: 3em;\n}\n\n.gt-paper__content-body p {\n  font-size: 1.2em;\n  font-weight: 100;\n  line-height: 1.5;\n}", ""]);
 
 	// exports
 
 
 /***/ },
-/* 212 */
+/* 213 */
 /***/ function(module, exports) {
 
 	/*
@@ -66755,7 +66929,7 @@
 
 
 /***/ },
-/* 213 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -67009,16 +67183,56 @@
 
 
 /***/ },
-/* 214 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(215);
+	var content = __webpack_require__(216);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(213)(content, {});
+	var update = __webpack_require__(214)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../../node_modules/css-loader/index.js!./home.css", function() {
+				var newContent = require("!!./../../../node_modules/css-loader/index.js!./home.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 216 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(213)();
+	// imports
+
+
+	// module
+	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: 0;\n  right: 0;\n  z-index: 1000;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 2em;\n    right: 2em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+
+	// exports
+
+
+/***/ },
+/* 217 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(218);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67035,10 +67249,10 @@
 	}
 
 /***/ },
-/* 215 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(212)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
@@ -67049,16 +67263,16 @@
 
 
 /***/ },
-/* 216 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(217);
+	var content = __webpack_require__(220);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(213)(content, {});
+	var update = __webpack_require__(214)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67075,15 +67289,15 @@
 	}
 
 /***/ },
-/* 217 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(212)();
+	exports = module.exports = __webpack_require__(213)();
 	// imports
 
 
 	// module
-	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  background: linear-gradient(#35013F, #EB5033);\n  background-size: cover;\n  position: relative;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n#bpm-helper {\n  display: none;\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
+	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  /*background: linear-gradient(#35013F, #EB5033);*/\n  background: #212121;\n  background-size: cover;\n  position: relative;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n#bpm-helper {\n  display: none;\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
 
 	// exports
 
