@@ -19745,7 +19745,8 @@
 	      launched: false,
 	      pageIdx: -1,
 	      showNavigation: false,
-	      audioLoaded: false
+	      audioLoaded: false,
+	      showLauncher: true
 	    };
 
 	    _this.mouseOver = _this.mouseOver.bind(_this);
@@ -19829,6 +19830,7 @@
 	      var _this3 = this;
 
 	      var _state = this.state;
+	      var showLauncher = _state.showLauncher;
 	      var launched = _state.launched;
 	      var pageIdx = _state.pageIdx;
 	      var showNavigation = _state.showNavigation;
@@ -19869,6 +19871,13 @@
 	      return _react2.default.createElement(
 	        'div',
 	        null,
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'gt-screen__icosahedron' },
+	          _react2.default.createElement(_Navigation2.default, {
+	            onToggle: this.toggleNavigation.bind(this),
+	            onNavigate: this.navigate.bind(this) })
+	        ),
 	        launched && _react2.default.createElement('div', { id: 'visualization' }),
 	        _react2.default.createElement(
 	          _reactMotion.Motion,
@@ -19879,9 +19888,9 @@
 	              y: 0
 	            },
 	            style: {
-	              scale: pageIdx > -1 ? (0, _reactMotion.spring)(.9, springParamsAlt) : (0, _reactMotion.spring)(1),
-	              opacity: pageIdx > -1 ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(1),
-	              y: pageIdx > -1 ? (0, _reactMotion.spring)(-100, springParamsAlt) : (0, _reactMotion.spring)(0)
+	              scale: !showLauncher ? (0, _reactMotion.spring)(.9, springParamsAlt) : (0, _reactMotion.spring)(1),
+	              opacity: !showLauncher ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(1),
+	              y: !showLauncher ? (0, _reactMotion.spring)(-100, springParamsAlt) : (0, _reactMotion.spring)(0)
 	            } },
 	          function (values) {
 	            return _react2.default.createElement(
@@ -19921,13 +19930,6 @@
 	                    )
 	                  );
 	                }
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'gt-screen__icosahedron' },
-	                _react2.default.createElement(_Navigation2.default, {
-	                  onToggle: _this3.toggleNavigation.bind(_this3),
-	                  onNavigate: _this3.navigate.bind(_this3) })
 	              ),
 	              _react2.default.createElement(
 	                _reactMotion.Motion,
@@ -19970,7 +19972,7 @@
 	              y: pageIdx > -1 ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(200)
 	            } },
 	          function (values) {
-	            return _react2.default.createElement(_Paper2.default, { style: {
+	            return _react2.default.createElement(_Paper2.default, { show: pageIdx > -1, style: {
 	                transform: 'translate3d(0, ' + values.y + 'px, 0) scale(' + values.scale + ')',
 	                opacity: values.opacity
 	              } });
@@ -19992,9 +19994,15 @@
 	      var _this4 = this;
 
 	      var pageIdx = item.id;
+	      this.setState({ pageIdx: -1 });
+
+	      setTimeout(function () {
+	        _this4.setState({ showLauncher: false });
+	      }, 250);
+
 	      setTimeout(function () {
 	        _this4.setState({ pageIdx: pageIdx });
-	      }, 250);
+	      }, 750);
 	    }
 	  }]);
 
@@ -66780,10 +66788,10 @@
 	  _createClass(Paper, [{
 	    key: 'render',
 	    value: function render() {
-	      var springParams = { stiffness: 120, damping: 16 };
+	      var springParams = { stiffness: 150, damping: 14 };
 	      var springParamsAlt = { stiffness: 60, damping: 16 };
 	      var springParamsAlt1 = { stiffness: 30, damping: 10 };
-
+	      var visible = this.props.show;
 	      return _react2.default.createElement(
 	        'div',
 	        _extends({ className: 'gt-paper' }, this.props),
@@ -66802,8 +66810,8 @@
 	                  opacity: 0
 	                },
 	                style: {
-	                  width: (0, _reactMotion.spring)(100, springParamsAlt),
-	                  opacity: (0, _reactMotion.spring)(1, springParamsAlt)
+	                  width: visible ? (0, _reactMotion.spring)(100, springParamsAlt) : (0, _reactMotion.spring)(0),
+	                  opacity: visible ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(0)
 	                } },
 	              function (val) {
 	                return _react2.default.createElement('div', { style: {
@@ -66819,7 +66827,8 @@
 	              _react2.default.createElement(
 	                'h2',
 	                null,
-	                _react2.default.createElement(_TypeWriter2.default, { word: '01.about' })
+	                visible && _react2.default.createElement(_TypeWriter2.default, { word: '01.about' }),
+	                !visible && _react2.default.createElement(_TypeWriter2.default, { word: '00.' + Math.random() * 9999999 })
 	              ),
 	              _react2.default.createElement(
 	                _reactMotion.Motion,
@@ -66829,8 +66838,8 @@
 	                    opacity: 0
 	                  },
 	                  style: {
-	                    y: (0, _reactMotion.spring)(0, springParamsAlt),
-	                    opacity: (0, _reactMotion.spring)(1, springParamsAlt)
+	                    y: visible ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(-80),
+	                    opacity: visible ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(0)
 	                  } },
 	                function (values) {
 	                  return _react2.default.createElement(
@@ -66853,8 +66862,8 @@
 	                    opacity: 0
 	                  },
 	                  style: {
-	                    right: (0, _reactMotion.spring)(0, springParamsAlt),
-	                    opacity: (0, _reactMotion.spring)(1, springParamsAlt)
+	                    right: visible ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(100),
+	                    opacity: visible ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(0)
 	                  } },
 	                function (val) {
 	                  return _react2.default.createElement('div', { style: {
@@ -66876,8 +66885,8 @@
 	                  opacity: (0, _reactMotion.spring)(0, springParamsAlt1)
 	                },
 	                style: {
-	                  y: (0, _reactMotion.spring)(0, springParamsAlt1),
-	                  opacity: (0, _reactMotion.spring)(1, springParamsAlt1)
+	                  y: visible ? (0, _reactMotion.spring)(0, springParamsAlt1) : (0, _reactMotion.spring)(600),
+	                  opacity: visible ? (0, _reactMotion.spring)(1, springParamsAlt1) : (0, _reactMotion.spring)(0)
 	                } },
 	              function (values) {
 	                return _react2.default.createElement(

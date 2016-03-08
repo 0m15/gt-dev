@@ -24,7 +24,8 @@ export default class Scene extends Component {
       launched: false,
       pageIdx: -1,
       showNavigation: false,
-      audioLoaded: false
+      audioLoaded: false,
+      showLauncher: true
     }
 
     this.mouseOver = this.mouseOver.bind(this)
@@ -95,7 +96,7 @@ export default class Scene extends Component {
 
   render() {
 
-    const { launched, pageIdx, showNavigation } = this.state
+    const { showLauncher, launched, pageIdx, showNavigation } = this.state
     const springParamsA = {stiffness: 60, damping: 12, precision: 0.1}
     const springParams = {stiffness: 20, damping: 20, precision: 0.1}
     const springParamsAlt = {stiffness: 80, damping: 16, precision: 0.1}
@@ -131,6 +132,12 @@ export default class Scene extends Component {
 
     return <div>
 
+      <div className="gt-screen__icosahedron">
+        <Navigation 
+          onToggle={this.toggleNavigation.bind(this)}
+          onNavigate={this.navigate.bind(this)} />
+      </div>
+
       {launched && <div id="visualization" />}
 
       <Motion
@@ -140,9 +147,9 @@ export default class Scene extends Component {
           y: 0
         }} 
         style={{
-          scale: pageIdx > -1 ? spring(.9, springParamsAlt) : spring(1),
-          opacity: pageIdx > - 1 ? spring(0, springParamsAlt) : spring(1),
-          y: pageIdx > -1 ? spring(-100, springParamsAlt) : spring(0),
+          scale: !showLauncher ? spring(.9, springParamsAlt) : spring(1),
+          opacity: !showLauncher ? spring(0, springParamsAlt) : spring(1),
+          y: !showLauncher ? spring(-100, springParamsAlt) : spring(0),
         }}>
         {values => 
           <div 
@@ -172,12 +179,6 @@ export default class Scene extends Component {
                   </h2>
                 </div>}
             </Motion>
-
-            <div className="gt-screen__icosahedron">
-              <Navigation 
-                onToggle={this.toggleNavigation.bind(this)}
-                onNavigate={this.navigate.bind(this)} />
-            </div>
 
             <Motion defaultStyle={{
                 scale: 1,
@@ -219,7 +220,7 @@ export default class Scene extends Component {
           y: pageIdx > -1 ? spring(0, springParamsAlt) : spring(200),
         }}>
           {values => 
-          <Paper style={{
+          <Paper show={pageIdx>-1} style={{
             transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
             opacity: values.opacity
           }}>
@@ -240,9 +241,15 @@ export default class Scene extends Component {
 
   navigate(item) {
     const pageIdx = item.id
+    this.setState({ pageIdx: -1 })
+
     setTimeout(() => {
-      this.setState({ pageIdx })    
+      this.setState({ showLauncher: false })    
     }, 250)
+
+    setTimeout(() => {
+      this.setState({ pageIdx })
+    }, 750)
     
   }
 }

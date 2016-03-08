@@ -8,10 +8,10 @@ export default class Paper extends Component {
 
 
   render() {
-    const springParams = {stiffness: 120, damping: 16}
+    const springParams = {stiffness: 150, damping: 14}
     const springParamsAlt = {stiffness: 60, damping: 16}
     const springParamsAlt1 = {stiffness: 30, damping: 10}
-
+    const visible = this.props.show
     return (
       <div className="gt-paper" {...this.props}>
 
@@ -28,8 +28,8 @@ export default class Paper extends Component {
                 opacity: 0
               }}
               style={{
-                width: spring(100, springParamsAlt),
-                opacity: spring(1, springParamsAlt)
+                width: visible ? spring(100, springParamsAlt) : spring(0),
+                opacity: visible ? spring(1, springParamsAlt) : spring(0)
               }}>    
               {val => 
                 <div style={{
@@ -40,7 +40,10 @@ export default class Paper extends Component {
             </Motion>
             <div className="gt-paper__content-header">
 
-            <h2><TypeWriter word="01.about" /></h2>
+            <h2>
+              {visible && <TypeWriter word="01.about" />}
+              {!visible && <TypeWriter word={`00.${Math.random()*9999999}`} />}
+            </h2>
 
             <Motion 
               defaultStyle={{
@@ -48,8 +51,8 @@ export default class Paper extends Component {
                 opacity: 0
               }}
               style={{
-                y: spring(0, springParamsAlt),
-                opacity: spring(1, springParamsAlt)
+                y: visible ? spring(0, springParamsAlt) : spring(-80),
+                opacity: visible ? spring(1, springParamsAlt) : spring(0)
               }}>    
               {values =>  
                 <h1 style={{
@@ -66,8 +69,8 @@ export default class Paper extends Component {
                   opacity: 0
                 }}
                 style={{
-                  right: spring(0, springParamsAlt),
-                  opacity: spring(1, springParamsAlt),
+                  right: visible ? spring(0, springParamsAlt) : spring(100),
+                  opacity: visible ? spring(1, springParamsAlt) : spring(0)
                 }}>    
               {val => 
                 <div style={{
@@ -89,8 +92,8 @@ export default class Paper extends Component {
                 opacity: spring(0, springParamsAlt1)
               }}
               style={{
-                y: spring(0, springParamsAlt1),
-                opacity: spring(1, springParamsAlt1)
+                y: visible ? spring(0, springParamsAlt1) : spring(600),
+                opacity: visible ? spring(1, springParamsAlt1) : spring(0)
               }}>    
               {values => 
               <div 
