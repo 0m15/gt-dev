@@ -23,12 +23,31 @@ export default class Scene extends Component {
       author: false,
       launched: false,
       pageIdx: -1,
-      showNavigation: false
+      showNavigation: false,
+      audioLoaded: false
     }
 
     this.mouseOver = this.mouseOver.bind(this)
     this.mouseOut = this.mouseOut.bind(this)
 
+  }
+
+  componentDidMount() {
+    this.audioEl = document.getElementById('track')
+
+    function isLoaded() {
+      return this.audioEl.readyState == 4
+    }
+
+    function checkIsLoaded() {
+      setTimeout(function() {
+        if(isLoaded()) {
+          return this.setState({
+            audioLoaded: true
+          })
+        }
+      }, 250)
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -181,9 +200,9 @@ export default class Scene extends Component {
             </Motion>
 
 
-            <div className="gt-screen__footer">
+            {/*<div className="gt-screen__footer">
               <p className="gt-text gt-text--small">detect webgl</p>
-            </div>
+            </div>*/}
           </div>}
       </Motion>
 

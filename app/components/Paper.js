@@ -40,7 +40,7 @@ export default class Paper extends Component {
             </Motion>
             <div className="gt-paper__content-header">
 
-            <h2><TypeWriter word="about" /></h2>
+            <h2><TypeWriter word="01.about" /></h2>
 
             <Motion 
               defaultStyle={{

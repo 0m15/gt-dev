@@ -19744,7 +19744,8 @@
 	      author: false,
 	      launched: false,
 	      pageIdx: -1,
-	      showNavigation: false
+	      showNavigation: false,
+	      audioLoaded: false
 	    };
 
 	    _this.mouseOver = _this.mouseOver.bind(_this);
@@ -19754,6 +19755,25 @@
 	  }
 
 	  _createClass(Scene, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.audioEl = document.getElementById('track');
+
+	      function isLoaded() {
+	        return this.audioEl.readyState == 4;
+	      }
+
+	      function checkIsLoaded() {
+	        setTimeout(function () {
+	          if (isLoaded()) {
+	            return this.setState({
+	              audioLoaded: true
+	            });
+	          }
+	        }, 250);
+	      }
+	    }
+	  }, {
 	    key: 'componentDidUpdate',
 	    value: function componentDidUpdate(prevProps, prevState) {
 	      if (this.state.launched && !prevState.launched) {
@@ -19932,15 +19952,6 @@
 	                      label: 'launch visualization*' })
 	                  );
 	                }
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'gt-screen__footer' },
-	                _react2.default.createElement(
-	                  'p',
-	                  { className: 'gt-text gt-text--small' },
-	                  'detect webgl'
-	                )
 	              )
 	            );
 	          }
@@ -66808,7 +66819,7 @@
 	              _react2.default.createElement(
 	                'h2',
 	                null,
-	                _react2.default.createElement(_TypeWriter2.default, { word: 'about' })
+	                _react2.default.createElement(_TypeWriter2.default, { word: '01.about' })
 	              ),
 	              _react2.default.createElement(
 	                _reactMotion.Motion,
@@ -66931,7 +66942,7 @@
 
 
 	// module
-	exports.push([module.id, ".gt-paper {}\n\n.gt-paper-grid {\n  display: flex;\n  width: 100%;\n  min-height: 100vh;\n}\n\n.gt-paper__content {\n  padding: 2em 12em 2em 4em;\n}\n\n.gt-paper__content,\n.gt-paper__aside {\n  flex: 1;\n}\n\n.gt-paper__content-header {\n  border-top: 1px solid rgba(255, 255, 255, .125);\n  position: relative;\n  top: -1px;\n  overflow-x: hidden;\n  padding-bottom: 3em;\n  margin-bottom: 6em;\n  padding: 3em 0;\n}\n\n.gt-paper__content-header h1 {\n  font-size: 4em;\n  letter-spacing: -.05em;\n  line-height: 1;\n  margin: 0;\n}\n\n.gt-paper__content-header h2 {\n  color: #777;\n  margin-bottom: 1em;\n  margin-top: 3em;\n  font-weight: 800;\n  font-size: .7em;\n  letter-spacing: .25em;\n}\n.gt-paper__content-body p {\n  font-size: 1.2em;\n  font-weight: 100;\n  line-height: 1.5;\n}", ""]);
+	exports.push([module.id, ".gt-paper {}\n\n.gt-paper-grid {\n  display: flex;\n  width: 100%;\n  min-height: 100vh;\n}\n\n.gt-paper__content {\n  padding: 2em 12em 2em 4em;\n}\n\n.gt-paper__content,\n.gt-paper__aside {\n  flex: 1;\n}\n\n.gt-paper__content-header {\n  border-top: 1px solid rgba(255, 255, 255, .125);\n  position: relative;\n  top: -1px;\n  overflow-x: hidden;\n  padding-bottom: 3em;\n  margin-bottom: 6em;\n  padding: 3em 0;\n}\n\n.gt-paper__content-header h1 {\n  font-size: 4em;\n  letter-spacing: -.05em;\n  line-height: 1;\n  margin: 0;\n}\n\n.gt-paper__content-header h2 {\n  color: #777;\n  margin-bottom: 1em;\n  margin-top: 3em;\n  font-weight: 800;\n  font-size: .7em;\n  letter-spacing: .25em;\n}\n.gt-paper__content-body p {\n  font-size: 1.25em;\n  font-weight: 100;\n  line-height: 1.7;\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 
@@ -67281,7 +67292,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  width: 100%;\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n  position: absolute;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: 0;\n  right: 0;\n  z-index: 9999;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 2em;\n    right: 2em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  width: 100%;\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: flex-end;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n  position: absolute;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: 0;\n  right: 0;\n  z-index: 9999;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 2em;\n    right: 2em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 1.25em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 20px;\n  text-align: center;\n  font-size: 1em;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  margin-bottom: 10em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  \n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.5em 2.5em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .75em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 100;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 12px;\n  display: inline-block;\n  text-align: center;\n  font-weight: 800;\n  color: #777;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 
@@ -67361,7 +67372,7 @@
 
 
 	// module
-	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  /*background: linear-gradient(#35013F, #EB5033);*/\n  background: #212121;\n  background-size: cover;\n  position: relative;\n}\n\na,\na:link {\n  color: #fff;\n}\n\n#bpm-helper {\n  display: none;\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
+	exports.push([module.id, "html,\nbody {\n  font-family:Apercu, Proxima Nova, Fira Sans, Work Sans, Apercu, Helvetica Neue;\n  color: #fff;\n  /*background-image: url(/assets/imgs/bg@2x.jpg);*/\n  /*background: linear-gradient(#35013F, #EB5033);*/\n  background: #212121;\n  background-size: cover;\n  position: relative;\n}\n\na,\na:link {\n  color: #fff;\n}\n\np {\n  font-family: Lora, serif;\n  line-height: 1.5;\n  font-weight: 100;\n}\n\n\n#bpm-helper {\n  display: none;\n  position: fixed;\n  top: 20px;\n  left: 20px;\n  background: #222;\n  padding: 10px;\n  z-index: 1000;\n  color: #fff;\n}\n\n/*canvas {\n  position: fixed;\n  top: 0;\n  z-index: 1;\n}*/", ""]);
 
 	// exports
 
