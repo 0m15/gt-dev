@@ -12,6 +12,7 @@ export default class IcosahedronButton extends Component {
       mouseover: false,
     }
 
+    this.am = 0.001
     this.mouseOver = this.mouseOver.bind(this)
     this.mouseOut = this.mouseOut.bind(this)
 
@@ -72,15 +73,22 @@ export default class IcosahedronButton extends Component {
   }
 
   animate(scene, camera) {
-    var am = 0.002
 
     if(this.state.mouseover) {
-      am = 0.01
+      
+      if(this.am < 0.0325) {
+        this.am += 0.0005
+      }
+
+    } else {
+      if(this.am > 0.001) {
+        this.am -= 0.0005
+      }
     }
 
-    scene.rotation.x += am
-    scene.rotation.y += am
-    scene.rotation.z += am
+    scene.rotation.x += this.am
+    scene.rotation.y += this.am
+    scene.rotation.z += this.am
   }
 
   render() {

@@ -104,8 +104,8 @@ export default class Scene extends Component {
     }
 
     if(showNavigation) {
-      headerMotionStyle.scale = spring(.75, springParamsA)
-      headerMotionStyle.opacity = spring(.45, springParamsA)
+      headerMotionStyle.scale = spring(.7, springParamsA)
+      headerMotionStyle.opacity = spring(.4, springParamsA)
       headerMotionStyle.y = spring(0, springParamsA)
       buttonMotionStyle = headerMotionStyle
     }
@@ -129,7 +129,7 @@ export default class Scene extends Component {
           <div 
             style={{
               opacity: values.opacity,
-              transform: `translate3d(0, ${values.y}%, 0) scale(${values.scale})`,
+              transform: `translate3d(0, ${values.y}vh, 0) scale(${values.scale})`,
             }}
             className="gt-screen gt-screen--home">
             <Motion 
@@ -195,13 +195,13 @@ export default class Scene extends Component {
           y: 0
         }} 
         style={{
-          scale: pageIdx > -1 ? spring(1, springParamsAlt) : spring(.9),
+          scale: pageIdx > -1 ? spring(1, springParamsAlt) : spring(.7),
           opacity: pageIdx > - 1 ? spring(1, springParamsAlt) : spring(0),
-          y: pageIdx > -1 ? spring(-100, springParamsAlt) : spring(0),
+          y: pageIdx > -1 ? spring(0, springParamsAlt) : spring(200),
         }}>
           {values => 
           <Paper style={{
-            transform: `translate3d(0, ${values.y}%, 0) scale(${values.scale})`,
+            transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
             opacity: values.opacity
           }}>
             

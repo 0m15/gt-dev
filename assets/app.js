@@ -19840,8 +19840,8 @@
 	      }
 
 	      if (showNavigation) {
-	        headerMotionStyle.scale = (0, _reactMotion.spring)(.75, springParamsA);
-	        headerMotionStyle.opacity = (0, _reactMotion.spring)(.45, springParamsA);
+	        headerMotionStyle.scale = (0, _reactMotion.spring)(.7, springParamsA);
+	        headerMotionStyle.opacity = (0, _reactMotion.spring)(.4, springParamsA);
 	        headerMotionStyle.y = (0, _reactMotion.spring)(0, springParamsA);
 	        buttonMotionStyle = headerMotionStyle;
 	      }
@@ -19869,7 +19869,7 @@
 	              {
 	                style: {
 	                  opacity: values.opacity,
-	                  transform: 'translate3d(0, ' + values.y + '%, 0) scale(' + values.scale + ')'
+	                  transform: 'translate3d(0, ' + values.y + 'vh, 0) scale(' + values.scale + ')'
 	                },
 	                className: 'gt-screen gt-screen--home' },
 	              _react2.default.createElement(
@@ -19954,13 +19954,13 @@
 	              y: 0
 	            },
 	            style: {
-	              scale: pageIdx > -1 ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(.9),
+	              scale: pageIdx > -1 ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(.7),
 	              opacity: pageIdx > -1 ? (0, _reactMotion.spring)(1, springParamsAlt) : (0, _reactMotion.spring)(0),
-	              y: pageIdx > -1 ? (0, _reactMotion.spring)(-100, springParamsAlt) : (0, _reactMotion.spring)(0)
+	              y: pageIdx > -1 ? (0, _reactMotion.spring)(0, springParamsAlt) : (0, _reactMotion.spring)(200)
 	            } },
 	          function (values) {
 	            return _react2.default.createElement(_Paper2.default, { style: {
-	                transform: 'translate3d(0, ' + values.y + '%, 0) scale(' + values.scale + ')',
+	                transform: 'translate3d(0, ' + values.y + 'px, 0) scale(' + values.scale + ')',
 	                opacity: values.opacity
 	              } });
 	          }
@@ -66618,6 +66618,7 @@
 	      mouseover: false
 	    };
 
+	    _this.am = 0.001;
 	    _this.mouseOver = _this.mouseOver.bind(_this);
 	    _this.mouseOut = _this.mouseOut.bind(_this);
 
@@ -66678,15 +66679,21 @@
 	  }, {
 	    key: 'animate',
 	    value: function animate(scene, camera) {
-	      var am = 0.002;
 
 	      if (this.state.mouseover) {
-	        am = 0.01;
+
+	        if (this.am < 0.0325) {
+	          this.am += 0.0005;
+	        }
+	      } else {
+	        if (this.am > 0.001) {
+	          this.am -= 0.0005;
+	        }
 	      }
 
-	      scene.rotation.x += am;
-	      scene.rotation.y += am;
-	      scene.rotation.z += am;
+	      scene.rotation.x += this.am;
+	      scene.rotation.y += this.am;
+	      scene.rotation.z += this.am;
 	    }
 	  }, {
 	    key: 'render',
@@ -66736,6 +66743,10 @@
 
 	var _reactMotion = __webpack_require__(193);
 
+	var _TypeWriter = __webpack_require__(160);
+
+	var _TypeWriter2 = _interopRequireDefault(_TypeWriter);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -66758,8 +66769,10 @@
 	  _createClass(Paper, [{
 	    key: 'render',
 	    value: function render() {
-	      var springParams = { stiffness: 60, damping: 20 };
-	      var springParamsAlt = { stiffness: 40, damping: 20 };
+	      var springParams = { stiffness: 120, damping: 16 };
+	      var springParamsAlt = { stiffness: 60, damping: 16 };
+	      var springParamsAlt1 = { stiffness: 30, damping: 10 };
+
 	      return _react2.default.createElement(
 	        'div',
 	        _extends({ className: 'gt-paper' }, this.props),
@@ -66774,40 +66787,86 @@
 	              _reactMotion.Motion,
 	              {
 	                defaultStyle: {
-	                  y: 600,
+	                  width: 0,
 	                  opacity: 0
 	                },
 	                style: {
-	                  y: (0, _reactMotion.spring)(0, springParams),
-	                  opacity: (0, _reactMotion.spring)(1, springParams)
+	                  width: (0, _reactMotion.spring)(100, springParamsAlt),
+	                  opacity: (0, _reactMotion.spring)(1, springParamsAlt)
 	                } },
-	              function (values) {
-	                return _react2.default.createElement(
-	                  'div',
-	                  {
-	                    style: {
-	                      transform: 'translate3d(0, ' + values.y + 'px, 0)',
-	                      opacity: values.opacity
-	                    },
-	                    className: 'gt-paper__content-header' },
-	                  _react2.default.createElement(
-	                    'h1',
-	                    null,
-	                    'title'
-	                  )
-	                );
+	              function (val) {
+	                return _react2.default.createElement('div', { style: {
+	                    height: 1,
+	                    background: '#888',
+	                    width: val.width + '%'
+	                  } });
 	              }
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'gt-paper__content-header' },
+	              _react2.default.createElement(
+	                'h2',
+	                null,
+	                _react2.default.createElement(_TypeWriter2.default, { word: 'about' })
+	              ),
+	              _react2.default.createElement(
+	                _reactMotion.Motion,
+	                {
+	                  defaultStyle: {
+	                    y: -80,
+	                    opacity: 0
+	                  },
+	                  style: {
+	                    y: (0, _reactMotion.spring)(0, springParamsAlt),
+	                    opacity: (0, _reactMotion.spring)(1, springParamsAlt)
+	                  } },
+	                function (values) {
+	                  return _react2.default.createElement(
+	                    'h1',
+	                    { style: {
+	                        transform: 'translate3d(0, ' + values.y + 'px, 0)',
+	                        zIndex: 10,
+	                        position: 'relative',
+	                        opacity: values.opacity
+	                      } },
+	                    'The Project'
+	                  );
+	                }
+	              ),
+	              _react2.default.createElement(
+	                _reactMotion.Motion,
+	                {
+	                  defaultStyle: {
+	                    right: 100,
+	                    opacity: 0
+	                  },
+	                  style: {
+	                    right: (0, _reactMotion.spring)(0, springParamsAlt),
+	                    opacity: (0, _reactMotion.spring)(1, springParamsAlt)
+	                  } },
+	                function (val) {
+	                  return _react2.default.createElement('div', { style: {
+	                      position: 'absolute',
+	                      zIndex: 1,
+	                      height: 1,
+	                      background: '#333',
+	                      width: '100%',
+	                      transform: 'translate3d(' + val.right + '%, 0, 0)'
+	                    } });
+	                }
+	              )
 	            ),
 	            _react2.default.createElement(
 	              _reactMotion.Motion,
 	              {
 	                defaultStyle: {
-	                  y: 800,
-	                  opacity: 0
+	                  y: 600,
+	                  opacity: (0, _reactMotion.spring)(0, springParamsAlt1)
 	                },
 	                style: {
-	                  y: (0, _reactMotion.spring)(0, springParamsAlt),
-	                  opacity: (0, _reactMotion.spring)(1, springParamsAlt)
+	                  y: (0, _reactMotion.spring)(0, springParamsAlt1),
+	                  opacity: (0, _reactMotion.spring)(1, springParamsAlt1)
 	                } },
 	              function (values) {
 	                return _react2.default.createElement(
@@ -66821,7 +66880,7 @@
 	                  _react2.default.createElement(
 	                    'p',
 	                    null,
-	                    'body'
+	                    'Glass sounds turning to Music. New sound project, out on March 18th 2016, by Max Casacci (producer, composer and founder of Subsonica) and Daniel Mana (electronic producer also known as Vaghe Stelle, from Nicolas Jaar’s Other People label - gaining support by the likes of James Holden, Kode9, Jacques Greene, Martyn, Nathan Fake). "Glasstress" is an album made with all kind of audio samples gathered in the environment of a furnace in Murano, near Venice: from the powerful breath of the furnace that reaches over 3000 celsius degrees to noise of tools, from the crushing of waste glass to the stem of his blowtorch. No electronic or acoustic drums, no pre-rhythmic set was added. All the rhythm of the furnace are formed exclusively by the noise and, in the same way, most of the melodic phrases are from the sound of the crystals. Eight tracks that open the doors of a glasshouse, such as suggested by surrealist Andre Breton in the "Nadja" novel, and does so by means of a powerful and evocative sensory journey. This is not a simple ambient soundtrack but an exploration through post industrial sounds. Glasstress was born from the homonymous exhibition of contemporary art glass created by Adriano Berengo and presented at the Venice Biennale in 2011. Some of the artworks had been expressly made for Glasstress by artists such as Tony Cragg, Jan Fabre, Olafur Eliasson, Orlan, Patricia Urquiola, Zaha Hadid and Fred Wilson, who have been invited to work in the glass studio in Murano. "Like A Glass Angel" is the first single, the song was inspired by the Pharrell Williams artwork “Inside Out”, from the Glasstress 2011 exhibition, a statue of the skeleton of a glass angel. The eclectic producer was enthusiastic about the project, granting permission to use the image of his work for the cover of "Like A Glass Angel", after listening to the album. Glasstress 2011 focused on the complex relationship that ties art, design and architecture together in an age thought to have moved beyond modernism. The exhibition, produced by Venice Projects, a partnership between Adriano Berengo and Susan Scherman, was presented in collaboration with MAD, the Museum of Arts and Design, New York. Among the other artists taking part to the booklet artwork, there are Javier Pérez, Kate Mccgwire, Mat Collishaw, Ivan Plusch, Hitoshi Kuriayama, Leonardo Cimolin and Kaneuhi Teppei.'
 	                  )
 	                );
 	              }
@@ -66872,7 +66931,7 @@
 
 
 	// module
-	exports.push([module.id, ".gt-paper {}\n\n.gt-paper-grid {\n  display: flex;\n  width: 100%;\n  min-height: 100vh;\n}\n\n.gt-paper__content {\n  padding: 2em;\n}\n\n.gt-paper__content,\n.gt-paper__aside {\n  flex: 1;\n}\n\n.gt-paper__content-header {\n  border-top: 1px solid rgba(255, 255, 255, .125);\n  padding-bottom: 3em;\n}\n\n.gt-paper__content-header h1 {\n  font-size: 3em;\n}\n\n.gt-paper__content-body p {\n  font-size: 1.2em;\n  font-weight: 100;\n  line-height: 1.5;\n}", ""]);
+	exports.push([module.id, ".gt-paper {}\n\n.gt-paper-grid {\n  display: flex;\n  width: 100%;\n  min-height: 100vh;\n}\n\n.gt-paper__content {\n  padding: 2em 12em 2em 4em;\n}\n\n.gt-paper__content,\n.gt-paper__aside {\n  flex: 1;\n}\n\n.gt-paper__content-header {\n  border-top: 1px solid rgba(255, 255, 255, .125);\n  position: relative;\n  top: -1px;\n  overflow-x: hidden;\n  padding-bottom: 3em;\n  margin-bottom: 6em;\n  padding: 3em 0;\n}\n\n.gt-paper__content-header h1 {\n  font-size: 4em;\n  letter-spacing: -.05em;\n  line-height: 1;\n  margin: 0;\n}\n\n.gt-paper__content-header h2 {\n  color: #777;\n  margin-bottom: 1em;\n  margin-top: 3em;\n  font-weight: 800;\n  font-size: .7em;\n  letter-spacing: .25em;\n}\n.gt-paper__content-body p {\n  font-size: 1.2em;\n  font-weight: 100;\n  line-height: 1.5;\n}", ""]);
 
 	// exports
 
@@ -67222,7 +67281,7 @@
 
 
 	// module
-	exports.push([module.id, "\n.gt-screen--home {\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: 0;\n  right: 0;\n  z-index: 9999;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 2em;\n    right: 2em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, "\n.gt-screen--home {\n  width: 100%;\n  height: 100%;\n  height: 100vh;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  /*background: rgba(255, 255, 255, .12);*/\n  position: relative;\n  z-index: 1;\n  position: absolute;\n}\n\n#visualization {\n  background: #000;\n}\n\n#visualization canvas {\n  position: fixed;\n  /*top: 100px;*/\n  left: 0;\n  width: 100%;\n  height: 100%;\n  z-index: 1;\n}\n\n.gt-screen__icosahedron {\n  position: fixed;\n  top: 0;\n  right: 0;\n  z-index: 9999;\n}\n\n@media screen and (min-width: 768px) {\n  .gt-screen__icosahedron {\n    top: 2em;\n    right: 2em;\n  }\n}\n\n.gt-screen__title {\n  margin-top: auto;\n  text-align: center;\n}\n\n.gt-title {\n  font-size: 2.5em;\n  text-transform: uppercase;\n  font-weight: 600;\n  margin: 0;\n  letter-spacing: 0em;\n  margin-top: auto;\n}\n\n.gt-title span span {\n  /*border-bottom: 2px solid #fff;*/\n  display: inline-block;\n  min-width: 40px;\n  text-align: center;\n}\n\n.gt-screen__action {\n  margin-top: 2em;\n  text-align: center;\n}\n\n.gt-screen__footer {\n  margin-top: auto;\n}\n\n.gt-button:focus {\n  outline: none;\n}\n\n.gt-button--launch {\n  color: #fff;\n  text-decoration: none;\n  background: transparent;\n  border-top: 1px solid rgba(255, 255, 255, 0);\n  border-left: 1px solid rgba(255, 255, 255, 0);\n  border-right: 1px solid rgba(255, 255, 255, 0);\n  border-bottom: 1px solid rgba(255, 255, 255, 0);\n  display: inline-block;\n  padding: 1.25em 2em;\n  border-radius: 0;\n  text-transform: uppercase;\n  font-size: .7em;\n  /*letter-spacing: .15em;*/\n  min-width: 100px;\n  text-align: center;\n  /*transition: all .8s ease-out;*/\n}\n\n/*.gt-button--launch:hover {\n  border-top: 1px solid rgba(255, 255, 255, .25);\n  border-left: 1px solid rgba(255, 255, 255, .25);\n  border-right: 1px solid rgba(255, 255, 255, .25);\n  border-bottom: 1px solid rgba(255, 255, 255, .25);\n  border-radius: 25px;\n  letter-spacing: .275em;\n}*/\n\n.gt-screen--project {\n  min-height: 100vh;\n  position: relative;\n  z-index: 10;\n  background: rgba(255, 255, 255, .12);\n  display: flex;\n}\n\n.gt-screen__left,\n.gt-screen__right {\n  flex: 2;\n}\n\n.gt-screen__right {\n  flex: 3;\n}\n\n.gt-screen__left-title {\n  padding: 2em 1em;\n  font-weight: 100;\n  font-size: 4em;\n}\n\n.gt-screen__right {\n  /*background: #fff;*/\n}\n\nh1,\nh2,\nh3 {\n  margin: 0;\n}\n\nh2 {\n  font-weight: 400;\n  text-transform: uppercase;\n  font-size: .75em;\n}\n\nh2 span span {\n  width: 20px;\n  display: inline-block;\n  text-align: center;\n}\n\n.gt-text--secondary {\n  font-size: .9em;\n}\n\n.gt-text--small {\n  font-size: .85em;\n  opacity: .75;\n  font-weight: 100;\n}\n\n.gt-text--body {\n  padding: 4em 6em 4em;\n  line-height: 1.5;\n  font-size: 1.5em;\n  font-weight: 100;\n  color: rgba(255, 255, 255, .9);\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 
