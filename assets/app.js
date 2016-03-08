@@ -66489,6 +66489,7 @@
 	              _extends({}, _this2.props, {
 	                style: {
 	                  //transform: `translate3d(0, ${values.y}%, 0)`,
+	                  background: 'rgba(0,0,0,.45)',
 	                  opacity: values.opacity,
 	                  position: 'fixed',
 	                  display: 'flex',
@@ -66951,7 +66952,7 @@
 
 
 	// module
-	exports.push([module.id, ".gt-paper {\n  position: relative;\n  z-index: 1000;\n}\n\n.gt-paper-grid {\n  display: flex;\n  width: 100%;\n  min-height: 100vh;\n  position: relative;\n  z-index: 1000;\n}\n\n.gt-paper__content {\n  padding: 2em 12em 2em 4em;\n}\n\n.gt-paper__content,\n.gt-paper__aside {\n  flex: 1;\n}\n\n.gt-paper__content-header {\n  border-top: 1px solid rgba(255, 255, 255, .125);\n  position: relative;\n  top: -1px;\n  overflow-x: hidden;\n  padding-bottom: 3em;\n  margin-bottom: 6em;\n  padding: 3em 0;\n}\n\n.gt-paper__content-header h1 {\n  font-size: 4em;\n  letter-spacing: -.05em;\n  line-height: 1;\n  margin: 0;\n}\n\n.gt-paper__content-header h2 {\n  color: #777;\n  margin-bottom: 1em;\n  margin-top: 3em;\n  font-weight: 800;\n  font-size: .7em;\n  letter-spacing: .25em;\n}\n.gt-paper__content-body p {\n  font-size: 1.25em;\n  font-weight: 100;\n  line-height: 1.7;\n  -webkit-font-smoothing: antialiased;\n}", ""]);
+	exports.push([module.id, ".gt-paper {\n  position: relative;\n  z-index: 1000;\n}\n\n.gt-paper-grid {\n  display: flex;\n  width: 100%;\n  min-height: 100vh;\n  position: relative;\n  z-index: 1000;\n}\n\n.gt-paper__content {\n  padding: 2em 14em 2em 4em;\n}\n\n.gt-paper__content,\n.gt-paper__aside {\n  flex: 1;\n}\n\n.gt-paper__content-header {\n  border-top: 1px solid rgba(255, 255, 255, .125);\n  position: relative;\n  top: -1px;\n  overflow-x: hidden;\n  padding-bottom: 3em;\n  margin-bottom: 6em;\n  padding: 3em 0;\n}\n\n.gt-paper__content-header h1 {\n  font-size: 4em;\n  letter-spacing: -.05em;\n  line-height: 1;\n  margin: 0;\n}\n\n.gt-paper__content-header h2 {\n  color: #777;\n  margin-bottom: 1em;\n  margin-top: 3em;\n  font-weight: 800;\n  font-size: .7em;\n  letter-spacing: .25em;\n}\n.gt-paper__content-body p {\n  font-size: 1.25em;\n  font-weight: 100;\n  line-height: 1.7;\n  -webkit-font-smoothing: antialiased;\n}", ""]);
 
 	// exports
 

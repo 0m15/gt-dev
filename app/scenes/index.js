@@ -4,7 +4,7 @@ import ThreeScene from '../components/ThreeScene'
 import * as visualization from './viz.js'
 
 import { playSfx } from '../lib/sfx'
-import { Motion, spring } from 'react-motion'
+import { Motion, spring, TransitionMotion } from 'react-motion'
 import MotionButton from "../components/MotionButton";
 import Navigation from '../components/Navigation'
 import Paper from '../components/Paper'
