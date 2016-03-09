@@ -42,6 +42,7 @@ var sunlight;
 var camControls;
 var sky;
 var terrainMesh;
+var sphereMesh;
 
 const objects = []
 
@@ -115,75 +116,40 @@ function initSky() {
   return skyboxMesh
 }
 
-THREE.DisplacementShader = {
-
-  uniforms: {
-            texture1: { type: "t", value: null },
-            scale: { type: "f", value: 1.0 },
-  },
-
-  vertexShader: [
-
-                        "varying vec2 vUv;",
-                        "varying float noise;",
-                        "varying vec3 fNormal;",
-                        "uniform sampler2D texture1;",
-                        "uniform float scale;",
-
-                        "void main() {",
-
-                            "vUv = uv;",
-                            "fNormal = normal;",
-
-                            "vec4 noiseTex = texture2D( texture1, vUv );",
-
-                            "noise = noiseTex.r;",
-                            //adding the normal scales it outward
-                            //(normal scale equals sphere diameter)
-                            "vec3 newPosition = position + normal * noise * scale;",
-
-                            "gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );",
-
-                        "}"
-
-  ].join("\n"),
-
-  fragmentShader: [
-
-      "varying vec2 vUv;",
-                        "varying float noise;",
-                        "varying vec3 fNormal;",
-
-      "void main( void ) {",
-
-                            // compose the colour using the normals then 
-                            // whatever is heightened by the noise is lighter
-                            "gl_FragColor = vec4( fNormal * noise, 1. );",
-
-                        "}"
-
-  ].join("\n")
-
-};
 var sphereMaterial;
 
 function sphere() {
-  // const uniforms = THREE.Uniform
-  // const geometry = new THREE.SphereGeometry(20, 200, 200)
-  // sphereMaterial = new THREE.ShaderMaterial({
-  //   uniforms: { 
-  //     tExplosion: { 
-  //       type: "t",
-  //       value: THREE.ImageUtils.loadTexture( 'assets/textures/green.png' ) 
-  //     },
-  //     time: { type: "f", value: 0.0 },
-  //     weight: { type: "f", value: 10.0 }
-  //   },
-  //   vertexShader: document.getElementById( 'vertexShader' ).textContent,
-  //   fragmentShader: document.getElementById( 'fragmentShader' ).textContent
-  // } );
+  // const shader = THREE.DisplacementShader
+  // const texture = THREE.ImageUtils.loadTexture('assets/textures/texture.jpg')
+  // const uniforms = THREE.UniformsUtils.clone(shader.uniforms)
+  
+  // uniforms["texture1"].value = texture
+  // uniforms["scale"].value = 10
+  // uniforms["time"].value = 0
 
-  // return new THREE.Mesh(geometry, sphereMaterial)
+  // var parameters = {
+  //   fragmentShader: shader.fragmentShader, 
+  //   vertexShader: shader.vertexShader, 
+  //   uniforms: uniforms
+  // }
+  // sphereMaterial = new THREE.ShaderMaterial(parameters)
+
+  sphereMaterial = new THREE.ShaderMaterial( {
+
+    uniforms: { 
+      tExplosion: { 
+        type: "t", value: 0, texture: THREE.ImageUtils.loadTexture( 'assets/textures/green.png' ) },
+      time: { type: "f", value: 0.0 },
+      weight: { type: "f", value: 10.0 }
+    },
+    vertexShader: document.getElementById( 'vertexShader' ).textContent,
+    fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+    
+  } );
+
+
+  const geometry = new THREE.SphereGeometry(320, 32, 32)
+  return new THREE.Mesh(geometry, sphereMaterial)
 }
 
 export function init() {
@@ -198,7 +164,8 @@ export function init() {
   // CAMERA
   camera = new THREE.PerspectiveCamera( 65, screenX / screenY, 1, 200000)
   
-  camera.position.z = 20000
+  camera.position.z = 30
+  camera.position.y = 2
   camera.lookAt( scene.position );
 
   // 0
@@ -208,10 +175,10 @@ export function init() {
   // camera.position.x = 0
 
   // 1
-  camera.rotation.y = 0.4
-  camera.rotation.x = 0.1
-  camera.position.y = 1200
-  camera.position.x = 4000
+  // camera.rotation.y = 0.4
+  // camera.rotation.x = 0.1
+  // camera.position.y = 1200
+  // camera.position.x = 4000
 
   // 2
   // camera.rotation.y = 1
@@ -233,14 +200,15 @@ export function init() {
   light.shadow.mapSize.height = 1024;
 
   scene.add(light)
-  scene.add(new THREE.CameraHelper( light.shadow.camera ))
+  //scene.add(new THREE.CameraHelper( light.shadow.camera ))
   tweenLight()
 
 
   // MAIN SPHERE
-  const sphereMesh = sphere()
+  sphereMesh = sphere()
+
   //sphereMesh.position.z = 12000
-  //scene.add(sphereMesh)
+  scene.add(sphereMesh)
 
   // MAIN OBJECT3D
   object3d = new THREE.Object3D()
@@ -536,6 +504,7 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
       m.position.setY(this.y)
       m.material.opacity=this.opacity
       if(opacity==0.25) m.castShadow = false
+      //sphereMaterial.uniforms["amp"].value = 1 + (this.scale * 0.1)
     })
     .onComplete(function() {
       new TWEEN
@@ -639,6 +608,9 @@ clock.start()
 var start = Date.now()
 export function animate(time) {
   //sphereMaterial.uniforms[ 'time' ].value = .0001 * ( Date.now() - start );
+
+  sphereMaterial.uniforms[ 'time' ].value = .00025 * ( Date.now() - start );
+
   currentSegment = segmentsByTime[audio.currentTime.toFixed(1)]
   currentScene = scenesByTime[audio.currentTime.toFixed(0)]  
   currentBar = barsByTime[audio.currentTime.toFixed(1)]
@@ -658,15 +630,12 @@ export function animate(time) {
 
   if(currentBar && currentBar.start != lastBar.start) {
     
-
-
     lastBar = currentBar
     barCount += 1;
   } 
 
 
   if(currentSegment) {
-
 
     if(currentSegment.start != lastSegment.start) {
       //light.intensity = currentSegment.loudnessMax*2
@@ -675,6 +644,7 @@ export function animate(time) {
       //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
       //tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
       addSegment(currentSegment, 60, 100)
+      //
       lastSegment = currentSegment
     }
 
@@ -708,10 +678,10 @@ export function animate(time) {
   cameraZ -= 36
 
   
-  camera.position.z = cameraZ
+  //camera.position.z = cameraZ
 
 
-
+  sphereMesh.rotation.y += 0.01
   requestAnimationFrame(animate)
   //renderer.render(scene, camera)
   //camera.rotation.y += 0.01

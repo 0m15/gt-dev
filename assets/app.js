@@ -60,9 +60,9 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(217); // app/index.js
+	__webpack_require__(222); // app/index.js
 
-	__webpack_require__(219);
+	__webpack_require__(224);
 
 	var app = _reactDom2.default.render(_react2.default.createElement(_scenes2.default, null), document.getElementById('gt-app'));
 
@@ -19691,23 +19691,23 @@
 
 	var _ThreeScene2 = _interopRequireDefault(_ThreeScene);
 
-	var _viz = __webpack_require__(165);
+	var _vizAlt = __webpack_require__(165);
 
-	var visualization = _interopRequireWildcard(_viz);
+	var visualization = _interopRequireWildcard(_vizAlt);
 
-	var _sfx = __webpack_require__(192);
+	var _sfx = __webpack_require__(197);
 
-	var _reactMotion = __webpack_require__(193);
+	var _reactMotion = __webpack_require__(198);
 
-	var _MotionButton = __webpack_require__(207);
+	var _MotionButton = __webpack_require__(212);
 
 	var _MotionButton2 = _interopRequireDefault(_MotionButton);
 
-	var _Navigation = __webpack_require__(208);
+	var _Navigation = __webpack_require__(213);
 
 	var _Navigation2 = _interopRequireDefault(_Navigation);
 
-	var _Paper = __webpack_require__(210);
+	var _Paper = __webpack_require__(215);
 
 	var _Paper2 = _interopRequireDefault(_Paper);
 
@@ -19729,7 +19729,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	__webpack_require__(215);
+	__webpack_require__(220);
 
 	var Scene = function (_Component) {
 	  _inherits(Scene, _Component);
@@ -61612,6 +61612,7 @@
 	});
 	exports.init = init;
 	exports.animate = animate;
+	exports.render = render;
 
 	var _three = __webpack_require__(163);
 
@@ -61671,6 +61672,10 @@
 	var camControls;
 	var sky;
 	var terrainMesh;
+	var sphereMesh;
+	var sphereMaterial;
+	var loudnessMax;
+	var center;
 
 	var objects = [];
 
@@ -61702,147 +61707,65 @@
 	  return Math.exp(minv + scale * (value - minp));
 	}
 
-	function initSky() {
-
-	  var urlPrefix = "assets/textures/milkway";
-	  var urls = [urlPrefix + "_posx.jpg", urlPrefix + "_negx.jpg", urlPrefix + "_posy.jpg", urlPrefix + "_negy.jpg", urlPrefix + "_posz.jpg", urlPrefix + "_negz.jpg"];
-
-	  var textureCube = new _three2.default.CubeTextureLoader().load(urls);
-	  var shader = _three2.default.ShaderLib["cube"];
-
-	  shader.uniforms['tCube'].value = textureCube; // textureCube has been init before
-
-	  var shaderMaterial = new _three2.default.ShaderMaterial({
-	    fragmentShader: shader.fragmentShader,
-	    vertexShader: shader.vertexShader,
-	    uniforms: shader.uniforms,
-	    depthWrite: false,
-	    side: _three2.default.BackSide
-	  });
-
-	  var material = new _three2.default.MeshPhongMaterial({
-	    color: 0xffffff
-	  });
-
-	  // build the skybox Mesh
-	  // wireframe: true
-	  var skyboxMesh = new _three2.default.Mesh(new _three2.default.BoxGeometry(100000, 100000, 100000), shaderMaterial);
-
-	  skyboxMesh.position.z = -80000;
-	  //skyboxMesh.rotation.x = 2
-	  // skyboxMesh.position.multiplyScalar(1000)
-
-	  // add it to the scene
-	  return skyboxMesh;
-	}
-
-	_three2.default.DisplacementShader = {
-
-	  uniforms: {
-	    texture1: { type: "t", value: null },
-	    scale: { type: "f", value: 1.0 }
-	  },
-
-	  vertexShader: ["varying vec2 vUv;", "varying float noise;", "varying vec3 fNormal;", "uniform sampler2D texture1;", "uniform float scale;", "void main() {", "vUv = uv;", "fNormal = normal;", "vec4 noiseTex = texture2D( texture1, vUv );", "noise = noiseTex.r;",
-	  //adding the normal scales it outward
-	  //(normal scale equals sphere diameter)
-	  "vec3 newPosition = position + normal * noise * scale;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );", "}"].join("\n"),
-
-	  fragmentShader: ["varying vec2 vUv;", "varying float noise;", "varying vec3 fNormal;", "void main( void ) {",
-
-	  // compose the colour using the normals then
-	  // whatever is heightened by the noise is lighter
-	  "gl_FragColor = vec4( fNormal * noise, 1. );", "}"].join("\n")
-
-	};
-	var sphereMaterial;
-
-	function sphere() {
-	  // const uniforms = THREE.Uniform
-	  // const geometry = new THREE.SphereGeometry(20, 200, 200)
-	  // sphereMaterial = new THREE.ShaderMaterial({
-	  //   uniforms: {
-	  //     tExplosion: {
-	  //       type: "t",
-	  //       value: THREE.ImageUtils.loadTexture( 'assets/textures/green.png' )
-	  //     },
-	  //     time: { type: "f", value: 0.0 },
-	  //     weight: { type: "f", value: 10.0 }
-	  //   },
-	  //   vertexShader: document.getElementById( 'vertexShader' ).textContent,
-	  //   fragmentShader: document.getElementById( 'fragmentShader' ).textContent
-	  // } );
-
-	  // return new THREE.Mesh(geometry, sphereMaterial)
-	}
+	var sphereUniforms;
 
 	function init() {
 
 	  // SCENE
 	  scene = new _three2.default.Scene();
 
-	  scene.fog = new _three2.default.Fog(0x121212, 0.1, 20000);
+	  scene.fog = new _three2.default.Fog(0x121212, 0.6, 12000);
 	  scene.add(new _three2.default.AmbientLight(0xffffff));
 
 	  // CAMERA
-	  camera = new _three2.default.PerspectiveCamera(65, screenX / screenY, 1, 200000);
+	  camera = new _three2.default.PerspectiveCamera(65, screenX / screenY, 1, 20000);
 
-	  camera.position.z = 20000;
+	  camera.position.z = 1250;
+	  camera.position.y = 40;
 	  camera.lookAt(scene.position);
 
-	  // 0
-	  //camera.rotation.y = 0.1
-	  // camera.rotation.x = -0.7
-	  // camera.position.y = 4000
-	  // camera.position.x = 0
-
-	  // 1
-	  camera.rotation.y = 0.4;
-	  camera.rotation.x = 0.1;
-	  camera.position.y = 1200;
-	  camera.position.x = 4000;
-
-	  // 2
-	  // camera.rotation.y = 1
-	  // camera.rotation.x = -1.25
-	  // camera.position.x = 0
-	  // camera.position.y = 8000
-
 	  // LIGHTS
-	  light = new _three2.default.DirectionalLight(0xffffff, 0.1);
-	  //light.castShadow = true;
-	  light.position.set(0, 1200, -3000);
-	  light.shadow.camera.near = -9000;
-	  light.shadow.camera.far = 1000;
-	  light.shadow.camera.right = 1600;
-	  light.shadow.camera.left = -1600;
-	  light.shadow.camera.top = 20000;
-	  light.shadow.camera.bottom = -12000;
-	  light.shadow.mapSize.width = 1024;
-	  light.shadow.mapSize.height = 1024;
+	  scene.add(new _three2.default.AmbientLight(0xffffff, 1.0));
 
+	  light = new _three2.default.DirectionalLight(0x3FBAC2, 1.0);
+	  light.castShadow = true;
+	  light.position.set(-80, 120, 4000);
 	  scene.add(light);
-	  scene.add(new _three2.default.CameraHelper(light.shadow.camera));
-	  tweenLight();
 
-	  // MAIN SPHERE
-	  var sphereMesh = sphere();
-	  //sphereMesh.position.z = 12000
-	  //scene.add(sphereMesh)
+	  var light1 = new _three2.default.DirectionalLight(0xF64662, 1.0);
+	  light1.position.set(80, 120, 4000);
+	  scene.add(light1);
+
+	  var light2 = new _three2.default.DirectionalLight(0x92E0A9, 1.0);
+	  light2.position.set(80, -120, 4000);
+	  scene.add(light2);
+
+	  //scene.add(new THREE.CameraHelper( light.shadow.camera ))
 
 	  // MAIN OBJECT3D
 	  object3d = new _three2.default.Object3D();
-	  scene.add(object3d);
+	  //scene.add(object3d)
 
-	  // TERRAIN
-	  var terrainMesh = terrain();
-	  terrainMesh.position.setY(-400);
-	  terrainMesh.castShadow = false;
-	  terrainMesh.receiveShadow = true;
-	  //scene.add(terrainMesh)
+	  sphereUniforms = {
+	    scale: { type: "f", value: 10.0 },
+	    displacement: { type: "f", value: 20.0 }
+	  };
+	  var vertexShader = document.getElementById('vertexShader').text;
+	  var fragmentShader = document.getElementById('fragmentShader').text;
+	  var material = new _three2.default.ShaderMaterial({
+	    uniforms: sphereUniforms,
+	    vertexShader: vertexShader,
+	    fragmentShader: fragmentShader
+	  });
 
-	  //sky = initSky()
-	  //scene.add(sky)
+	  var geometry = new _three2.default.IcosahedronGeometry(480, 4);
+
+	  // material = new THREE.MeshBasicMaterial();
+	  geometry.computeFaceNormals();
+	  geometry.computeVertexNormals();
+	  sphereMesh = new _three2.default.Mesh(geometry, material);
+	  sphereMesh.position.z = -600;
+	  scene.add(sphereMesh);
 
 	  // RENDERER
 	  renderer = new _three2.default.WebGLRenderer({
@@ -61857,8 +61780,6 @@
 	  // RENDERER SHADOW
 	  renderer.shadowMap.enabled = true;
 	  renderer.shadowMap.type = _three2.default.PCFSoftShadowMap;
-	  // renderer.gammaInput = true
-	  // renderer.gammaOutput = true
 	  renderer.autoClear = false;
 
 	  // append canvas
@@ -61872,11 +61793,11 @@
 	    stencilBuffer: true
 	  };
 
+	  // POSTPROCESSING
 	  var renderTarget = new _three2.default.WebGLRenderTarget(screenX, screenY, rtParameters);
-
 	  var effectBlend = new _three2.default.ShaderPass(_three2.default.BlendShader, "tDiffuse1");
-
 	  var effectFXAA = new _three2.default.ShaderPass(_three2.default.FXAAShader);
+
 	  effectFXAA.uniforms['resolution'].value.set(1 / screenX, 1 / screenY);
 
 	  var effectBleach = new _three2.default.ShaderPass(_three2.default.BleachBypassShader);
@@ -61885,98 +61806,38 @@
 	  hblur = new _three2.default.ShaderPass(_three2.default.HorizontalTiltShiftShader);
 	  vblur = new _three2.default.ShaderPass(_three2.default.VerticalTiltShiftShader);
 
-	  // hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
-	  // vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
-
+	  hblur.uniforms['h'].value = 1 / window.innerWidth;
+	  vblur.uniforms['v'].value = 1 / window.innerHeight;
 	  vblur.renderToScreen = true;
+
 	  var effectBloom = new _three2.default.BloomPass(1, 32, 5);
 	  effectBloom.renderToScreen = true;
 
+	  var effect = new _three2.default.ShaderPass(_three2.default.RGBShiftShader);
+	  effect.uniforms['amount'].value = 0.0015;
+	  effect.renderToScreen = true;
+
 	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
-	  //vblur.renderToScreen = true
-
-	  //composer = new THREE.EffectComposer( renderer, renderTarget );
-
 	  composer.addPass(new _three2.default.RenderPass(scene, camera));
 
-	  composer.addPass(effectFXAA);
-	  composer.addPass(effectBloom);
-	  //composer.addPass( hblur );
-	  composer.addPass(vblur);
-	  composer.addPass(effectBleach);
+	  var kaleidoPass = new _three2.default.ShaderPass(_three2.default.KaleidoShader);
+	  var mirrorPass = new _three2.default.ShaderPass(_three2.default.MirrorShader);
 
-	  // Mouse control
-	  // controls = new THREE.OrbitControls( camera, renderer.domElement );
-	  // controls.target.set( 0, 0, 0 );
-	  // controls.update();
+	  //composer.addPass( effectFXAA );
+	  composer.addPass(effectBloom);
+	  composer.addPass(hblur);
+	  composer.addPass(vblur);
+	  //composer.addPass( kaleidoPass );
+	  composer.addPass(mirrorPass);
+	  composer.addPass(effect);
+
+	  //composer.addPass( effectBleach );
 
 	  // PLAY AUDIO
-	  audio.play();
+	  setTimeout(function () {
+	    audio.play();
+	  }, 1000);
 	}
-
-	function generateHeight(width, height) {
-
-	  var size = width * height;
-	  var data = new Uint8Array(size);
-	  var perlin = new ImprovedNoise();
-	  var quality = 0.1;
-	  var z = Math.random() * 100;
-
-	  for (var j = 0; j < 4; j++) {
-
-	    for (var i = 0; i < size; i++) {
-
-	      var x = i % width;
-	      var y = ~ ~(i / width);
-
-	      data[i] += Math.abs(perlin.noise(x / quality, y / quality, z) * quality * 1.75);
-	    }
-
-	    quality *= 5;
-	  }
-
-	  return data;
-	}
-
-	function terrain() {
-	  var worldWidth = 256;
-	  var worldDepth = 1024;
-	  var worldHalfWidth = worldWidth / 2,
-	      worldHalfDepth = worldDepth / 2;
-	  var data = generateHeight(worldWidth, worldDepth);
-	  var geometry = new _three2.default.PlaneBufferGeometry(40000, 500000, worldWidth - 1, worldDepth - 1);
-	  var texture = _three2.default.ImageUtils.loadTexture('/assets/textures/rock.jpg');
-
-	  //var geometry = new THREE.SphereBufferGeometry( 20000, worldWidth-1, worldDepth-1);
-	  geometry.rotateX(-Math.PI / 2);
-
-	  var vertices = geometry.attributes.position.array;
-
-	  for (var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3) {
-	    vertices[j + 1] = data[i] * 10;
-	  }
-
-	  var material = new _three2.default.MeshPhongMaterial({
-	    color: 0x343434,
-	    specular: 0x57385C,
-	    //shading: THREE.FlatShading,
-	    //wireframe: true,
-	    //vertexColors: THREE.VertexColors,
-	    map: texture
-	  });
-
-	  return new _three2.default.Mesh(geometry, material);
-
-	  // var groundGeo = new THREE.PlaneBufferGeometry( 10000, 20000 );
-	  // var groundMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x050505 } );
-	  // var ground = new THREE.Mesh( groundGeo, groundMat );
-	  // ground.rotation.x = -Math.PI/2;
-	  // ground.position.y = -200;
-	  // return ground
-	}
-
-	var loudnessMax;
-	var center;
 
 	function addSegment(segment) {
 	  var radius = arguments.length <= 1 || arguments[1] === undefined ? 10 : arguments[1];
@@ -61984,262 +61845,151 @@
 
 	  // loudness 0-1
 	  loudnessMax = (-100 - segment.loudnessMax) * -1 / 100;
+	  var segmentLength = 12;
 
-	  center = new _three2.default.Vector3(Math.random() * screenX - screenX / 2, Math.random() * screenY - screenY / 2, camera.position.z - 9000);
+	  for (var i = 0; i < 1; i++) {
+	    var _radius = logScale([0.72, 0.97], [1, 64], loudnessMax);
 
-	  var segmentLength = parseInt(segment.duration * 3) + 1;
-
-	  for (var i = 0; i < segmentLength; i++) {
-	    var timbre = segment.timbre[i];
-	    var _radius = logScale([0.72, 0.97], [1, 64], loudnessMax); //loudnessMax*12//timbre
-	    //var geometry1 = new THREE.SphereGeometry( radius, 8, 8);
-
-	    var shader = _three2.default.FresnelShader;
-	    var uniforms = _three2.default.UniformsUtils.clone(shader.uniforms);
-	    var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms };
-	    var materialA = new _three2.default.ShaderMaterial(parameters);
-
-	    var geometry1 = i > 0 ? new _three2.default.SphereGeometry(_radius, 32, 32) : new _three2.default.CylinderGeometry(0, _radius, _radius * 6);
+	    var geometry = new _three2.default.SphereGeometry(_radius, 1, 1);
 
 	    var material = new _three2.default.MeshPhongMaterial({
-	      //color: loudnessMax > 0.9 ? Math.random()*0xF30A49 : 0xF30A49,
-	      color: Math.random() * 0xF30A49,
-	      transparent: true,
-	      opacity: loudnessMax,
+	      color: 0x121212,
+	      //transparent: true,
+	      opacity: 1 - loudnessMax,
 	      shading: _three2.default.FlatShading,
-	      specular: Math.random() * 0xF30A49
+	      specular: 0xffffff
 	    });
 
 	    //wireframe: true
-	    var customMaterial = new _three2.default.ShaderMaterial({
-	      uniforms: {
-	        "c": { type: "f", value: 1.0 },
-	        "p": { type: "f", value: 1.4 },
-	        glowColor: { type: "c", value: new _three2.default.Color(0xff3300) },
-	        viewVector: { type: "v3", value: camera.position }
-	      },
-	      vertexShader: document.getElementById('vertexShader').textContent,
-	      fragmentShader: document.getElementById('fragmentShader').textContent,
-	      side: _three2.default.BackSide,
-	      blending: _three2.default.AdditiveBlending,
-	      transparent: true
-	    });
+	    var _mesh = new _three2.default.Mesh(geometry, material);
 
-	    var materials = [customMaterial, material];
-	    //const _mesh = THREE.SceneUtils.createMultiMaterialObject(geometry1, materials)
-	    var _mesh = new _three2.default.Mesh(geometry1, material);
-
-	    // _mesh.rotation.set(
-	    //   Math.random() * 2,
-	    //   Math.random() * 2,
-	    //   Math.random() * 2)
-
-	    _mesh.position.set(-1200 + i * 600, //center.x + Math.random() * 2400 - 1200,
-	    loudnessMax <= 0.90 ? -screenY / 2 : screenY / 2, center.z + 800);
-
+	    _mesh.rotation.set(Math.random() * 1, Math.random() * 1, Math.random() * 1);
+	    _mesh.position.set(Math.random() * 1.0 - 1.0, Math.random() * 1.0 - 1.0, Math.random() * 1.0 - 1.0);
+	    _mesh.scale.set(0, 0, 0);
+	    //_mesh.position.multiplyScalar(Math.random() * 3000)
 	    _mesh.castShadow = true;
 	    _mesh.receiveShadow = false;
 
 	    object3d.add(_mesh);
+
 	    tweenSegment(_mesh, loudnessMax, segment.duration, i * (segment.duration / segmentLength) * 1000);
 	  }
-	}
-
-	function addTatum(tatum) {
-	  var geometry = new _three2.default.Geometry();
-	  geometry.vertices.push(new _three2.default.Vector3(400, 0, camera.position.z - 8000), new _three2.default.Vector3(400, 600, camera.position.z - 8000));
-	  var material = new _three2.default.LineBasicMaterial({
-	    color: Math.random() * 0xffffff
-	  });
-
-	  var mesh = new _three2.default.Line(geometry, material);
-	  //object3d.add(mesh)
-
-	  var hgeometry = new _three2.default.Geometry();
-	  hgeometry.vertices.push(new _three2.default.Vector3(-200, 0, camera.position.z - 8000), new _three2.default.Vector3(200, 0, camera.position.z - 8000));
-
-	  var hmesh = new _three2.default.Line(hgeometry, material);
-
-	  object3d.add(hmesh);
-
-	  new _tween2.default.Tween(hmesh.scale).to({ x: 200 }, 2300).start();
 	}
 
 	function tweenSegment(m, loudness, duration) {
 	  var delay = arguments.length <= 3 || arguments[3] === undefined ? 1 : arguments[3];
 	  var remove = arguments.length <= 4 || arguments[4] === undefined ? true : arguments[4];
 
-	  var loudnessMax = (-100 - loudness) * -1 / 100;
-
-	  m.scale.set(.25, .25, .25);
-	  var scale = loudnessMax * 6;
+	  var scale = 7 * loudness;
 	  var opacity = 1;
-
 	  var easing = _tween2.default.Easing.Quadratic.Out;
+	  console.log('scale', scale);
 
-	  if (duration <= 0.25) {
-	    easing = _tween2.default.Easing.Elastic.Out;
-	  }
-
-	  // var tween = new TWEEN.Tween(m.position)
-	  //   .to({z: m.position.z+25 }, 3000)
-	  //   .easing(TWEEN.Easing.Elastic.Out)
-	  //   .start()
-
-	  var tween = new _tween2.default.Tween({ scale: .1, opacity: 1, y: m.position.y }).delay(delay).to({ scale: scale, opacity: opacity, y: 0 }, duration * 1000).easing(_tween2.default.Easing.Elastic.InOut).onUpdate(function (t) {
+	  var tween = new _tween2.default.Tween({ scale: 0 }).delay(delay).to({ scale: scale }, duration * 1000).easing(_tween2.default.Easing.Elastic.Out).onUpdate(function (t) {
+	    console.log('this.scale', this.scale);
 	    m.scale.set(this.scale, this.scale, this.scale);
-	    //m.rotation.set()
-	    m.position.setY(this.y);
-	    m.material.opacity = this.opacity;
-	    if (opacity == 0.25) m.castShadow = false;
+	  }).start();
+
+	  var tween = new _tween2.default.Tween({ scale: scale * 10, x: m.position.x, y: m.position.y, z: m.position.z }).delay(delay).to({ x: Math.random() * 20 - 20, y: Math.random() * 20 - 20, z: Math.random() * 20 - 20 }, duration * 10 * 1000).easing(_tween2.default.Easing.Quadratic.Out).onUpdate(function (t) {
+	    m.position.set(this.x, this.y, this.z);
+	  }).start();
+	}
+
+	function tweenSegmentOut(mesh) {
+	  var duration = arguments.length <= 1 || arguments[1] === undefined ? 100 : arguments[1];
+	  var scalarValue = arguments.length <= 2 || arguments[2] === undefined ? 10 : arguments[2];
+	  var remove = arguments.length <= 3 || arguments[3] === undefined ? false : arguments[3];
+
+	  var position = mesh.position.clone();
+	  var newPosition = position.multiplyScalar(scalarValue);
+
+	  var tween = new _tween2.default.Tween(mesh.position).to({ x: newPosition.x, y: newPosition.y, z: newPosition.z }, duration).easing(_tween2.default.Easing.Quadratic.InOut).onUpdate(function (t) {
+	    //mesh.material.opacity = 1-t
 	  }).onComplete(function () {
-	    new _tween2.default.Tween({ scale: scale, z: m.position.z, rotation: 0, opacity: 1 }).to({ scale: 2, z: m.position.z + 600, rotation: scale, opacity: 0 }, 3000).easing(_tween2.default.Easing.Exponential.Out).onUpdate(function (t) {
-	      //m.scale.set(this.scale, this.scale, this.scale)
-	      //m.rotation.set(this.rotation, this.rotation, this.rotation)
-	      //m.material.opacity=this.opacity
-	    }).onComplete(function () {
-	      if (remove) object3d.remove(m);
-	    }).start();
+	    if (remove) object3d.remove(mesh);
 	  }).start();
 	}
 
-	function tweenObject(obj, scale, duration) {
-	  var tween = new _tween2.default.Tween(obj.scale).to({ x: scale, y: scale, z: scale }, duration).easing(_tween2.default.Easing.Exponential.In).onComplete(function () {
-	    new _tween2.default.Tween(obj.scale).to({ x: 1, y: 1, z: 1 }, duration / 2).easing(_tween2.default.Easing.Exponential.Out).start();
-	  }).start();
+	function bump() {
+	  var duration = arguments.length <= 0 || arguments[0] === undefined ? 250 : arguments[0];
+	  var scalarValue = arguments.length <= 1 || arguments[1] === undefined ? 10 : arguments[1];
+	  var remove = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+
+	  var currentObj;
+	  for (var i = 0; i < object3d.children.length; i++) {
+	    currentObj = object3d.children[i];
+	    if (currentObj) tweenSegmentOut(currentObj, duration, scalarValue, remove);
+	  }
 	}
 
-	function tweenLight() {
-	  var x = arguments.length <= 0 || arguments[0] === undefined ? 4000 : arguments[0];
-	  var duration = arguments.length <= 1 || arguments[1] === undefined ? 2290 : arguments[1];
-	  var easing = arguments.length <= 2 || arguments[2] === undefined ? _tween2.default.Easing.Circular.InOut : arguments[2];
-	  var returnBack = arguments.length <= 3 || arguments[3] === undefined ? true : arguments[3];
-
-	  var tween = new _tween2.default.Tween(light.position).to({ x: x }, duration / 2).easing(easing).onComplete(function () {
-	    if (returnBack) tweenLight(x * -1, duration, _tween2.default.Easing.Circular.InOut);
-	  }).start();
-	  return tween;
-	}
-
-	var sceneIdx = 0;
-
-	// position (x, y), rotation (x, y)
-	var cameraPositions = [new _three2.default.Vector2(-4000, 12000)];
-
-	var cameraRotations = [];
-
-	function addScene(scene) {
-
-	  console.log('scene', scene, sceneIdx);
-
-	  // move camera
-	  if (sceneIdx >= 1) {}
-	  // camera.position.x = 4000
-	  // camera.position.y = 600
-	  // camera.rotation.y = -0.1 
-
-
-	  // object3d.scale.set(1, 1, 1)
-
-	  // for(var i = 0; i < object3d.children.length;i++) {
-	  //   var child = object3d.children[i]
-	  //   object3d.remove(child)
+	function bumpSegment(loudness, duration) {
+	  // var currentObj;
+	  // for(var i = 0; i < object3d.children.length; i++) {
+	  //   currentObj = object3d.children[i]
+	  //   if(currentObj) tweenSegmentOut(currentObj, duration, scalarValue, remove)
 	  // }
+	  console.log(loudness, duration);
 
-	  // var tween = new TWEEN
-	  //   .Tween(object3d.rotation)
-	  //   .to({ x: -1, y: -1, z: -1 }, scene.duration*1000)
-	  //   .easing(TWEEN.Easing.Exponential.In)
-	  //   .onComplete(function() {})
-	  //   .start()
-	  sceneIdx += 1;
+	  new _tween2.default.Tween({ displacement: sphereUniforms.displacement.value, scale: sphereUniforms.scale.value }).to({ displacement: loudness * 100, scale: loudness * 10 }, duration).easing(_tween2.default.Easing.Quintic.InOut).onUpdate(function () {
+	    sphereUniforms.displacement.value = this.displacement;
+	    sphereUniforms.scale.value = this.scale;
+	  }).start();
 	}
-
-	//audio.currentTime=0
 
 	var barInterval = 1 / (_audioData.audioData.info.bpm / 60);
+
 	var lastTime = 0;
-	var currentSegment;
 	var currentScene;
-	var lastScene;
-	var lastBar = {};
+	var currentSegment;
+	var lastSegment = {};
+	var lastScene = {};
 	var currentBar = {};
-	var clock = new _three2.default.Clock();
-	var barCount = 0;
-	var startTweenLight = false;
-	clock.start();
+	var lastBar = {};
 	var start = Date.now();
+	var segmentLoudness = 0;
+
+	audio.currentTime = 25;
+
 	function animate(time) {
-	  //sphereMaterial.uniforms[ 'time' ].value = .0001 * ( Date.now() - start );
-	  currentSegment = segmentsByTime[audio.currentTime.toFixed(1)];
+	  render();
+	  sphereMesh.rotation.x += 0.01;
+	  object3d.rotation.y += 0.01;
+	  object3d.rotation.x += 0.01;
 	  currentScene = scenesByTime[audio.currentTime.toFixed(0)];
+	  currentSegment = segmentsByTime[audio.currentTime.toFixed(1)];
 	  currentBar = barsByTime[audio.currentTime.toFixed(1)];
 
-	  light.intensity = 1.0;
-	  //particleSystem.scale.set(1, 1, 1)
-
-	  if (audio.currentTime == 0 && startTweenLight === false) {
-	    startTweenLight = true;
-	  }
-
-	  if (currentScene && currentScene != lastScene) {
-	    addScene(currentScene);
-	    lastScene = currentScene;
-	  }
-
 	  if (currentBar && currentBar.start != lastBar.start) {
-
-	    lastBar = currentBar;
-	    barCount += 1;
+	    bump(60, 10, false);
 	  }
 
 	  if (currentSegment) {
+	    segmentLoudness = (-100 - currentSegment.loudnessMax) * -1 / 100;
 
-	    if (currentSegment.start != lastSegment.start) {
-	      //light.intensity = currentSegment.loudnessMax*2
-	      //vblur.uniforms[ 'v' ].value = currentSegment.loudnessMax*0.001
+	    if (currentSegment && currentSegment.start != lastSegment.start) {
+	      addSegment(currentSegment);
+	      console.log('bump');
 
-	      //document.getElementById('bpm-helper').innerHTML = "LOUDNESS: "+ currentSegment.loudnessMax
-	      //tweenLight(light, currentSegment.loudnessMax*-1, currentSegment.duration)
-	      addSegment(currentSegment, 60, 100);
+	      bumpSegment(segmentLoudness, currentSegment.duration * 1000);
 	      lastSegment = currentSegment;
 	    }
+	  }
 
-	    if (currentSegment.loudnessMax > -22) {
+	  if (currentScene && currentScene.start != lastScene.start) {
 
-	      //sky.uniforms.reileigh.intensity += audio.currentTime/1000000
-	      //addSegment(currentSegment, 2, 3000)
-	      //lastSegment = currentSegment
+	    if (lastScene.start != undefined) {
+	      bump(1000, 100, true);
 	    }
+
+	    lastScene = currentScene;
 	  }
 
-	  //sky.uniforms.turbidity.value = audio.currentTime/100;
-	  // sky.uniforms.reileigh.value = ;
-	  // sky.uniforms.luminance.value = ;
-	  // sky.uniforms.mieCoefficient.value = ;
-	  // sky.uniforms.mieDirectionalG.value = ;
-
-	  //sky.uniforms.reileigh.value = 4 - (audio.currentTime/50)
-
-	  // tempo bpm
-	  if (!lastTime || audio.currentTime - lastTime >= barInterval) {
-	    //particleSystem.scale.set(1.1,1.1,1.1)
-	    //sky.uniforms.turbidity.value = 1.0
-	    addTatum();
-	    lastTime = audio.currentTime;
-	  }
-
-	  cameraZ -= 36;
-
-	  camera.position.z = cameraZ;
-
-	  requestAnimationFrame(animate);
-	  //renderer.render(scene, camera)
-	  //camera.rotation.y += 0.01
-	  composer.render(renderer);
-	  //camControls.update(clock.getDelta())
-	  renderer.shadowMap.needsUpdate = true;
 	  _tween2.default.update();
+	  requestAnimationFrame(animate);
+	}
+
+	function render() {
+	  composer.render(renderer);
 	}
 
 	//EVENTS
@@ -62247,7 +61997,7 @@
 	function onWindowResize() {
 	  camera.aspect = window.innerWidth / window.innerHeight;
 	  camera.updateProjectionMatrix();
-	  renderer.setSize(window.innerWidth, window.innerHeight);
+	  composer.setSize(window.innerWidth, window.innerHeight);
 	}
 
 /***/ },
@@ -62403,6 +62153,11 @@
 	__webpack_require__(189);
 	__webpack_require__(190);
 	__webpack_require__(191);
+	__webpack_require__(192);
+	__webpack_require__(193);
+	__webpack_require__(194);
+	__webpack_require__(195);
+	__webpack_require__(196);
 
 /***/ },
 /* 170 */
@@ -64758,6 +64513,326 @@
 /* 192 */
 /***/ function(module, exports) {
 
+	"use strict";
+
+	THREE.DisplacementShader = {
+
+	  uniforms: {
+	    texture1: { type: "t", value: null },
+	    scale: { type: "f", value: 1.0 },
+	    amp: { type: "f", value: 1.0 },
+	    time: { type: "f", value: 1.0 }
+	  },
+
+	  vertexShader: ["varying vec2 vUv;", "varying float noise;", "varying vec3 fNormal;", "uniform sampler2D texture1;", "uniform float scale;", "uniform float amp;", "uniform float time;", "void main() {", "vUv = uv;", "fNormal = normal;", "vec4 noiseTex = texture2D( texture1, vUv );", "noise = noiseTex.r * amp * time;",
+
+	  //adding the normal scales it outward
+	  //(normal scale equals sphere diameter)
+	  "vec3 newPosition = position + normal * noise * scale;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );", "}"].join("\n"),
+
+	  fragmentShader: ["varying vec2 vUv;", "varying float noise;", "varying vec3 fNormal;", "void main( void ) {",
+	  // compose the colour using the normals then
+	  // whatever is heightened by the noise is lighter
+	  "gl_FragColor = vec4( fNormal * noise, 1. );", "}"].join("\n")
+
+	};
+
+/***/ },
+/* 193 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	THREE.SimpleShader = {
+
+	                      uniforms: {
+	                                            texture1: { type: "t", value: null },
+	                                            scale: { type: "f", value: 1.0 }
+	                      },
+
+	                      vertexShader: ["varying vec3 fNormal;", "void main() {", "fNormal = normal;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+	                      fragmentShader: ["varying vec3 fNormal;", "void main( void ) {",
+
+	                      // compose the colour using the normals then
+	                      // whatever is heightened by the noise is lighter
+	                      "gl_FragColor = vec4( fNormal, 1. );", "}"].join("\n")
+
+	};
+
+/***/ },
+/* 194 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	/**
+	 * @author felixturner / http://airtight.cc/
+	 *
+	 * Kaleidoscope Shader
+	 * Radial reflection around center point
+	 * Ported from: http://pixelshaders.com/editor/
+	 * by Toby Schachman / http://tobyschachman.com/
+	 *
+	 * sides: number of reflections
+	 * angle: initial angle in radians
+	 */
+
+	THREE.KaleidoShader = {
+
+	  uniforms: {
+
+	    "tDiffuse": { type: "t", value: null },
+	    "sides": { type: "f", value: 12.0 },
+	    "angle": { type: "f", value: 0.0 }
+
+	  },
+
+	  vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+	  fragmentShader: ["uniform sampler2D tDiffuse;", "uniform float sides;", "uniform float angle;", "varying vec2 vUv;", "void main() {", "vec2 p = vUv - 0.5;", "float r = length(p);", "float a = atan(p.y, p.x) + angle;", "float tau = 2. * 3.1416 ;", "a = mod(a, tau/sides);", "a = abs(a - tau/sides/2.) ;", "p = r * vec2(cos(a), sin(a));", "vec4 color = texture2D(tDiffuse, p + 0.5);", "gl_FragColor = color;", "}"].join("\n")
+
+	};
+
+/***/ },
+/* 195 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	/**
+	 * @author huwb / http://huwbowles.com/
+	 *
+	 * God-rays (crepuscular rays)
+	 *
+	 * Similar implementation to the one used by Crytek for CryEngine 2 [Sousa2008].
+	 * Blurs a mask generated from the depth map along radial lines emanating from the light
+	 * source. The blur repeatedly applies a blur filter of increasing support but constant
+	 * sample count to produce a blur filter with large support.
+	 *
+	 * My implementation performs 3 passes, similar to the implementation from Sousa. I found
+	 * just 6 samples per pass produced acceptible results. The blur is applied three times,
+	 * with decreasing filter support. The result is equivalent to a single pass with
+	 * 6*6*6 = 216 samples.
+	 *
+	 * References:
+	 *
+	 * Sousa2008 - Crysis Next Gen Effects, GDC2008, http://www.crytek.com/sites/default/files/GDC08_SousaT_CrysisEffects.ppt
+	 */
+
+	THREE.ShaderGodRays = {
+
+	  /**
+	   * The god-ray generation shader.
+	   *
+	   * First pass:
+	   *
+	   * The input is the depth map. I found that the output from the
+	   * THREE.MeshDepthMaterial material was directly suitable without
+	   * requiring any treatment whatsoever.
+	   *
+	   * The depth map is blurred along radial lines towards the "sun". The
+	   * output is written to a temporary render target (I used a 1/4 sized
+	   * target).
+	   *
+	   * Pass two & three:
+	   *
+	   * The results of the previous pass are re-blurred, each time with a
+	   * decreased distance between samples.
+	   */
+
+	  'godrays_generate': {
+
+	    uniforms: {
+
+	      tInput: {
+	        type: "t",
+	        value: null
+	      },
+
+	      fStepSize: {
+	        type: "f",
+	        value: 1.0
+	      },
+
+	      vSunPositionScreenSpace: {
+	        type: "v2",
+	        value: new THREE.Vector2(0.5, 0.5)
+	      }
+
+	    },
+
+	    vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+	    fragmentShader: ["#define TAPS_PER_PASS 6.0", "varying vec2 vUv;", "uniform sampler2D tInput;", "uniform vec2 vSunPositionScreenSpace;", "uniform float fStepSize;", // filter step size
+
+	    "void main() {",
+
+	    // delta from current pixel to "sun" position
+
+	    "vec2 delta = vSunPositionScreenSpace - vUv;", "float dist = length( delta );",
+
+	    // Step vector (uv space)
+
+	    "vec2 stepv = fStepSize * delta / dist;",
+
+	    // Number of iterations between pixel and sun
+
+	    "float iters = dist/fStepSize;", "vec2 uv = vUv.xy;", "float col = 0.0;",
+
+	    // This breaks ANGLE in Chrome 22
+	    //  - see http://code.google.com/p/chromium/issues/detail?id=153105
+
+	    /*
+	    // Unrolling didnt do much on my hardware (ATI Mobility Radeon 3450),
+	    // so i've just left the loop
+	     "for ( float i = 0.0; i < TAPS_PER_PASS; i += 1.0 ) {",
+	       // Accumulate samples, making sure we dont walk past the light source.
+	       // The check for uv.y < 1 would not be necessary with "border" UV wrap
+	      // mode, with a black border colour. I don't think this is currently
+	      // exposed by three.js. As a result there might be artifacts when the
+	      // sun is to the left, right or bottom of screen as these cases are
+	      // not specifically handled.
+	       "col += ( i <= iters && uv.y < 1.0 ? texture2D( tInput, uv ).r : 0.0 );",
+	      "uv += stepv;",
+	     "}",
+	    */
+
+	    // Unrolling loop manually makes it work in ANGLE
+
+	    "if ( 0.0 <= iters && uv.y < 1.0 ) col += texture2D( tInput, uv ).r;", "uv += stepv;", "if ( 1.0 <= iters && uv.y < 1.0 ) col += texture2D( tInput, uv ).r;", "uv += stepv;", "if ( 2.0 <= iters && uv.y < 1.0 ) col += texture2D( tInput, uv ).r;", "uv += stepv;", "if ( 3.0 <= iters && uv.y < 1.0 ) col += texture2D( tInput, uv ).r;", "uv += stepv;", "if ( 4.0 <= iters && uv.y < 1.0 ) col += texture2D( tInput, uv ).r;", "uv += stepv;", "if ( 5.0 <= iters && uv.y < 1.0 ) col += texture2D( tInput, uv ).r;", "uv += stepv;",
+
+	    // Should technically be dividing by 'iters', but 'TAPS_PER_PASS' smooths out
+	    // objectionable artifacts, in particular near the sun position. The side
+	    // effect is that the result is darker than it should be around the sun, as
+	    // TAPS_PER_PASS is greater than the number of samples actually accumulated.
+	    // When the result is inverted (in the shader 'godrays_combine', this produces
+	    // a slight bright spot at the position of the sun, even when it is occluded.
+
+	    "gl_FragColor = vec4( col/TAPS_PER_PASS );", "gl_FragColor.a = 1.0;", "}"].join("\n")
+
+	  },
+
+	  /**
+	   * Additively applies god rays from texture tGodRays to a background (tColors).
+	   * fGodRayIntensity attenuates the god rays.
+	   */
+
+	  'godrays_combine': {
+
+	    uniforms: {
+
+	      tColors: {
+	        type: "t",
+	        value: null
+	      },
+
+	      tGodRays: {
+	        type: "t",
+	        value: null
+	      },
+
+	      fGodRayIntensity: {
+	        type: "f",
+	        value: 0.69
+	      },
+
+	      vSunPositionScreenSpace: {
+	        type: "v2",
+	        value: new THREE.Vector2(0.5, 0.5)
+	      }
+
+	    },
+
+	    vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+	    fragmentShader: ["varying vec2 vUv;", "uniform sampler2D tColors;", "uniform sampler2D tGodRays;", "uniform vec2 vSunPositionScreenSpace;", "uniform float fGodRayIntensity;", "void main() {",
+
+	    // Since THREE.MeshDepthMaterial renders foreground objects white and background
+	    // objects black, the god-rays will be white streaks. Therefore value is inverted
+	    // before being combined with tColors
+
+	    "gl_FragColor = texture2D( tColors, vUv ) + fGodRayIntensity * vec4( 1.0 - texture2D( tGodRays, vUv ).r );", "gl_FragColor.a = 1.0;", "}"].join("\n")
+
+	  },
+
+	  /**
+	   * A dodgy sun/sky shader. Makes a bright spot at the sun location. Would be
+	   * cheaper/faster/simpler to implement this as a simple sun sprite.
+	   */
+
+	  'godrays_fake_sun': {
+
+	    uniforms: {
+
+	      vSunPositionScreenSpace: {
+	        type: "v2",
+	        value: new THREE.Vector2(0.5, 0.5)
+	      },
+
+	      fAspect: {
+	        type: "f",
+	        value: 1.0
+	      },
+
+	      sunColor: {
+	        type: "c",
+	        value: new THREE.Color(0xffee00)
+	      },
+
+	      bgColor: {
+	        type: "c",
+	        value: new THREE.Color(0x000000)
+	      }
+
+	    },
+
+	    vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+	    fragmentShader: ["varying vec2 vUv;", "uniform vec2 vSunPositionScreenSpace;", "uniform float fAspect;", "uniform vec3 sunColor;", "uniform vec3 bgColor;", "void main() {", "vec2 diff = vUv - vSunPositionScreenSpace;",
+
+	    // Correct for aspect ratio
+
+	    "diff.x *= fAspect;", "float prop = clamp( length( diff ) / 0.5, 0.0, 1.0 );", "prop = 0.35 * pow( 1.0 - prop, 3.0 );", "gl_FragColor.xyz = mix( sunColor, bgColor, 1.0 - prop );", "gl_FragColor.w = 1.0;", "}"].join("\n")
+
+	  }
+
+	};
+
+/***/ },
+/* 196 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	/**
+	 * @author felixturner / http://airtight.cc/
+	 *
+	 * Mirror Shader
+	 * Copies half the input to the other half
+	 *
+	 * side: side of input to mirror (0 = left, 1 = right, 2 = top, 3 = bottom)
+	 */
+
+	THREE.MirrorShader = {
+
+	  uniforms: {
+
+	    "tDiffuse": { type: "t", value: null },
+	    "side": { type: "i", value: 1 }
+
+	  },
+
+	  vertexShader: ["varying vec2 vUv;", "void main() {", "vUv = uv;", "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );", "}"].join("\n"),
+
+	  fragmentShader: ["uniform sampler2D tDiffuse;", "uniform int side;", "varying vec2 vUv;", "void main() {", "vec2 p = vUv;", "if (side == 0){", "if (p.x > 0.5) p.x = 1.0 - p.x;", "}else if (side == 1){", "if (p.x < 0.5) p.x = 1.0 - p.x;", "}else if (side == 2){", "if (p.y < 0.5) p.y = 1.0 - p.y;", "}else if (side == 3){", "if (p.y > 0.5) p.y = 1.0 - p.y;", "} ", "vec4 color = texture2D(tDiffuse, p);", "gl_FragColor = color;", "}"].join("\n")
+
+	};
+
+/***/ },
+/* 197 */
+/***/ function(module, exports) {
+
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
@@ -64775,7 +64850,7 @@
 	}
 
 /***/ },
-/* 193 */
+/* 198 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64784,34 +64859,34 @@
 
 	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
 
-	var _Motion = __webpack_require__(194);
+	var _Motion = __webpack_require__(199);
 
 	exports.Motion = _interopRequire(_Motion);
 
-	var _StaggeredMotion = __webpack_require__(201);
+	var _StaggeredMotion = __webpack_require__(206);
 
 	exports.StaggeredMotion = _interopRequire(_StaggeredMotion);
 
-	var _TransitionMotion = __webpack_require__(202);
+	var _TransitionMotion = __webpack_require__(207);
 
 	exports.TransitionMotion = _interopRequire(_TransitionMotion);
 
-	var _spring = __webpack_require__(204);
+	var _spring = __webpack_require__(209);
 
 	exports.spring = _interopRequire(_spring);
 
-	var _presets = __webpack_require__(205);
+	var _presets = __webpack_require__(210);
 
 	exports.presets = _interopRequire(_presets);
 
 	// deprecated, dummy warning function
 
-	var _reorderKeys = __webpack_require__(206);
+	var _reorderKeys = __webpack_require__(211);
 
 	exports.reorderKeys = _interopRequire(_reorderKeys);
 
 /***/ },
-/* 194 */
+/* 199 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64822,27 +64897,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(195);
+	var _mapToZero = __webpack_require__(200);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(196);
+	var _stripStyle = __webpack_require__(201);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(197);
+	var _stepper3 = __webpack_require__(202);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(198);
+	var _performanceNow = __webpack_require__(203);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(199);
+	var _raf = __webpack_require__(204);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(200);
+	var _shouldStopAnimation = __webpack_require__(205);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -65057,7 +65132,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 195 */
+/* 200 */
 /***/ function(module, exports) {
 
 	
@@ -65081,7 +65156,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 196 */
+/* 201 */
 /***/ function(module, exports) {
 
 	
@@ -65107,7 +65182,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 197 */
+/* 202 */
 /***/ function(module, exports) {
 
 	
@@ -65155,7 +65230,7 @@
 	// array reference around.
 
 /***/ },
-/* 198 */
+/* 203 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
@@ -65194,10 +65269,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 199 */
+/* 204 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(198)
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(203)
 	  , root = typeof window === 'undefined' ? global : window
 	  , vendors = ['moz', 'webkit']
 	  , suffix = 'AnimationFrame'
@@ -65273,7 +65348,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 200 */
+/* 205 */
 /***/ function(module, exports) {
 
 	
@@ -65309,7 +65384,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 201 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65320,27 +65395,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(195);
+	var _mapToZero = __webpack_require__(200);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(196);
+	var _stripStyle = __webpack_require__(201);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(197);
+	var _stepper3 = __webpack_require__(202);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(198);
+	var _performanceNow = __webpack_require__(203);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(199);
+	var _raf = __webpack_require__(204);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(200);
+	var _shouldStopAnimation = __webpack_require__(205);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -65576,7 +65651,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 202 */
+/* 207 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65587,31 +65662,31 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(195);
+	var _mapToZero = __webpack_require__(200);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(196);
+	var _stripStyle = __webpack_require__(201);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(197);
+	var _stepper3 = __webpack_require__(202);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _mergeDiff = __webpack_require__(203);
+	var _mergeDiff = __webpack_require__(208);
 
 	var _mergeDiff2 = _interopRequireDefault(_mergeDiff);
 
-	var _performanceNow = __webpack_require__(198);
+	var _performanceNow = __webpack_require__(203);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(199);
+	var _raf = __webpack_require__(204);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(200);
+	var _shouldStopAnimation = __webpack_require__(205);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -66069,7 +66144,7 @@
 	// that you've unmounted but that's still animating. This is where it lives
 
 /***/ },
-/* 203 */
+/* 208 */
 /***/ function(module, exports) {
 
 	
@@ -66182,7 +66257,7 @@
 	// to loop through and find a key's index each time), but I no longer care
 
 /***/ },
-/* 204 */
+/* 209 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66195,7 +66270,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _presets = __webpack_require__(205);
+	var _presets = __webpack_require__(210);
 
 	var _presets2 = _interopRequireDefault(_presets);
 
@@ -66210,7 +66285,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 205 */
+/* 210 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -66225,7 +66300,7 @@
 	module.exports = exports["default"];
 
 /***/ },
-/* 206 */
+/* 211 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -66248,7 +66323,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 207 */
+/* 212 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66265,7 +66340,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(193);
+	var _reactMotion = __webpack_require__(198);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66390,7 +66465,7 @@
 	exports.default = MotionButton;
 
 /***/ },
-/* 208 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66407,9 +66482,9 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(193);
+	var _reactMotion = __webpack_require__(198);
 
-	var _IcosahedronButton = __webpack_require__(209);
+	var _IcosahedronButton = __webpack_require__(214);
 
 	var _IcosahedronButton2 = _interopRequireDefault(_IcosahedronButton);
 
@@ -66591,7 +66666,7 @@
 	exports.default = Navigation;
 
 /***/ },
-/* 209 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66744,7 +66819,7 @@
 	exports.default = IcosahedronButton;
 
 /***/ },
-/* 210 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66761,7 +66836,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(193);
+	var _reactMotion = __webpack_require__(198);
 
 	var _TypeWriter = __webpack_require__(160);
 
@@ -66775,7 +66850,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	__webpack_require__(211);
+	__webpack_require__(216);
 
 	var Paper = function (_Component) {
 	  _inherits(Paper, _Component);
@@ -66918,16 +66993,16 @@
 	exports.default = Paper;
 
 /***/ },
-/* 211 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(212);
+	var content = __webpack_require__(217);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
+	var update = __webpack_require__(219)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -66944,10 +67019,10 @@
 	}
 
 /***/ },
-/* 212 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(213)();
+	exports = module.exports = __webpack_require__(218)();
 	// imports
 
 
@@ -66958,7 +67033,7 @@
 
 
 /***/ },
-/* 213 */
+/* 218 */
 /***/ function(module, exports) {
 
 	/*
@@ -67014,7 +67089,7 @@
 
 
 /***/ },
-/* 214 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -67268,16 +67343,16 @@
 
 
 /***/ },
-/* 215 */
+/* 220 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(216);
+	var content = __webpack_require__(221);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
+	var update = __webpack_require__(219)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67294,10 +67369,10 @@
 	}
 
 /***/ },
-/* 216 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(213)();
+	exports = module.exports = __webpack_require__(218)();
 	// imports
 
 
@@ -67308,16 +67383,16 @@
 
 
 /***/ },
-/* 217 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(218);
+	var content = __webpack_require__(223);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
+	var update = __webpack_require__(219)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67334,10 +67409,10 @@
 	}
 
 /***/ },
-/* 218 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(213)();
+	exports = module.exports = __webpack_require__(218)();
 	// imports
 
 
@@ -67348,16 +67423,16 @@
 
 
 /***/ },
-/* 219 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(220);
+	var content = __webpack_require__(225);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(214)(content, {});
+	var update = __webpack_require__(219)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67374,10 +67449,10 @@
 	}
 
 /***/ },
-/* 220 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(213)();
+	exports = module.exports = __webpack_require__(218)();
 	// imports
 
 

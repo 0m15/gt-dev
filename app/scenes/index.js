@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import TypeWriter from '../components/TypeWriter'
 import ThreeScene from '../components/ThreeScene'
-import * as visualization from './viz.js'
+import * as visualization from './viz-alt.js'
 
 import { playSfx } from '../lib/sfx'
 import { Motion, spring, TransitionMotion } from 'react-motion'
