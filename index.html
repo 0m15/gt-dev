@@ -126,8 +126,10 @@
 <script id="vertexShader" type="x-shader/x-vertex">
 uniform float scale;
 uniform float displacement;
+varying float vDisplacement;
 // send noise value to fragment with vNoise.
 varying float vNoise;
+varying vec3 col;
 
 //
 // GLSL textureless classic 3D noise "cnoise",
@@ -240,12 +242,17 @@ float cnoise(vec3 P)
 void main() {
   vNoise = cnoise(normalize(position) * scale);
   vec3 pos = position + normal * vNoise * vec3(displacement);
+  vDisplacement = displacement;
+  col = vec3(uv, 1.0);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(pos,1.0);
 }
   </script>
   
   <script id="fragmentShader" type="x-shader/x-fragment">
+
+  varying vec3 col;
   varying float vNoise;
+  varying float vDisplacement;
   void main() {
     gl_FragColor = vec4(vec3(1.0) * vNoise, 1.0);
   }

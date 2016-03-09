@@ -60,9 +60,9 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(222); // app/index.js
+	__webpack_require__(224); // app/index.js
 
-	__webpack_require__(224);
+	__webpack_require__(226);
 
 	var app = _reactDom2.default.render(_react2.default.createElement(_scenes2.default, null), document.getElementById('gt-app'));
 
@@ -19695,19 +19695,19 @@
 
 	var visualization = _interopRequireWildcard(_vizAlt);
 
-	var _sfx = __webpack_require__(197);
+	var _sfx = __webpack_require__(199);
 
-	var _reactMotion = __webpack_require__(198);
+	var _reactMotion = __webpack_require__(200);
 
-	var _MotionButton = __webpack_require__(212);
+	var _MotionButton = __webpack_require__(214);
 
 	var _MotionButton2 = _interopRequireDefault(_MotionButton);
 
-	var _Navigation = __webpack_require__(213);
+	var _Navigation = __webpack_require__(215);
 
 	var _Navigation2 = _interopRequireDefault(_Navigation);
 
-	var _Paper = __webpack_require__(215);
+	var _Paper = __webpack_require__(217);
 
 	var _Paper2 = _interopRequireDefault(_Paper);
 
@@ -19729,7 +19729,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	__webpack_require__(220);
+	__webpack_require__(222);
 
 	var Scene = function (_Component) {
 	  _inherits(Scene, _Component);
@@ -61634,6 +61634,8 @@
 	// threejs effects & plugins
 	__webpack_require__(169);
 
+	var chromaticAbberationPass, FXAAPass, bloomPass, invertPass, boxBlurPass, fullBoxBlurPass, zoomBlurPass, multiPassBloomPass, denoisePass, sepiaPass, noisePass, vignettePass, vignette2Pass, CGAPass, sobelEdgeDetectionPass, dirtPass, blendPass, guidedFullBoxBlurPass, SSAOPass, pixelatePass, rgbSplitPass, artPass, chromaticAberrationPass, barrelBlurPass, oldVideoPass, dotScreenPass, circularBlur, poissonDiscBlur, cannyEdgeDetectionPass, freiChenEdgeDetectionPass, toonPass, fxaaPass, highPassPass, grayscalePass, asciiPass, guidedBoxPass, ledPass, halftonePass, halftoneCMYKPass;
+
 	var screenX = window.innerWidth;
 	var screenY = window.innerHeight;
 
@@ -61676,6 +61678,8 @@
 	var sphereMaterial;
 	var loudnessMax;
 	var center;
+	var dirtPass;
+	var blendPass;
 
 	var objects = [];
 
@@ -61744,7 +61748,8 @@
 
 	  // MAIN OBJECT3D
 	  object3d = new _three2.default.Object3D();
-	  //scene.add(object3d)
+	  object3d.position.z = 400;
+	  scene.add(object3d);
 
 	  sphereUniforms = {
 	    scale: { type: "f", value: 10.0 },
@@ -61785,51 +61790,66 @@
 	  // append canvas
 	  document.getElementById('visualization').appendChild(renderer.domElement);
 
+	  composer = new WAGNER.Composer(renderer, { useRGBA: false });
+	  composer.setSize(window.innerWidth, window.innerHeight); // or whatever resolution
+
+	  dirtPass = new WAGNER.DirtPass();
+	  blendPass = new WAGNER.BlendPass();
+	  bloomPass = new WAGNER.MultiPassBloomPass();
+	  bloomPass.params.blurAmount = 20;
+	  FXAAPass = new WAGNER.FXAAPass();
+	  vignettePass = new WAGNER.Vignette2Pass();
+	  vignettePass.params.boost = 2;
+	  vignettePass.params.reduction = 3;
+	  noisePass = new WAGNER.NoisePass();
+	  noisePass.params.amount = .05;
+	  chromaticAbberationPass = new WAGNER.ChromaticAberrationPass();
+
 	  // RENDER PASS
-	  var rtParameters = {
-	    minFilter: _three2.default.LinearFilter,
-	    magFilter: _three2.default.LinearFilter,
-	    format: _three2.default.RGBFormat,
-	    stencilBuffer: true
-	  };
+	  // var rtParameters = {
+	  //   minFilter: THREE.LinearFilter,
+	  //   magFilter: THREE.LinearFilter,
+	  //   format: THREE.RGBFormat,
+	  //   stencilBuffer: true
+	  // };
 
-	  // POSTPROCESSING
-	  var renderTarget = new _three2.default.WebGLRenderTarget(screenX, screenY, rtParameters);
-	  var effectBlend = new _three2.default.ShaderPass(_three2.default.BlendShader, "tDiffuse1");
-	  var effectFXAA = new _three2.default.ShaderPass(_three2.default.FXAAShader);
+	  // // POSTPROCESSING
+	  // var renderTarget = new THREE.WebGLRenderTarget( screenX, screenY, rtParameters );
+	  // var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
+	  // var effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
 
-	  effectFXAA.uniforms['resolution'].value.set(1 / screenX, 1 / screenY);
+	  // effectFXAA.uniforms[ 'resolution' ].value.set( 1 / screenX, 1 / screenY );
 
-	  var effectBleach = new _three2.default.ShaderPass(_three2.default.BleachBypassShader);
+	  // var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
 
-	  // tilt shift
-	  hblur = new _three2.default.ShaderPass(_three2.default.HorizontalTiltShiftShader);
-	  vblur = new _three2.default.ShaderPass(_three2.default.VerticalTiltShiftShader);
+	  // // tilt shift
+	  // hblur = new THREE.ShaderPass( THREE.HorizontalTiltShiftShader );
+	  // vblur = new THREE.ShaderPass( THREE.VerticalTiltShiftShader );
 
-	  hblur.uniforms['h'].value = 1 / window.innerWidth;
-	  vblur.uniforms['v'].value = 1 / window.innerHeight;
-	  vblur.renderToScreen = true;
+	  // hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
+	  // vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
+	  // vblur.renderToScreen = true
 
-	  var effectBloom = new _three2.default.BloomPass(1, 32, 5);
-	  effectBloom.renderToScreen = true;
+	  // var effectBloom = new THREE.BloomPass(1, 32, 5);
+	  // effectBloom.renderToScreen = true
 
-	  var effect = new _three2.default.ShaderPass(_three2.default.RGBShiftShader);
-	  effect.uniforms['amount'].value = 0.0015;
-	  effect.renderToScreen = true;
+	  // var effect = new THREE.ShaderPass( THREE.RGBShiftShader );
+	  // effect.uniforms[ 'amount' ].value = 0.0015;
+	  // effect.renderToScreen = true;
 
-	  composer = new _three2.default.EffectComposer(renderer, renderTarget);
-	  composer.addPass(new _three2.default.RenderPass(scene, camera));
+	  // composer = new THREE.EffectComposer( renderer, renderTarget ); 
+	  // composer.addPass( new THREE.RenderPass( scene, camera ) );
 
-	  var kaleidoPass = new _three2.default.ShaderPass(_three2.default.KaleidoShader);
-	  var mirrorPass = new _three2.default.ShaderPass(_three2.default.MirrorShader);
+	  // var kaleidoPass = new THREE.ShaderPass( THREE.KaleidoShader );
+	  // var mirrorPass = new THREE.ShaderPass( THREE.MirrorShader );
 
-	  //composer.addPass( effectFXAA );
-	  composer.addPass(effectBloom);
-	  composer.addPass(hblur);
-	  composer.addPass(vblur);
-	  //composer.addPass( kaleidoPass );
-	  composer.addPass(mirrorPass);
-	  composer.addPass(effect);
+	  // //composer.addPass( effectFXAA );
+	  // composer.addPass( effectBloom );
+	  // composer.addPass( hblur );
+	  // composer.addPass( vblur );
+	  // //composer.addPass( kaleidoPass );
+	  // composer.addPass( mirrorPass );
+	  // composer.addPass( effect );
 
 	  //composer.addPass( effectBleach );
 
@@ -61883,16 +61903,22 @@
 	  var scale = 7 * loudness;
 	  var opacity = 1;
 	  var easing = _tween2.default.Easing.Quadratic.Out;
-	  console.log('scale', scale);
 
-	  var tween = new _tween2.default.Tween({ scale: 0 }).delay(delay).to({ scale: scale }, duration * 1000).easing(_tween2.default.Easing.Elastic.Out).onUpdate(function (t) {
-	    console.log('this.scale', this.scale);
+	  var tween = new _tween2.default.Tween({ scale: 0 }).delay(delay).to({ scale: 1 }, duration * 1000).easing(_tween2.default.Easing.Elastic.Out).onUpdate(function (t) {
 	    m.scale.set(this.scale, this.scale, this.scale);
+	  }).onComplete(function () {
+	    tweenSegmentOut(m, 5000, 1000, true);
 	  }).start();
 
-	  var tween = new _tween2.default.Tween({ scale: scale * 10, x: m.position.x, y: m.position.y, z: m.position.z }).delay(delay).to({ x: Math.random() * 20 - 20, y: Math.random() * 20 - 20, z: Math.random() * 20 - 20 }, duration * 10 * 1000).easing(_tween2.default.Easing.Quadratic.Out).onUpdate(function (t) {
-	    m.position.set(this.x, this.y, this.z);
-	  }).start();
+	  // var tween = new TWEEN
+	  //   .Tween({ scale: scale*10, x: m.position.x, y: m.position.y, z: m.position.z })
+	  //   .delay(delay)
+	  //   .to({ x: Math.random()*20-20, y: Math.random()*20-20, z: Math.random()*20-20 }, (duration*10)*1000)
+	  //   .easing(TWEEN.Easing.Quadratic.Out)
+	  //   .onUpdate(function(t) {
+	  //     m.position.set(this.x, this.y, this.z)
+	  //   })
+	  //   .start()
 	}
 
 	function tweenSegmentOut(mesh) {
@@ -61930,9 +61956,16 @@
 	  // }
 	  console.log(loudness, duration);
 
-	  new _tween2.default.Tween({ displacement: sphereUniforms.displacement.value, scale: sphereUniforms.scale.value }).to({ displacement: loudness * 100, scale: loudness * 10 }, duration).easing(_tween2.default.Easing.Quintic.InOut).onUpdate(function () {
+	  new _tween2.default.Tween({ scaleMesh: 1, displacement: sphereUniforms.displacement.value, scale: sphereUniforms.scale.value }).to({ scaleMesh: loudnessMax * 1.25, displacement: loudness * 100, scale: loudness * 10 }, duration).easing(_tween2.default.Easing.Quintic.InOut).onUpdate(function () {
 	    sphereUniforms.displacement.value = this.displacement;
 	    sphereUniforms.scale.value = this.scale;
+	  }).start();
+	}
+
+	function bumpScene(loudness, duration) {
+	  console.log('bump', loudness);
+	  new _tween2.default.Tween({ scaleMesh: 1 }).to({ scaleMesh: loudness * 0.01 }, duration).easing(_tween2.default.Easing.Quintic.InOut).onUpdate(function () {
+	    sphereMesh.scale.set(this.scaleMesh, this.scaleMesh, this.scaleMesh);
 	  }).start();
 	}
 
@@ -61953,14 +61986,14 @@
 	function animate(time) {
 	  render();
 	  sphereMesh.rotation.x += 0.01;
-	  object3d.rotation.y += 0.01;
-	  object3d.rotation.x += 0.01;
+	  scene.rotation.y += light.rotation.x = 0.01;
+	  scene.rotation.x += 0.01;
 	  currentScene = scenesByTime[audio.currentTime.toFixed(0)];
 	  currentSegment = segmentsByTime[audio.currentTime.toFixed(1)];
 	  currentBar = barsByTime[audio.currentTime.toFixed(1)];
 
 	  if (currentBar && currentBar.start != lastBar.start) {
-	    bump(60, 10, false);
+	    //bump(60, 10, false)
 	  }
 
 	  if (currentSegment) {
@@ -61968,8 +62001,6 @@
 
 	    if (currentSegment && currentSegment.start != lastSegment.start) {
 	      addSegment(currentSegment);
-	      console.log('bump');
-
 	      bumpSegment(segmentLoudness, currentSegment.duration * 1000);
 	      lastSegment = currentSegment;
 	    }
@@ -61978,7 +62009,8 @@
 	  if (currentScene && currentScene.start != lastScene.start) {
 
 	    if (lastScene.start != undefined) {
-	      bump(1000, 100, true);
+	      //bump(1000, 100, true) 
+	      //bumpScene((-100-currentScene.loudness)*-1, currentScene.duration*1000)
 	    }
 
 	    lastScene = currentScene;
@@ -61989,7 +62021,17 @@
 	}
 
 	function render() {
-	  composer.render(renderer);
+	  renderer.autoClearColor = true;
+	  composer.reset();
+	  composer.render(scene, camera);
+	  composer.pass(dirtPass);
+	  composer.pass(chromaticAbberationPass);
+	  composer.pass(bloomPass);
+	  composer.pass(vignettePass);
+	  composer.pass(FXAAPass);
+	  composer.pass(noisePass);
+
+	  composer.toScreen();
 	}
 
 	//EVENTS
@@ -62158,6 +62200,8 @@
 	__webpack_require__(194);
 	__webpack_require__(195);
 	__webpack_require__(196);
+	__webpack_require__(197);
+	__webpack_require__(198);
 
 /***/ },
 /* 170 */
@@ -64835,6 +64879,1511 @@
 
 	'use strict';
 
+	(function () {
+
+	  'use strict';
+
+	  var WAGNER = WAGNER || {};
+
+	  WAGNER.vertexShadersPath = './vertex-shaders';
+	  WAGNER.fragmentShadersPath = './fragment-shaders';
+	  WAGNER.assetsPath = './assets';
+
+	  WAGNER.log = function () {
+	    //console.log( Array.prototype.slice.call( arguments ).join( ' ' ) );
+	  };
+
+	  WAGNER.Composer = function (renderer, settings) {
+
+	    this.width = 1;
+	    this.height = 1;
+
+	    this.settings = settings || {};
+	    this.useRGBA = this.settings.useRGBA || false;
+
+	    this.renderer = renderer;
+	    this.copyPass = new WAGNER.CopyPass(this.settings);
+
+	    this.scene = new THREE.Scene();
+	    this.quad = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), this.defaultMaterial);
+	    this.scene.add(this.quad);
+	    this.camera = new THREE.OrthographicCamera(1, 1, 1, 1, -10000, 10000);
+
+	    this.front = new THREE.WebGLRenderTarget(1, 1, {
+	      minFilter: this.settings.minFilter !== undefined ? this.settings.minFilter : THREE.LinearFilter,
+	      magFilter: this.settings.magFilter !== undefined ? this.settings.magFilter : THREE.LinearFilter,
+	      wrapS: this.settings.wrapS !== undefined ? this.settings.wrapS : THREE.ClampToEdgeWrapping,
+	      wrapT: this.settings.wrapT !== undefined ? this.settings.wrapT : THREE.ClampToEdgeWrapping,
+	      format: this.useRGBA ? THREE.RGBAFormat : THREE.RGBFormat,
+	      type: this.settings.type !== undefined ? this.settings.type : THREE.UnsignedByteType,
+	      stencilBuffer: this.settings.stencilBuffer !== undefined ? this.settings.stencilBuffer : true
+	    });
+
+	    this.back = this.front.clone();
+
+	    this.startTime = Date.now();
+
+	    this.passes = {};
+	  };
+
+	  WAGNER.Composer.prototype.linkPass = function (id, pass) {
+
+	    function WagnerLoadPassException(message) {
+	      this.message = 'Pass "' + id + '" already loaded.';
+	      this.name = "WagnerLoadPassException";
+	      this.toString = function () {
+	        return this.message;
+	      };
+	    }
+
+	    if (this.passes[id]) {
+	      throw new WagnerLoadPassException(id, pass);
+	    }
+
+	    this.passes[id] = pass;
+	  };
+
+	  WAGNER.Composer.prototype.swapBuffers = function () {
+
+	    this.output = this.write;
+	    this.input = this.read;
+
+	    var t = this.write;
+	    this.write = this.read;
+	    this.read = t;
+	  };
+
+	  WAGNER.Composer.prototype.render = function (scene, camera, keep, output) {
+
+	    if (this.copyPass.isLoaded()) {
+	      if (keep) this.swapBuffers();
+	      this.renderer.render(scene, camera, output ? output : this.write, true);
+	      if (!output) this.swapBuffers();
+	    }
+	  };
+
+	  WAGNER.Composer.prototype.toScreen = function () {
+
+	    if (this.copyPass.isLoaded()) {
+	      this.quad.material = this.copyPass.shader;
+	      this.quad.material.uniforms.tInput.value = this.read;
+	      this.quad.material.uniforms.resolution.value.set(this.width, this.height);
+	      this.renderer.render(this.scene, this.camera);
+	    }
+	  };
+
+	  WAGNER.Composer.prototype.toTexture = function (t) {
+
+	    if (this.copyPass.isLoaded()) {
+	      this.quad.material = this.copyPass.shader;
+	      this.quad.material.uniforms.tInput.value = this.read;
+	      this.renderer.render(this.scene, this.camera, t, false);
+	    }
+	  };
+
+	  WAGNER.Composer.prototype.pass = function (pass) {
+
+	    if (pass instanceof WAGNER.Stack) {
+
+	      this.passStack(pass);
+	    } else {
+
+	      if (typeof pass === 'string') {
+	        this.quad.material = this.passes[pass];
+	      }
+	      if (pass instanceof THREE.ShaderMaterial) {
+	        this.quad.material = pass;
+	      }
+	      if (pass instanceof WAGNER.Pass) {
+	        if (!pass.isLoaded()) return;
+	        pass.run(this);
+	        return;
+	      }
+
+	      if (!pass.isSim) this.quad.material.uniforms.tInput.value = this.read;
+
+	      this.quad.material.uniforms.resolution.value.set(this.width, this.height);
+	      this.quad.material.uniforms.time.value = 0.001 * (Date.now() - this.startTime);
+	      this.renderer.render(this.scene, this.camera, this.write, false);
+	      this.swapBuffers();
+	    }
+	  };
+
+	  WAGNER.Composer.prototype.passStack = function (stack) {
+
+	    stack.getPasses().forEach(function (pass) {
+
+	      this.pass(pass);
+	    }.bind(this));
+	  };
+
+	  WAGNER.Composer.prototype.reset = function () {
+
+	    this.read = this.front;
+	    this.write = this.back;
+
+	    this.output = this.write;
+	    this.input = this.read;
+	  };
+
+	  WAGNER.Composer.prototype.setSource = function (src) {
+
+	    if (this.copyPass.isLoaded()) {
+	      this.quad.material = this.copyPass.shader;
+	      this.quad.material.uniforms.tInput.value = src;
+	      this.renderer.render(this.scene, this.camera, this.write, true);
+	      this.swapBuffers();
+	    }
+	  };
+
+	  WAGNER.Composer.prototype.setSize = function (w, h) {
+
+	    this.width = w;
+	    this.height = h;
+
+	    this.camera.projectionMatrix.makeOrthographic(w / -2, w / 2, h / 2, h / -2, this.camera.near, this.camera.far);
+	    this.quad.scale.set(w, h, 1);
+
+	    this.front.setSize(w, h);
+	    this.back.setSize(w, h);
+	  };
+
+	  WAGNER.Composer.prototype.defaultMaterial = new THREE.MeshBasicMaterial();
+
+	  WAGNER.loadShader = function (file, callback) {
+
+	    var oReq = new XMLHttpRequest();
+	    oReq.onload = function () {
+	      var content = oReq.responseText;
+	      callback(content);
+	    }.bind(this);
+	    oReq.onerror = function () {
+
+	      function WagnerLoadShaderException(f) {
+	        this.message = 'Shader "' + f + '" couldn\'t be loaded.';
+	        this.name = "WagnerLoadShaderException";
+	        this.toString = function () {
+	          return this.message;
+	        };
+	      }
+	      throw new WagnerLoadShaderException(file);
+	    };
+	    oReq.onabort = function () {
+
+	      function WagnerLoadShaderException(f) {
+	        this.message = 'Shader "' + f + '" load was aborted.';
+	        this.name = "WagnerLoadShaderException";
+	        this.toString = function () {
+	          return this.message;
+	        };
+	      }
+	      throw new WagnerLoadShaderException(file);
+	    };
+	    oReq.open('get', file, true);
+	    oReq.send();
+	  };
+
+	  WAGNER.processShader = function (vertexShaderCode, fragmentShaderCode) {
+
+	    WAGNER.log('Processing Shader | Performing uniform Reflection...');
+
+	    var regExp = /uniform\s+([^\s]+)\s+([^\s]+)\s*;/gi;
+	    var regExp2 = /uniform\s+([^\s]+)\s+([^\s]+)\s*\[\s*(\w+)\s*\]*\s*;/gi;
+
+	    var typesMap = {
+
+	      sampler2D: { type: 't', value: function value() {
+	          return new THREE.Texture();
+	        } },
+	      samplerCube: { type: 't', value: function value() {} },
+
+	      bool: { type: 'b', value: function value() {
+	          return 0;
+	        } },
+	      int: { type: 'i', value: function value() {
+	          return 0;
+	        } },
+	      float: { type: 'f', value: function value() {
+	          return 0;
+	        } },
+
+	      vec2: { type: 'v2', value: function value() {
+	          return new THREE.Vector2();
+	        } },
+	      vec3: { type: 'v3', value: function value() {
+	          return new THREE.Vector3();
+	        } },
+	      vec4: { type: 'v4', value: function value() {
+	          return new THREE.Vector4();
+	        } },
+
+	      bvec2: { type: 'v2', value: function value() {
+	          return new THREE.Vector2();
+	        } },
+	      bvec3: { type: 'v3', value: function value() {
+	          return new THREE.Vector3();
+	        } },
+	      bvec4: { type: 'v4', value: function value() {
+	          return new THREE.Vector4();
+	        } },
+
+	      ivec2: { type: 'v2', value: function value() {
+	          return new THREE.Vector2();
+	        } },
+	      ivec3: { type: 'v3', value: function value() {
+	          return new THREE.Vector3();
+	        } },
+	      ivec4: { type: 'v4', value: function value() {
+	          return new THREE.Vector4();
+	        } },
+
+	      mat2: { type: 'v2', value: function value() {
+	          return new THREE.Matrix2();
+	        } },
+	      mat3: { type: 'v3', value: function value() {
+	          return new THREE.Matrix3();
+	        } },
+	      mat4: { type: 'v4', value: function value() {
+	          return new THREE.Matrix4();
+	        } }
+
+	    };
+
+	    var arrayTypesMap = {
+	      float: { type: 'fv', value: function value() {
+	          return [];
+	        } },
+	      vec3: { type: 'v3v', value: function value() {
+	          return [];
+	        } }
+	    };
+
+	    var matches;
+	    var uniforms = {
+	      resolution: { type: 'v2', value: new THREE.Vector2(1, 1), default: true },
+	      time: { type: 'f', value: Date.now(), default: true },
+	      tInput: { type: 't', value: new THREE.Texture(), default: true }
+	    };
+
+	    var uniformType, uniformName, arraySize;
+
+	    while ((matches = regExp.exec(fragmentShaderCode)) !== null) {
+	      if (matches.index === regExp.lastIndex) {
+	        regExp.lastIndex++;
+	      }
+	      uniformType = matches[1];
+	      uniformName = matches[2];
+	      WAGNER.log('  > SINGLE', uniformType, uniformName);
+	      uniforms[uniformName] = {
+	        type: typesMap[uniformType].type,
+	        value: typesMap[uniformType].value()
+	      };
+	    }
+
+	    while ((matches = regExp2.exec(fragmentShaderCode)) !== null) {
+	      if (matches.index === regExp.lastIndex) {
+	        regExp.lastIndex++;
+	      }
+	      uniformType = matches[1];
+	      uniformName = matches[2];
+	      arraySize = matches[3];
+	      WAGNER.log('  > ARRAY', arraySize, uniformType, uniformName);
+	      uniforms[uniformName] = {
+	        type: arrayTypesMap[uniformType].type,
+	        value: arrayTypesMap[uniformType].value()
+	      };
+	    }
+
+	    WAGNER.log('Uniform reflection completed. Compiling...');
+
+	    var shader = new THREE.ShaderMaterial({
+	      uniforms: uniforms,
+	      vertexShader: vertexShaderCode,
+	      fragmentShader: fragmentShaderCode,
+	      shading: THREE.FlatShading,
+	      depthWrite: false,
+	      depthTest: false,
+	      transparent: true
+	    });
+
+	    WAGNER.log('Compiled');
+
+	    return shader;
+	  };
+
+	  WAGNER.Pass = function () {
+
+	    WAGNER.log('Pass constructor');
+	    this.shader = null;
+	    this.loaded = null;
+	    this.params = {};
+	    this.isSim = false;
+	  };
+
+	  WAGNER.Pass.prototype.loadShader = function (id, c) {
+
+	    var self = this;
+	    var vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 ); }';
+	    WAGNER.loadShader(WAGNER.fragmentShadersPath + '/' + id, function (fs) {
+	      self.shader = WAGNER.processShader(vs, fs);
+	      //self.mapUniforms( self.shader.uniforms );
+	      if (c) c.apply(self);
+	    });
+	  };
+
+	  WAGNER.Pass.prototype.mapUniforms = function (uniforms) {
+
+	    var params = this.params;
+
+	    for (var j in uniforms) {
+	      if (!uniforms[j].default) {
+	        (function (id) {
+	          Object.defineProperty(params, id, {
+	            get: function get() {
+	              return uniforms[id].value;
+	            },
+	            set: function set(v) {
+	              uniforms[id].value = v;
+	            },
+	            configurable: false
+	          });
+	        })(j);
+	      }
+	    }
+	  };
+
+	  WAGNER.Pass.prototype.run = function (c) {
+
+	    //WAGNER.log( 'Pass run' );
+	    c.pass(this.shader);
+	  };
+
+	  WAGNER.Pass.prototype.isLoaded = function () {
+
+	    if (this.loaded === null) {
+	      if (this.shader instanceof THREE.ShaderMaterial) {
+	        this.loaded = true;
+	      }
+	    } else {
+	      return this.loaded;
+	    }
+	  };
+
+	  WAGNER.Pass.prototype.getOfflineTexture = function (w, h, useRGBA) {
+
+	    var rtTexture = new THREE.WebGLRenderTarget(w, h, {
+	      minFilter: THREE.LinearFilter,
+	      magFilter: THREE.LinearFilter,
+	      format: useRGBA ? THREE.RGBAFormat : THREE.RGBFormat
+	    });
+
+	    return rtTexture;
+	  };
+
+	  WAGNER.CopyPass = function () {
+
+	    WAGNER.Pass.call(this);
+	    WAGNER.log('CopyPass constructor');
+	    this.loadShader('copy-fs.glsl');
+	  };
+
+	  WAGNER.CopyPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	  WAGNER.GenericPass = function (fragmentShaderSource, c) {
+
+	    WAGNER.Pass.call(this);
+	    var self = this;
+	    WAGNER.loadShader(WAGNER.vertexShadersPath + '/orto-vs.glsl', function (vs) {
+	      WAGNER.loadShader(fragmentShaderSource, function (fs) {
+	        self.shader = WAGNER.processShader(vs, fs);
+	        if (c) c.apply(self);
+	      });
+	    });
+	  };
+
+	  WAGNER.GenericPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	  WAGNER.Stack = function (shadersPool) {
+
+	    this.passItems = [];
+	    this.shadersPool = shadersPool;
+	    this.passes = [];
+	  };
+
+	  WAGNER.Stack.prototype.addPass = function (shaderName, enabled, params, index) {
+
+	    var length,
+	        passItem = {
+	      shaderName: shaderName,
+	      enabled: enabled || false,
+	      params: params
+	    };
+
+	    this.passItems.push(passItem);
+	    length = this.passItems.length;
+
+	    this.updatePasses();
+
+	    if (index) {
+
+	      return this.movePassToIndex(this.passItems[length], index);
+	    } else {
+
+	      return length - 1;
+	    }
+	  };
+
+	  WAGNER.Stack.prototype.removePass = function (index) {
+
+	    this.passItems.splice(index, 1);
+	    this.updatePasses();
+	  };
+
+	  WAGNER.Stack.prototype.enablePass = function (index) {
+
+	    this.passItems[index].enabled = true;
+	    this.updatePasses();
+	  };
+
+	  WAGNER.Stack.prototype.disablePass = function (index) {
+
+	    this.passItems[index].enabled = false;
+	    this.updatePasses();
+	  };
+
+	  WAGNER.Stack.prototype.isPassEnabled = function (index) {
+
+	    return this.passItems[index].enabled;
+	  };
+
+	  WAGNER.Stack.prototype.movePassToIndex = function (index, destIndex) {
+
+	    this.passItems.splice(destIndex, 0, this.passItems.splice(index, 1)[0]);
+	    this.updatePasses();
+	    return destIndex; //#TODO:180 check if destIndex is final index
+	  };
+
+	  WAGNER.Stack.prototype.reverse = function () {
+
+	    this.passItems.reverse();
+	    this.updatePasses();
+	  };
+
+	  WAGNER.Stack.prototype.updatePasses = function () {
+
+	    this.passes = this.shadersPool.getPasses(this.passItems);
+
+	    // init default params for new passItems
+	    this.passItems.forEach(function (passItem, index) {
+
+	      if (passItem.params === undefined) {
+
+	        passItem.params = JSON.parse(JSON.stringify(this.passes[index].params)); // clone params without reference to the real shader instance params
+	        // console.log('updatePasses', passItem, passItem.params);
+	      }
+	    }.bind(this));
+
+	    // console.log('Updated stack passes list from shaders pool. Stack contains', this.passes.length, 'shaders, and there are', this.shadersPool.availableShaders.length, 'shaders in the pool.');
+	  };
+
+	  WAGNER.Stack.prototype.getPasses = function () {
+
+	    return this.passes;
+	  };
+
+	  WAGNER.ShadersPool = function () {
+
+	    this.availableShaders = [];
+	  };
+
+	  WAGNER.ShadersPool.prototype.getPasses = function (passItems) {
+
+	    var pass,
+	        passes = [];
+
+	    this.availableShaders.forEach(function (availableShader) {
+
+	      availableShader.used = false;
+	    });
+
+	    if (passItems) {
+
+	      passItems.forEach(function (passItem, index) {
+
+	        if (passItem.enabled) {
+
+	          pass = this.getShaderFromPool(passItem.shaderName, passItem.params);
+
+	          if (passItem.params) {
+
+	            pass.params = this.extendParams(pass.params, passItem.params);
+	          }
+
+	          passes.push(pass);
+	        }
+	      }.bind(this));
+	    }
+
+	    return passes;
+	  };
+
+	  WAGNER.ShadersPool.prototype.getShaderFromPool = function (shaderName, params) {
+
+	    var pass, shaderItem;
+
+	    if (shaderName && WAGNER[shaderName]) {
+
+	      for (var i = this.availableShaders.length - 1; i >= 0; i--) {
+
+	        shaderItem = this.availableShaders[i];
+
+	        if (!shaderItem.used && shaderItem.name === shaderName) {
+
+	          shaderItem.used = true;
+	          pass = shaderItem.pass;
+	          break;
+	        }
+	      };
+
+	      if (!pass) {
+
+	        pass = new WAGNER[shaderName](params);
+
+	        shaderItem = {
+	          pass: pass,
+	          name: shaderName,
+	          used: true
+	        };
+
+	        this.availableShaders.push(shaderItem);
+	      }
+
+	      return pass;
+	    }
+	  };
+
+	  WAGNER.ShadersPool.prototype.extendParams = function (target, source) {
+
+	    var obj = {},
+	        i = 0,
+	        il = arguments.length,
+	        key;
+
+	    for (; i < il; i++) {
+
+	      for (key in arguments[i]) {
+
+	        if (arguments[i].hasOwnProperty(key)) {
+
+	          obj[key] = arguments[i][key];
+	        }
+	      }
+	    }
+
+	    return obj;
+	  };
+
+	  window.WAGNER = WAGNER;
+	})();
+
+/***/ },
+/* 198 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	WAGNER.BlendPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('BlendPass constructor');
+	  this.loadShader('blend-fs.glsl');
+
+	  this.params.mode = 1;
+	  this.params.opacity = 1;
+	  this.params.tInput2 = null;
+	  this.params.resolution2 = new THREE.Vector2();
+	  this.params.sizeMode = 1;
+	  this.params.aspectRatio = 1;
+	  this.params.aspectRatio2 = 1;
+	};
+
+	WAGNER.BlendMode = {
+	  Normal: 1,
+	  Dissolve: 2,
+	  Darken: 3,
+	  Multiply: 4,
+	  ColorBurn: 5,
+	  LinearBurn: 6,
+	  DarkerColor: 7,
+	  Lighten: 8,
+	  Screen: 9,
+	  ColorDodge: 10,
+	  LinearDodge: 11,
+	  LighterColor: 12,
+	  Overlay: 13,
+	  SoftLight: 14,
+	  HardLight: 15,
+	  VividLight: 16,
+	  LinearLight: 17,
+	  PinLight: 18,
+	  HardMix: 19,
+	  Difference: 20,
+	  Exclusion: 21,
+	  Substract: 22,
+	  Divide: 23
+	};
+
+	WAGNER.BlendPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.BlendPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.mode.value = this.params.mode;
+	  this.shader.uniforms.opacity.value = this.params.opacity;
+	  this.shader.uniforms.tInput2.value = this.params.tInput2;
+	  this.shader.uniforms.sizeMode.value = this.params.sizeMode;
+	  this.shader.uniforms.aspectRatio.value = this.params.aspectRatio;
+	  this.shader.uniforms.aspectRatio2.value = this.params.aspectRatio2;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.InvertPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('InvertPass constructor');
+	  this.loadShader('invert-fs.glsl');
+	};
+
+	WAGNER.InvertPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.SymetricPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('SymetricPass constructor');
+	  this.loadShader('symetric-fs.glsl');
+
+	  this.params.xReverse = false;
+	  this.params.yReverse = false;
+	  this.params.xMirror = false;
+	  this.params.yMirror = false;
+	  this.params.mirrorCenter = new THREE.Vector2(0.5, 0.5);
+	  this.params.angle = 0;
+	};
+
+	WAGNER.SymetricPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.SymetricPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.xReverse.value = this.params.xReverse;
+	  this.shader.uniforms.yReverse.value = this.params.yReverse;
+	  this.shader.uniforms.xMirror.value = this.params.xMirror;
+	  this.shader.uniforms.yMirror.value = this.params.yMirror;
+	  this.shader.uniforms.mirrorCenter.value = this.params.mirrorCenter;
+	  this.shader.uniforms.angle.value = this.params.angle;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.SepiaPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('SepiaPass constructor');
+	  this.loadShader('sepia-fs.glsl');
+
+	  this.params.amount = 1;
+	};
+
+	WAGNER.SepiaPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.SepiaPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.amount.value = this.params.amount;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.BrightnessContrastPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('BrightnessContrastPass constructor');
+	  this.loadShader('brightness-contrast-fs.glsl');
+
+	  this.params.brightness = 1;
+	  this.params.contrast = 1;
+	};
+
+	WAGNER.BrightnessContrastPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.BrightnessContrastPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.brightness.value = this.params.brightness;
+	  this.shader.uniforms.contrast.value = this.params.contrast;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.Pass.prototype.bindUniform = function (p, s, v, c) {
+
+	  Object.defineProperty(p, v, {
+	    get: function get() {
+	      return s.uniforms[id].value;
+	    },
+	    set: c,
+	    configurable: false
+	  });
+	};
+
+	WAGNER.NoisePass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('Noise Pass constructor');
+	  this.loadShader('noise-fs.glsl');
+
+	  this.params.amount = 0.1;
+	  this.params.speed = 0;
+	};
+
+	WAGNER.NoisePass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.NoisePass.prototype.run = function (c) {
+
+	  this.shader.uniforms.amount.value = this.params.amount;
+	  this.shader.uniforms.speed.value = this.params.speed;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.VignettePass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('Vignette Pass constructor');
+	  this.loadShader('vignette-fs.glsl');
+
+	  this.params.amount = 1;
+	  this.params.falloff = 0.1;
+	};
+
+	WAGNER.VignettePass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.VignettePass.prototype.run = function (c) {
+
+	  this.shader.uniforms.amount.value = this.params.amount;
+	  this.shader.uniforms.falloff.value = this.params.falloff;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.Vignette2Pass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('Vignette Pass constructor');
+	  this.loadShader('vignette2-fs.glsl');
+
+	  this.params.boost = 2;
+	  this.params.reduction = 2;
+	};
+
+	WAGNER.Vignette2Pass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.Vignette2Pass.prototype.run = function (c) {
+
+	  this.shader.uniforms.boost.value = this.params.boost;
+	  this.shader.uniforms.reduction.value = this.params.reduction;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.DenoisePass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('Denoise Pass constructor');
+	  this.loadShader('denoise-fs.glsl');
+
+	  this.params.exponent = 5;
+	  this.params.strength = 10;
+	};
+
+	WAGNER.DenoisePass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.DenoisePass.prototype.run = function (c) {
+
+	  this.shader.uniforms.exponent.value = this.params.exponent;
+	  this.shader.uniforms.strength.value = this.params.strength;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.BoxBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('BoxBlurPass Pass constructor');
+	  this.loadShader('box-blur2-fs.glsl');
+	  this.params.delta = new THREE.Vector2(0, 0);
+	  this.params.taps = 1;
+	};
+
+	WAGNER.BoxBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.BoxBlurPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.delta.value.copy(this.params.delta);
+	  /*for( var j = 0; j < this.params.taps; j++ ) {
+	    this.shader.uniforms.delta.value.copy( this.params.delta );
+	    c.pass( this.shader );
+	  }*/
+	  c.pass(this.shader);
+	};
+
+	WAGNER.FullBoxBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('FullBoxBlurPass Pass constructor');
+	  this.boxPass = new WAGNER.BoxBlurPass();
+	  this.params.amount = 20;
+	  this.params.taps = 1;
+	};
+
+	WAGNER.FullBoxBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.FullBoxBlurPass.prototype.isLoaded = function () {
+
+	  if (this.boxPass.isLoaded()) {
+	    this.loaded = true;
+	  }
+	  return WAGNER.Pass.prototype.isLoaded.call(this);
+	};
+
+	WAGNER.FullBoxBlurPass.prototype.run = function (c) {
+
+	  var s = this.params.amount;
+	  this.boxPass.params.delta.set(s, 0);
+	  this.boxPass.params.taps = this.params.taps;
+	  c.pass(this.boxPass);
+	  this.boxPass.params.delta.set(0, s);
+	  c.pass(this.boxPass);
+	};
+
+	WAGNER.ZoomBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('ZoomBlurPass Pass constructor');
+	  this.loadShader('zoom-blur-fs.glsl');
+
+	  this.params.center = new THREE.Vector2(0.5, 0.5);
+	  this.params.strength = 2;
+	};
+
+	WAGNER.ZoomBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.ZoomBlurPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.center.value.copy(this.params.center);
+	  this.shader.uniforms.strength.value = this.params.strength;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.MultiPassBloomPass = function (w, h) {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('MultiPassBloomPass Pass constructor');
+
+	  this.composer = null;
+
+	  this.tmpTexture = this.getOfflineTexture(w, h, true);
+	  this.blurPass = new WAGNER.FullBoxBlurPass();
+	  this.blendPass = new WAGNER.BlendPass();
+	  this.zoomBlur = new WAGNER.ZoomBlurPass();
+	  this.brightnessContrastPass = new WAGNER.BrightnessContrastPass();
+
+	  this.width = w || 512;
+	  this.height = h || 512;
+
+	  this.params.blurAmount = 20;
+	  this.params.applyZoomBlur = false;
+	  this.params.zoomBlurStrength = 2;
+	  this.params.useTexture = false;
+	  this.params.zoomBlurCenter = new THREE.Vector2(0, 0);
+	  this.params.blendMode = WAGNER.BlendMode.Screen;
+	};
+
+	WAGNER.MultiPassBloomPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.MultiPassBloomPass.prototype.isLoaded = function () {
+
+	  if (this.blurPass.isLoaded() && this.blendPass.isLoaded() && this.zoomBlur.isLoaded()) {
+	    this.loaded = true;
+	  }
+	  return WAGNER.Pass.prototype.isLoaded.call(this);
+	};
+
+	WAGNER.MultiPassBloomPass.prototype.run = function (c) {
+
+	  if (!this.composer) {
+	    this.composer = new WAGNER.Composer(c.renderer, { useRGBA: true });
+	    this.composer.setSize(this.width, this.height);
+	    //this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
+	  }
+
+	  /*var s = 0.5;
+	  if( c.width != this.tmpTexture.width / s || c.height != this.tmpTexture.height / s ) {
+	    this.tmpTexture  = this.getOfflineTexture( c.width * s, c.height * s, true );
+	    this.composer.setSize( this.tmpTexture.width, this.tmpTexture.height );
+	  }*/
+
+	  this.composer.reset();
+
+	  if (this.params.useTexture === true) {
+	    this.composer.setSource(this.params.glowTexture);
+	  } else {
+	    this.composer.setSource(c.output);
+	    /*this.brightnessContrastPass.params.brightness = -1;
+	    this.brightnessContrastPass.params.contrast = 5;
+	    this.composer.pass( this.brightnessContrastPass );*/
+	  }
+
+	  this.blurPass.params.amount = this.params.blurAmount;
+	  this.composer.pass(this.blurPass);
+
+	  if (this.params.applyZoomBlur) {
+	    this.zoomBlur.params.center.set(.5 * this.composer.width, .5 * this.composer.height);
+	    this.zoomBlur.params.strength = this.params.zoomBlurStrength;
+	    this.composer.pass(this.zoomBlur);
+	  }
+
+	  if (this.params.useTexture === true) {
+	    this.blendPass.params.mode = WAGNER.BlendMode.Screen;
+	    this.blendPass.params.tInput = this.params.glowTexture;
+	    c.pass(this.blendPass);
+	  }
+
+	  this.blendPass.params.mode = this.params.blendMode;
+	  this.blendPass.params.tInput2 = this.composer.output;
+	  c.pass(this.blendPass);
+	};
+
+	WAGNER.CGAPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('CGA Pass constructor');
+	  this.loadShader('cga-fs.glsl', function () {
+	    this.shader.uniforms.pixelDensity.value = window.devicePixelRatio;
+	  });
+	};
+
+	WAGNER.CGAPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.SobelEdgeDetectionPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('SobelEdgeDetectionPass Pass constructor');
+	  this.loadShader('sobel-fs.glsl');
+	};
+
+	WAGNER.SobelEdgeDetectionPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.FreiChenEdgeDetectionPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('FreiChenEdgeDetectionPass Pass constructor');
+	  this.loadShader('frei-chen-fs.glsl');
+	};
+
+	WAGNER.FreiChenEdgeDetectionPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.DirtPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  this.blendPass = new WAGNER.BlendPass();
+	  this.dirtTexture = THREE.ImageUtils.loadTexture(WAGNER.assetsPath + '/textures/dirt8.jpg');
+
+	  this.params.blendMode = WAGNER.BlendMode.Overlay;
+	};
+
+	WAGNER.DirtPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.DirtPass.prototype.isLoaded = function () {
+
+	  if (this.blendPass.isLoaded()) {
+	    this.loaded = true;
+	  }
+	  return WAGNER.Pass.prototype.isLoaded.call(this);
+	};
+
+	WAGNER.DirtPass.prototype.run = function (c) {
+
+	  this.blendPass.params.sizeMode = 1;
+	  this.blendPass.params.mode = this.params.blendMode;
+	  this.blendPass.params.tInput2 = this.dirtTexture;
+	  if (this.dirtTexture.image) {
+	    this.blendPass.params.resolution2.set(this.dirtTexture.image.width, this.dirtTexture.image.height);
+	    this.blendPass.params.aspectRatio2 = this.dirtTexture.image.width / this.dirtTexture.image.height;
+	  }
+	  this.blendPass.params.aspectRatio = c.read.width / c.read.height;
+	  c.pass(this.blendPass);
+	};
+
+	WAGNER.GuidedBoxBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('GuidedBoxBlurPass Pass constructor');
+	  this.loadShader('guided-box-blur2-fs.glsl');
+
+	  this.params.tBias = null;
+	  this.params.delta = new THREE.Vector2(1., 0);
+	  this.params.invertBiasMap = false;
+	  this.params.isPacked = 0;
+	  this.params.from = 0;
+	  this.params.to = 1;
+	};
+
+	WAGNER.GuidedBoxBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.GuidedBoxBlurPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.tBias.value = this.params.tBias, this.shader.uniforms.delta.value.copy(this.params.delta);
+	  this.shader.uniforms.delta.value.multiplyScalar(.0001);
+	  this.shader.uniforms.invertBiasMap.value = this.params.invertBiasMap;
+	  this.shader.uniforms.isPacked.value = this.params.isPacked;
+	  this.shader.uniforms.from.value = this.params.from;
+	  this.shader.uniforms.to.value = this.params.to;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.GuidedFullBoxBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('FullBoxBlurPass Pass constructor');
+	  this.guidedBoxPass = new WAGNER.GuidedBoxBlurPass();
+
+	  this.params.tBias = null;
+	  this.params.invertBiasMap = false;
+	  this.params.isPacked = 0;
+	  this.params.amount = 10;
+	  this.params.from = 0;
+	  this.params.to = 1;
+	  this.params.taps = 1;
+	};
+
+	WAGNER.GuidedFullBoxBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.GuidedFullBoxBlurPass.prototype.isLoaded = function () {
+
+	  if (this.guidedBoxPass.isLoaded()) {
+	    this.loaded = true;
+	  }
+	  return WAGNER.Pass.prototype.isLoaded.call(this);
+	};
+
+	WAGNER.GuidedFullBoxBlurPass.prototype.run = function (c) {
+
+	  this.guidedBoxPass.params.invertBiasMap = this.params.invertBiasMap;
+	  this.guidedBoxPass.params.isPacked = this.params.isPacked;
+	  this.guidedBoxPass.params.tBias = this.params.tBias;
+	  this.guidedBoxPass.params.from = this.params.from;
+	  this.guidedBoxPass.params.to = this.params.to;
+	  var s = this.params.amount;
+	  for (var j = 0; j < this.params.taps; j++) {
+	    this.guidedBoxPass.params.delta.set(s, 0);
+	    c.pass(this.guidedBoxPass);
+	    this.guidedBoxPass.params.delta.set(0, s);
+	    c.pass(this.guidedBoxPass);
+	  }
+	};
+
+	WAGNER.PixelatePass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('PixelatePass Pass constructor');
+	  this.loadShader('pixelate-fs.glsl');
+
+	  this.params.amount = 320;
+	};
+
+	WAGNER.PixelatePass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.PixelatePass.prototype.run = function (c) {
+
+	  this.shader.uniforms.amount.value = this.params.amount;
+	  c.pass(this.shader);
+	};
+
+	WAGNER.RGBSplitPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('RGBSplitPass Pass constructor');
+	  this.loadShader('rgb-split-fs.glsl', function () {});
+
+	  this.params.delta = new THREE.Vector2();
+	};
+
+	WAGNER.RGBSplitPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.RGBSplitPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.delta.value.copy(this.params.delta);
+	  c.pass(this.shader);
+	};
+
+	/*
+
+	https://www.shadertoy.com/view/XssGz8
+
+	Simulates Chromatic Aberration by linearly interpolating blur-weights from red to green to blue.
+	Original idea by Kusma: https://github.com/kusma/vlee/blob/master/data/postprocess.fx
+	Barrel Blur forked from https://www.shadertoy.com/view/XslGz8
+
+	*/
+
+	WAGNER.ChromaticAberrationPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('ChromaticAberrationPass Pass constructor');
+	  this.loadShader('chromatic-aberration-fs.glsl');
+	};
+
+	WAGNER.ChromaticAberrationPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.BarrelBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('BarrelBlurPass Pass constructor');
+	  this.loadShader('barrel-blur-fs.glsl');
+	};
+
+	WAGNER.BarrelBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.OldVideoPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('OldVideoPass Pass constructor');
+	  this.loadShader('old-video-fs.glsl');
+	};
+
+	WAGNER.OldVideoPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.DotScreenPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('DotScreenPass Pass constructor');
+	  this.loadShader('dot-screen-fs.glsl');
+	};
+
+	WAGNER.DotScreenPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.PoissonDiscBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('PoissonDiscBlurPass Pass constructor');
+	  this.loadShader('poisson-disc-blur-fs.glsl');
+	};
+
+	WAGNER.PoissonDiscBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.CircularBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('CircularBlurPass Pass constructor');
+	  this.loadShader('circular-blur-fs.glsl');
+	};
+
+	WAGNER.CircularBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.ToonPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('ToonPass Pass constructor');
+	  this.loadShader('toon-fs.glsl');
+	};
+
+	WAGNER.ToonPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.FXAAPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('FXAA Pass constructor');
+	  this.loadShader('fxaa-fs.glsl');
+	};
+
+	WAGNER.FXAAPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.HighPassPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('HighPass Pass constructor');
+	  this.loadShader('high-pass-fs.glsl');
+	};
+
+	WAGNER.HighPassPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.GrayscalePass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('GrayscalePass Pass constructor');
+	  this.loadShader('grayscale-fs.glsl');
+	};
+
+	WAGNER.GrayscalePass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.ASCIIPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('ASCIIPass Pass constructor');
+	  this.loadShader('ascii-fs.glsl', function () {
+	    this.shader.uniforms.tAscii.value = THREE.ImageUtils.loadTexture(WAGNER.assetsPath + '/ascii/8x16_ascii_font_sorted.gif');
+	  });
+	};
+
+	WAGNER.ASCIIPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.LEDPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('LEDPass Pass constructor');
+	  this.loadShader('led-fs.glsl', function () {
+
+	    //this.shader.uniforms.noiseTexture.value = 1;
+	  });
+
+	  this.params.pixelSize = 10;
+	  this.params.tolerance = .25;
+	  this.params.pixelRadius = .25;
+	  this.params.luminanceSteps = 100;
+	  this.params.luminanceBoost = .2;
+	  this.params.colorBoost = .01;
+	  this.params.burntOutPercent = 50;
+	};
+
+	WAGNER.LEDPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.LEDPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.pixelSize.value = this.params.pixelSize;
+	  this.shader.uniforms.tolerance.value = this.params.tolerance;
+	  this.shader.uniforms.pixelRadius.value = this.params.pixelRadius;
+	  this.shader.uniforms.luminanceSteps.value = this.params.luminanceSteps;
+	  this.shader.uniforms.luminanceBoost.value = this.params.luminanceBoost;
+	  this.shader.uniforms.colorBoost.value = this.params.colorBoost;
+	  this.shader.uniforms.burntOutPercent.value = this.params.burntOutPercent;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.HalftonePass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('HalftonePass Pass constructor');
+	  this.loadShader('halftone-fs.glsl', function () {
+	    this.shader.uniforms.pixelSize.value = 6;
+	  });
+	};
+
+	WAGNER.HalftonePass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.Halftone2Pass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('Halftone2Pass Pass constructor');
+	  this.loadShader('halftone2-fs.glsl');
+
+	  this.params.amount = 128;
+	  this.params.smoothness = .25;
+	};
+
+	WAGNER.Halftone2Pass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.Halftone2Pass.prototype.run = function (c) {
+
+	  this.shader.uniforms.amount.value = this.params.amount;
+	  this.shader.uniforms.smoothness.value = this.params.smoothness;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.HalftoneCMYKPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('HalftoneCMYKPass Pass constructor');
+	  this.loadShader('halftone-cmyk-fs.glsl', function () {});
+	};
+
+	WAGNER.HalftoneCMYKPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.CrossFadePass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('CrossFadePass Pass constructor');
+	  this.loadShader('crossfade-fs.glsl');
+
+	  this.params.tInput2 = null;
+	  this.params.tFadeMap = null;
+	  this.params.amount = 0;
+	};
+
+	WAGNER.CrossFadePass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.CrossFadePass.prototype.run = function (c) {
+
+	  this.shader.uniforms.tInput2.value = this.params.tInput2;
+	  this.shader.uniforms.tFadeMap.value = this.params.tFadeMap;
+	  this.shader.uniforms.amount.value = this.params.amount;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.SSAOPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('SSAOPass Pass constructor');
+	  this.loadShader('ssao-fs.glsl', function (fs) {
+
+	    /*this.shader.uniforms.pSphere.value = [
+	      new THREE.Vector3(-0.010735935, 0.01647018, 0.0062425877),
+	      new THREE.Vector3(-0.06533369, 0.3647007, -0.13746321),
+	      new THREE.Vector3(-0.6539235, -0.016726388, -0.53000957),
+	      new THREE.Vector3(0.40958285, 0.0052428036, -0.5591124),
+	      new THREE.Vector3(-0.1465366, 0.09899267, 0.15571679),
+	      new THREE.Vector3(-0.44122112, -0.5458797, 0.04912532),
+	      new THREE.Vector3(0.03755566, -0.10961345, -0.33040273),
+	      new THREE.Vector3(0.019100213, 0.29652783, 0.066237666),
+	      new THREE.Vector3(0.8765323, 0.011236004, 0.28265962),
+	      new THREE.Vector3(0.29264435, -0.40794238, 0.15964167)
+	    ];*/
+
+	  });
+
+	  this.params.texture = null;
+	  this.params.isPacked = false;
+	  this.params.onlyOcclusion = false;
+
+	  this.blurPass = new WAGNER.FullBoxBlurPass();
+	  this.blendPass = new WAGNER.BlendPass();
+	  this.composer = null;
+	};
+
+	WAGNER.SSAOPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.SSAOPass.prototype.run = function (c) {
+
+	  if (!this.composer) {
+	    var s = 4;
+	    this.composer = new WAGNER.Composer(c.renderer, { useRGBA: true });
+	    this.composer.setSize(c.width / s, c.height / s);
+	  }
+
+	  this.composer.reset();
+
+	  this.composer.setSource(c.output);
+
+	  this.shader.uniforms.tDepth.value = this.params.texture;
+	  //this.shader.uniforms.isPacked.value = this.params.isPacked;
+	  this.shader.uniforms.onlyOcclusion.value = this.params.onlyOcclusion;
+	  this.composer.pass(this.shader);
+
+	  this.blurPass.params.amount = .1;
+	  this.composer.pass(this.blurPass);
+
+	  if (this.params.onlyOcclusion) {
+	    c.setSource(this.composer.output);
+	  } else {
+	    this.blendPass.params.mode = WAGNER.BlendMode.Multiply;
+	    this.blendPass.params.tInput2 = this.composer.output;
+
+	    c.pass(this.blendPass);
+	  }
+	};
+
+	WAGNER.SimpleSSAOPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('SimpleSSAOPass Pass constructor');
+	  this.loadShader('ssao-simple-fs.glsl', function (fs) {});
+
+	  this.params.texture = null;
+	  this.params.onlyOcclusion = 0;
+	  this.params.zNear = 1;
+	  this.params.zFar = 10000;
+	  this.params.strength = 1;
+	};
+
+	WAGNER.SimpleSSAOPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.SimpleSSAOPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.tDepth.value = this.params.texture;
+	  //  this.shader.uniforms.onlyOcclusion.value = this.params.onlyOcclusion;
+	  this.shader.uniforms.zNear.value = this.params.zNear;
+	  this.shader.uniforms.zFar.value = this.params.zFar;
+	  this.shader.uniforms.strength.value = this.params.strength;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.DirectionalBlurPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('Directional Blur Pass constructor');
+	  this.loadShader('guided-directional-blur-fs.glsl', function (fs) {});
+
+	  this.params.tBias = null;
+	  this.params.delta = .1;
+	};
+
+	WAGNER.DirectionalBlurPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.DirectionalBlurPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.tBias.value = this.params.tBias;
+	  this.shader.uniforms.delta.value = this.params.delta;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.BleachPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('Bleach Pass constructor');
+	  this.loadShader('bleach-fs.glsl', function (fs) {});
+
+	  this.params.amount = 1;
+	};
+
+	WAGNER.BleachPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.BleachPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.amount.value = this.params.amount;
+
+	  c.pass(this.shader);
+	};
+
+	WAGNER.DOFPass = function () {
+
+	  WAGNER.Pass.call(this);
+	  WAGNER.log('DOFPass Pass constructor');
+	  this.loadShader('dof-fs.glsl');
+
+	  this.params.focalDistance = 0;
+	  this.params.aperture = .005;
+	  this.params.tBias = null;
+	  this.params.blurAmount = 1;
+	};
+
+	WAGNER.DOFPass.prototype = Object.create(WAGNER.Pass.prototype);
+
+	WAGNER.DOFPass.prototype.run = function (c) {
+
+	  this.shader.uniforms.tBias.value = this.params.tBias;
+	  this.shader.uniforms.focalDistance.value = this.params.focalDistance;
+	  this.shader.uniforms.aperture.value = this.params.aperture;
+	  this.shader.uniforms.blurAmount.value = this.params.blurAmount;
+
+	  this.shader.uniforms.delta.value.set(1, 0);
+	  c.pass(this.shader);
+
+	  this.shader.uniforms.delta.value.set(0, 1);
+	  c.pass(this.shader);
+	};
+
+/***/ },
+/* 199 */
+/***/ function(module, exports) {
+
+	'use strict';
+
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
@@ -64850,7 +66399,7 @@
 	}
 
 /***/ },
-/* 198 */
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64859,34 +66408,34 @@
 
 	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
 
-	var _Motion = __webpack_require__(199);
+	var _Motion = __webpack_require__(201);
 
 	exports.Motion = _interopRequire(_Motion);
 
-	var _StaggeredMotion = __webpack_require__(206);
+	var _StaggeredMotion = __webpack_require__(208);
 
 	exports.StaggeredMotion = _interopRequire(_StaggeredMotion);
 
-	var _TransitionMotion = __webpack_require__(207);
+	var _TransitionMotion = __webpack_require__(209);
 
 	exports.TransitionMotion = _interopRequire(_TransitionMotion);
 
-	var _spring = __webpack_require__(209);
+	var _spring = __webpack_require__(211);
 
 	exports.spring = _interopRequire(_spring);
 
-	var _presets = __webpack_require__(210);
+	var _presets = __webpack_require__(212);
 
 	exports.presets = _interopRequire(_presets);
 
 	// deprecated, dummy warning function
 
-	var _reorderKeys = __webpack_require__(211);
+	var _reorderKeys = __webpack_require__(213);
 
 	exports.reorderKeys = _interopRequire(_reorderKeys);
 
 /***/ },
-/* 199 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -64897,27 +66446,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(200);
+	var _mapToZero = __webpack_require__(202);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(201);
+	var _stripStyle = __webpack_require__(203);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(202);
+	var _stepper3 = __webpack_require__(204);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(203);
+	var _performanceNow = __webpack_require__(205);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(204);
+	var _raf = __webpack_require__(206);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(205);
+	var _shouldStopAnimation = __webpack_require__(207);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -65132,7 +66681,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 200 */
+/* 202 */
 /***/ function(module, exports) {
 
 	
@@ -65156,7 +66705,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 201 */
+/* 203 */
 /***/ function(module, exports) {
 
 	
@@ -65182,7 +66731,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 202 */
+/* 204 */
 /***/ function(module, exports) {
 
 	
@@ -65230,7 +66779,7 @@
 	// array reference around.
 
 /***/ },
-/* 203 */
+/* 205 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.7.1
@@ -65269,10 +66818,10 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 204 */
+/* 206 */
 /***/ function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(203)
+	/* WEBPACK VAR INJECTION */(function(global) {var now = __webpack_require__(205)
 	  , root = typeof window === 'undefined' ? global : window
 	  , vendors = ['moz', 'webkit']
 	  , suffix = 'AnimationFrame'
@@ -65348,7 +66897,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ },
-/* 205 */
+/* 207 */
 /***/ function(module, exports) {
 
 	
@@ -65384,7 +66933,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 206 */
+/* 208 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65395,27 +66944,27 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(200);
+	var _mapToZero = __webpack_require__(202);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(201);
+	var _stripStyle = __webpack_require__(203);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(202);
+	var _stepper3 = __webpack_require__(204);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _performanceNow = __webpack_require__(203);
+	var _performanceNow = __webpack_require__(205);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(204);
+	var _raf = __webpack_require__(206);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(205);
+	var _shouldStopAnimation = __webpack_require__(207);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -65651,7 +67200,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 207 */
+/* 209 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -65662,31 +67211,31 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _mapToZero = __webpack_require__(200);
+	var _mapToZero = __webpack_require__(202);
 
 	var _mapToZero2 = _interopRequireDefault(_mapToZero);
 
-	var _stripStyle = __webpack_require__(201);
+	var _stripStyle = __webpack_require__(203);
 
 	var _stripStyle2 = _interopRequireDefault(_stripStyle);
 
-	var _stepper3 = __webpack_require__(202);
+	var _stepper3 = __webpack_require__(204);
 
 	var _stepper4 = _interopRequireDefault(_stepper3);
 
-	var _mergeDiff = __webpack_require__(208);
+	var _mergeDiff = __webpack_require__(210);
 
 	var _mergeDiff2 = _interopRequireDefault(_mergeDiff);
 
-	var _performanceNow = __webpack_require__(203);
+	var _performanceNow = __webpack_require__(205);
 
 	var _performanceNow2 = _interopRequireDefault(_performanceNow);
 
-	var _raf = __webpack_require__(204);
+	var _raf = __webpack_require__(206);
 
 	var _raf2 = _interopRequireDefault(_raf);
 
-	var _shouldStopAnimation = __webpack_require__(205);
+	var _shouldStopAnimation = __webpack_require__(207);
 
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 
@@ -66144,7 +67693,7 @@
 	// that you've unmounted but that's still animating. This is where it lives
 
 /***/ },
-/* 208 */
+/* 210 */
 /***/ function(module, exports) {
 
 	
@@ -66257,7 +67806,7 @@
 	// to loop through and find a key's index each time), but I no longer care
 
 /***/ },
-/* 209 */
+/* 211 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66270,7 +67819,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _presets = __webpack_require__(210);
+	var _presets = __webpack_require__(212);
 
 	var _presets2 = _interopRequireDefault(_presets);
 
@@ -66285,7 +67834,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 210 */
+/* 212 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -66300,7 +67849,7 @@
 	module.exports = exports["default"];
 
 /***/ },
-/* 211 */
+/* 213 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -66323,7 +67872,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
 
 /***/ },
-/* 212 */
+/* 214 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66340,7 +67889,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(198);
+	var _reactMotion = __webpack_require__(200);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66465,7 +68014,7 @@
 	exports.default = MotionButton;
 
 /***/ },
-/* 213 */
+/* 215 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66482,9 +68031,9 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(198);
+	var _reactMotion = __webpack_require__(200);
 
-	var _IcosahedronButton = __webpack_require__(214);
+	var _IcosahedronButton = __webpack_require__(216);
 
 	var _IcosahedronButton2 = _interopRequireDefault(_IcosahedronButton);
 
@@ -66666,7 +68215,7 @@
 	exports.default = Navigation;
 
 /***/ },
-/* 214 */
+/* 216 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66819,7 +68368,7 @@
 	exports.default = IcosahedronButton;
 
 /***/ },
-/* 215 */
+/* 217 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66836,7 +68385,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _reactMotion = __webpack_require__(198);
+	var _reactMotion = __webpack_require__(200);
 
 	var _TypeWriter = __webpack_require__(160);
 
@@ -66850,7 +68399,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	__webpack_require__(216);
+	__webpack_require__(218);
 
 	var Paper = function (_Component) {
 	  _inherits(Paper, _Component);
@@ -66993,16 +68542,16 @@
 	exports.default = Paper;
 
 /***/ },
-/* 216 */
+/* 218 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(217);
+	var content = __webpack_require__(219);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(221)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67019,10 +68568,10 @@
 	}
 
 /***/ },
-/* 217 */
+/* 219 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(220)();
 	// imports
 
 
@@ -67033,7 +68582,7 @@
 
 
 /***/ },
-/* 218 */
+/* 220 */
 /***/ function(module, exports) {
 
 	/*
@@ -67089,7 +68638,7 @@
 
 
 /***/ },
-/* 219 */
+/* 221 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -67343,16 +68892,16 @@
 
 
 /***/ },
-/* 220 */
+/* 222 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(221);
+	var content = __webpack_require__(223);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(221)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67369,10 +68918,10 @@
 	}
 
 /***/ },
-/* 221 */
+/* 223 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(220)();
 	// imports
 
 
@@ -67383,16 +68932,16 @@
 
 
 /***/ },
-/* 222 */
+/* 224 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(223);
+	var content = __webpack_require__(225);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(221)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67409,10 +68958,10 @@
 	}
 
 /***/ },
-/* 223 */
+/* 225 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(220)();
 	// imports
 
 
@@ -67423,16 +68972,16 @@
 
 
 /***/ },
-/* 224 */
+/* 226 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(225);
+	var content = __webpack_require__(227);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(219)(content, {});
+	var update = __webpack_require__(221)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -67449,10 +68998,10 @@
 	}
 
 /***/ },
-/* 225 */
+/* 227 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(218)();
+	exports = module.exports = __webpack_require__(220)();
 	// imports
 
 
