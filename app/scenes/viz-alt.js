@@ -470,7 +470,6 @@ var start = Date.now()
 var segmentLoudness = 0
 var targetRotation = 0
 
-audio.currentTime = 25
 
 export function animate(time) {
   barInterval = 1 / (audioData.info.bpm / 60)
