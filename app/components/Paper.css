@@ -1,0 +1,62 @@
+.gt-paper {
+  position: relative;
+  z-index: 1000;
+  background: rgba(0, 0, 0, .65);
+}
+
+.gt-paper-grid {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1000;
+}
+
+.gt-paper__back {
+  font-size: 2em;
+  font-weight: 100;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  cursor: pointer;
+}
+
+.gt-paper__content {
+  padding: 2em 14em 2em 4em;
+}
+
+.gt-paper__content,
+.gt-paper__aside {
+  flex: 1;
+}
+
+.gt-paper__content-header {
+  border-top: 1px solid rgba(255, 255, 255, .125);
+  position: relative;
+  top: -1px;
+  overflow-x: hidden;
+  padding-bottom: 3em;
+  margin-bottom: 6em;
+  padding: 3em 0;
+}
+
+.gt-paper__content-header h1 {
+  font-size: 4em;
+  letter-spacing: -.05em;
+  line-height: 1;
+  margin: 0;
+}
+
+.gt-paper__content-header h2 {
+  color: #777;
+  margin-bottom: 1em;
+  margin-top: 3em;
+  font-weight: 800;
+  font-size: .7em;
+  letter-spacing: .25em;
+}
+.gt-paper__content-body p {
+  font-size: 1.25em;
+  font-weight: 100;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}

@@ -254,7 +254,7 @@ void main() {
   varying float vNoise;
   varying float vDisplacement;
   void main() {
-    gl_FragColor = vec4(vec3(1.0) * vNoise, 1.0 * vNoise);
+    gl_FragColor = vec4(vec3(1.0) / vNoise, 1.0 * vNoise);
     //gl_FragColor = vec4( col ,  vNoise * (1. - vUv.y));
   }
   </script>
