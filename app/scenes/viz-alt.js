@@ -61,14 +61,23 @@ var playing = false
 
 const objects = []
 
-import { audioData, getBeatsByTime, getSegmentsByTime, getBarsByTime, getTatumsByTime, getScenesByTime } from '../lib/audio-data'
+import { setupData, audioData, getBeatsByTime, getSegmentsByTime, getBarsByTime, getTatumsByTime, getScenesByTime } from '../lib/audio-data'
 
 
-const beatsByTime = getBeatsByTime()
-const segmentsByTime = getSegmentsByTime()
-const barsByTime = getBarsByTime()
-const tatumsByTime = getTatumsByTime()
-const scenesByTime = getScenesByTime()
+var beatsByTime;
+var segmentsByTime;
+var barsByTime;
+var tatumsByTime;
+var scenesByTime;
+
+export function setupAudioData(trackData) {
+  setupData(trackData)
+  beatsByTime = getBeatsByTime()
+  segmentsByTime = getSegmentsByTime()
+  barsByTime = getBarsByTime()
+  tatumsByTime = getTatumsByTime()
+  scenesByTime = getScenesByTime()
+}
 
 // UTILS
 
@@ -448,7 +457,7 @@ function bumpBar(fromScale=0.2, scale=3, duration=2000, returnBack=true) {
     .start()
 }
 
-const barInterval = 1 / (audioData.info.bpm / 60)
+var barInterval;
 
 var lastTime = 0
 var currentScene;
@@ -464,6 +473,7 @@ var targetRotation = 0
 audio.currentTime = 25
 
 export function animate(time) {
+  barInterval = 1 / (audioData.info.bpm / 60)
   render()
   object3d.rotation.y += 0.01
   

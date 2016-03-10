@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import TypeWriter from '../components/TypeWriter'
 import ThreeScene from '../components/ThreeScene'
 import * as visualization from './viz-alt.js'
-
 import { playSfx } from '../lib/sfx'
 import { Motion, spring, TransitionMotion } from 'react-motion'
 import MotionButton from "../components/MotionButton";
@@ -11,6 +10,9 @@ import Paper from '../components/Paper'
 
 import THREE from 'three'
 import TWEEN from 'tween'
+
+require('es6-promise').polyfill();
+require('whatwg-fetch');
 
 require('./styles/home.css')
 
@@ -25,12 +27,30 @@ export default class Scene extends Component {
       pageIdx: -1,
       showNavigation: false,
       audioLoaded: false,
-      showLauncher: true
+      showLauncher: true,
+      currentSection: null,
+      canLaunch: false
     }
 
     this.mouseOver = this.mouseOver.bind(this)
     this.mouseOut = this.mouseOut.bind(this)
 
+    // load track audio data
+    fetch('/app/data/track-data.js')
+      .then((res) => {
+        return res.json()
+      }, (err) => {
+        console.log('cannot load audio data', err)
+      })
+      .then((json) => {
+        console.log('json')
+        this.setState({
+          canLaunch: true
+        })
+        visualization.setupAudioData(json)
+        visualization.init()
+        visualization.animate()
+      }) 
   }
 
   componentDidMount() {
@@ -64,12 +84,6 @@ export default class Scene extends Component {
 
   componentDidMount() {
     this.typewrite()
-
-    setTimeout(function() {
-      console.log('vi', visualization)
-      visualization.init()
-      visualization.animate()
-    }, 0)
   }
 
   typewrite() {
@@ -201,7 +215,7 @@ export default class Scene extends Component {
                 </div>}
             </Motion>
 
-            <Motion defaultStyle={{
+            {this.state.canLaunch && <Motion defaultStyle={{
                 scale: 1,
                 opacity: 1, 
                 y: 0,
@@ -220,7 +234,11 @@ export default class Scene extends Component {
                     className="gt-button gt-button--launch"
                     label="launch visualization*" /> 
                 </div>}
-            </Motion>
+            </Motion>}
+
+            {!this.state.canLaunch && <div className="gt-screen__action">
+              <span>loading audio data...</span>
+            </div>}
 
 
             {/*<div className="gt-screen__footer">
@@ -242,7 +260,10 @@ export default class Scene extends Component {
           y: pageIdx > -1 ? spring(0, springParamsAlt) : spring(200),
         }}>
           {values => 
-          <Paper onClose={this.closePaper.bind(this)} show={pageIdx>-1} style={{
+          <Paper 
+            section={this.state.currentSection}
+            onClose={this.closePaper.bind(this)} 
+            show={pageIdx>-1} style={{
             transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
             opacity: values.opacity
           }}>
@@ -270,7 +291,7 @@ export default class Scene extends Component {
     }, 250)
 
     setTimeout(() => {
-      this.setState({ pageIdx })
+      this.setState({ pageIdx, currentSection: item })
     }, 750)
     
   }
