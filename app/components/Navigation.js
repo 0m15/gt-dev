@@ -63,7 +63,8 @@ export default class Navigation extends Component {
               {...this.props}
               style={{
                 //transform: `translate3d(0, ${values.y}%, 0)`,
-                background: 'rgba(0,0,0,.45)',
+                //background: 'rgba(0,0,0,.45)',
+                background: 'linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, .9))',
                 opacity: values.opacity,
                 position: 'fixed',
                 display: 'flex',

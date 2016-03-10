@@ -254,7 +254,29 @@ void main() {
   varying float vNoise;
   varying float vDisplacement;
   void main() {
-    gl_FragColor = vec4(vec3(1.0) * vNoise, 1.0);
+    gl_FragColor = vec4(vec3(1.0) * vNoise, 1.0 * vNoise);
+    //gl_FragColor = vec4( col ,  vNoise * (1. - vUv.y));
+  }
+  </script>
+
+  <script id="aurora-fragment" type="x-shader/x-vertex">
+
+  </script> 
+
+  <script id="aurora-vertex" type="x-shader/x-fragment">
+
+  varying vec2 vUv;
+  varying vec4 vAudio;
+
+  void main(){
+
+   
+    vec3 c = vAudio.x * vec3( .6 , .0 , .3 );
+    c+= vAudio.y * vec3( .3 , .0 , .9 );
+    c += vAudio.z * vec3( .2 , .9 , .7 );
+    c=  normalize( c);
+    gl_FragColor = vec4( c ,  vAudio.a * (1. - vUv.y));
+
   }
   </script>
 

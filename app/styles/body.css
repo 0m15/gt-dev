@@ -14,7 +14,8 @@ a:link {
   color: #fff;
 }
 
-p {
+p,
+.serif {
   font-family: Lora, serif;
   line-height: 1.5;
   font-weight: 100;

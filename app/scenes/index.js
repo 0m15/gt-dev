@@ -48,14 +48,15 @@ export default class Scene extends Component {
           })
         }
       }, 250)
-    }
+    }    
+    
   }
 
   componentDidUpdate(prevProps, prevState) {
+
     if(this.state.launched && !prevState.launched) {
       setTimeout(() => {
-        visualization.init()
-        visualization.animate()  
+        visualization.playScene()
       }, 0)
       
     }
@@ -63,6 +64,12 @@ export default class Scene extends Component {
 
   componentDidMount() {
     this.typewrite()
+
+    setTimeout(function() {
+      console.log('vi', visualization)
+      visualization.init()
+      visualization.animate()
+    }, 0)
   }
 
   typewrite() {
@@ -94,6 +101,13 @@ export default class Scene extends Component {
     })
   }
 
+  closePaper() {
+    this.setState({
+      pageIdx: -1,
+      showLauncher: true
+    })
+  }
+
   render() {
 
     const { showLauncher, launched, pageIdx, showNavigation } = this.state
@@ -104,28 +118,30 @@ export default class Scene extends Component {
     let headerMotionStyle = {
       scale: spring(1), 
       opacity: spring(1),
-      y: spring(0)
+      y: spring(0),
+      x: spring(0)
     }
 
     let buttonMotionStyle = {
       scale: spring(1), 
       opacity: spring(1),
-      y: spring(0)
+      y: spring(0),
+      x: spring(0)
     }
 
     if(launched) {
-      headerMotionStyle.scale = spring(.7, springParams)
-      headerMotionStyle.opacity =spring(.25, springParams)
-      headerMotionStyle.y = spring(-310, springParams)
+      headerMotionStyle.scale = spring(1.25, springParams)
+      headerMotionStyle.opacity =spring(.75, springParams)
+      headerMotionStyle.y = spring(180, springParams)
 
-      buttonMotionStyle.scale = spring(3, springParams)
+      buttonMotionStyle.scale = spring(1, springParams)
       buttonMotionStyle.y = spring(200, springParams)
       buttonMotionStyle.opacity =  spring(0, springParams)
     }
 
-    if(showNavigation) {
-      headerMotionStyle.scale = spring(.7, springParamsA)
-      headerMotionStyle.opacity = spring(.4, springParamsA)
+    if(showNavigation && !launched) {
+      headerMotionStyle.scale = spring(.9, springParamsA)
+      headerMotionStyle.opacity = spring(.5, springParamsA)
       headerMotionStyle.y = spring(0, springParamsA)
       buttonMotionStyle = headerMotionStyle
     }
@@ -138,7 +154,7 @@ export default class Scene extends Component {
           onNavigate={this.navigate.bind(this)} />
       </div>
 
-      {launched && <div id="visualization" />}
+      <div id="visualization" />
 
       <Motion
         defaultStyle={{
@@ -163,11 +179,12 @@ export default class Scene extends Component {
                 scale: 1, 
                 y: 0,
                 opacity: 1,
+                x: 0
               }} 
               style={headerMotionStyle}>
               {values => 
                 <div style={{
-                  transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
+                  transform: `translate3d(${values.x}px, ${values.y}px, 0) scale(${values.scale})`,
                   opacity: values.opacity
                 }} className="gt-screen__title">
                   <h1 className="gt-title">
@@ -184,11 +201,12 @@ export default class Scene extends Component {
                 scale: 1,
                 opacity: 1, 
                 y: 0,
+                x: 0
               }} 
               style={buttonMotionStyle}>
               {values => 
                 <div style={{
-                  transform: `translate3d(0, ${values.y}px, 0)  scale(${values.scale})`,
+                  transform: `translate3d(${values.x}px, ${values.y}px, 0)  scale(${values.scale})`,
                   opacity: values.opacity
                 }} className="gt-screen__action">
                   <MotionButton 
@@ -220,7 +238,7 @@ export default class Scene extends Component {
           y: pageIdx > -1 ? spring(0, springParamsAlt) : spring(200),
         }}>
           {values => 
-          <Paper show={pageIdx>-1} style={{
+          <Paper onClose={this.closePaper.bind(this)} show={pageIdx>-1} style={{
             transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
             opacity: values.opacity
           }}>

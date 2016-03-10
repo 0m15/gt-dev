@@ -17,11 +17,16 @@ export default class Paper extends Component {
 
         <div className="gt-paper-grid">
 
+
           <div className="gt-paper__aside">
             
           </div>
 
           <div className="gt-paper__content">
+            <div className="gt-paper__back" onClick={this.props.onClose}>
+            &larr; Back
+            </div>
+
             <Motion 
               defaultStyle={{
                 width: 0,
@@ -34,7 +39,7 @@ export default class Paper extends Component {
               {val => 
                 <div style={{
                   height: 1,
-                  background: '#888',
+                  background: 'rgba(255, 255, 255, .75)',
                   width: val.width + '%',
                 }} />}
             </Motion>
@@ -77,7 +82,7 @@ export default class Paper extends Component {
                   position: 'absolute',
                   zIndex: 1,
                   height: 1,
-                  background: '#333',
+                  background: 'rgba(255, 255, 255, .125)',
                   width: '100%',
                   transform: `translate3d(${val.right}%, 0, 0)`
                 }} />}
