@@ -156,6 +156,10 @@ export default class Scene extends Component {
 
       <div id="visualization" />
 
+      <div className="gt-screen__toolbar">
+        toolbar
+      </div>
+
       <Motion
         defaultStyle={{
           scale: 1, 

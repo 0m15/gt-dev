@@ -124,7 +124,7 @@ function bumpParticle(
     .onComplete(function() {
       if(back) bumpParticle(particle, scalar, 'in', false, TWEEN.Easing.Quadratic.Out, duration)
     })
-    .delay(delay)
+    //.delay(delay)
     .start()
 } 
 

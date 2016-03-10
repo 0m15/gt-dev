@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "gh": "webpack; git ci -am 'build'; git push origin gh-pages"
+    "gh": "webpack; git ci -am 'build'; git push gh gh-pages"
   },
   "author": "feuer",
   "license": "ISC",
