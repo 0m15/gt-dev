@@ -154,7 +154,7 @@ WAGNER.NoisePass = function() {
   this.loadShader( 'noise-fs.glsl' );
 
   this.params.amount = 0.1;
-  this.params.speed = 0;
+  this.params.speed = 0.1;
 
 };
 

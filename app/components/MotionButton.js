@@ -83,7 +83,6 @@ export default class MotionButton extends Component {
   }
 
   mouseout() {
-    console.log('mouseout')
     this.setState({
       mouseover: false
     }) 

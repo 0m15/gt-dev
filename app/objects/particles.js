@@ -60,8 +60,8 @@ export function update() {
     var particle = geometry.vertices[pCount];
 
     // check if we need to reset
-    if (particle.y > window.innerHeight + 300) {
-      particle.y = -window.innerHeight*2
+    if (particle.y < window.innerHeight*-1) {
+      particle.y = window.innerHeight*2
       particle.velocity.y = 0;
     }
 
@@ -72,8 +72,8 @@ export function update() {
 
     // update the velocity with
     // a splat of randomniz
-    particle.velocity.x = Math.random() * .2 - .2;
-    particle.velocity.y = Math.random() * 10;
+    particle.velocity.x = Math.random() * 4 - 2;
+    particle.velocity.y = Math.random() * 10 * -1;
 
     particle.y += particle.velocity.y
     particle.x += particle.velocity.x
@@ -87,7 +87,7 @@ export function update() {
   geometry.verticesNeedUpdate = true
 }
 
-export function bump(value=1.1, direction='out', back=true, duration=250) {
+export function bump(value=1.01, direction='out', back=true, duration=250) {
   for(var i = 0; i < geometry.vertices.length; i++) {
     // get the particle
     var particle = geometry.vertices[i];

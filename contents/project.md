@@ -1,6 +1,3 @@
-Title: The Project
-Subtitle: 01.About
-
 Glass sounds turning to Music.
 
 New sound project, out on March 18th 2016, by Max Casacci 

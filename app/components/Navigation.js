@@ -1,26 +1,30 @@
 import React, { Component } from "react"
 import { StaggeredMotion, Motion, spring } from 'react-motion'
+import Transition from 'react-motion-ui-pack'
 import IcosahedronButton from './IcosahedronButton'
+import TypeWriter from '../components/TypeWriter'
 
 const items = [
   {
     title: "The Project",
+    subtitle: "00.About",
     href: "project",
-    id: 0
+    id: 0,
   },
   {
-    title: "Artists",
-    href: "artists",
-    id: 1
+    title: "Tracklist",
+    subtitle: "01.Listen",
+    href: "tracklist",
+    id: 2,
+    aside: (
+      <div className="gt-tracklist__artwork">
+        <img src="/assets/imgs/glasstress-front.jpg" width={500} height={500} />
+      </div>)
   },
   {
-    title: "Get the Album",
-    href: "listen",
-    id: 2
-  },
-  {
-    title: "Gallery",
-    href: "gallery",
+    title: "Masterpieces",
+    subtitle: "02.See",
+    href: "masterpieces",
     id: 3
   },
 ]
@@ -34,21 +38,45 @@ export default class Navigation extends Component {
     this.hide = this.hide.bind(this)
     this.toggle = this.toggle.bind(this)
     this.navigate = this.navigate.bind(this)
+    this.mouseOverButton = this.mouseOverButton.bind(this)
+    this.mouseOutButton = this.mouseOutButton.bind(this)
 
     this.state = {
-      show: false
+      show: false,
+      mouseOver: false
     }
+  }
+
+  mouseOverButton(e) {
+    this.setState({
+      mouseOver: true
+    })
+  }
+
+  mouseOutButton() {
+    this.setState({
+      mouseOver: false
+    })
   }
 
   render() {
     
-    const { show } = this.state
+    const { show, mouseOver } = this.state
     const springParams = {stiffness: 280, damping: 20}
     const springParamsAlt = {stiffness: 200, damping: 30}
 
     return (
       <div>
-        <IcosahedronButton onClick={this.toggle} />
+        <div style={{textAlign:'center'}}>
+          <IcosahedronButton 
+            onMouseOver={this.mouseOverButton}
+            onMouseOut={this.mouseOutButton} 
+            onClick={this.toggle} />
+          {mouseOver && <span className="gt-text--subhead">
+            {show ? <TypeWriter word="close" /> : <TypeWriter word="menu" />}
+          </span>}
+        </div>
+
         <Motion 
           defaultStyle={{
             y: 100,
@@ -89,7 +117,6 @@ export default class Navigation extends Component {
                     {y: -30, opacity: 0}, 
                     {y: -40, opacity: 0}, 
                     {y: -50, opacity: 0},
-                    {y: -60, opacity: 0}
                     ]}
                   styles={prevInterpolatedStyles => prevInterpolatedStyles.map((_, i) => {
                     return i === 0

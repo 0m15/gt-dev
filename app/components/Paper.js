@@ -3,7 +3,11 @@ import { StaggeredMotion, Motion, spring } from 'react-motion'
 import TypeWriter from './TypeWriter'
 import Remarkable from 'remarkable'
 
-const md = new Remarkable();
+const md = new Remarkable({
+  html: true,
+  typographer: true,
+  quotes: '“”‘’'
+});
 
 require('es6-promise').polyfill();
 require('whatwg-fetch');
@@ -18,8 +22,18 @@ export default class Paper extends Component {
     super(props)
     this.state = {
       content: null,
+      visible: props.show
     }
     this.fetch(props.section.href)
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(nextProps.section.href != this.props.section.href) {
+      this.fetch(nextProps.section.href)
+      this.setState({
+        visible: false
+      })
+    }
   }
 
   fetch(path) {
@@ -32,7 +46,8 @@ export default class Paper extends Component {
       .then((text) => {
         console.log('content', text)
         this.setState({
-          content: text
+          content: text,
+          visible: true
         })
       })
   }
@@ -41,7 +56,8 @@ export default class Paper extends Component {
     const springParams = {stiffness: 150, damping: 14}
     const springParamsAlt = {stiffness: 60, damping: 16}
     const springParamsAlt1 = {stiffness: 30, damping: 10}
-    const visible = this.props.show
+    const visible = this.state.visible
+    console.log('visible', visible)
     return (
       <div className="gt-paper" {...this.props}>
 
@@ -49,7 +65,7 @@ export default class Paper extends Component {
 
 
           <div className="gt-paper__aside">
-            
+            {this.props.section.aside && this.props.section.aside}
           </div>
 
           <div className="gt-paper__content">
@@ -76,26 +92,30 @@ export default class Paper extends Component {
             <div className="gt-paper__content-header">
 
             <h2>
-              {visible && <TypeWriter word="01.about" />}
+              {visible && <TypeWriter word={this.props.section.subtitle} />}
               {!visible && <TypeWriter word={`00.${Math.random()*9999999}`} />}
             </h2>
 
             <Motion 
               defaultStyle={{
                 y: -80,
-                opacity: 0
+                x: 140,
+                opacity: 0,
+                scale: .6
               }}
               style={{
-                y: visible ? spring(0, springParamsAlt) : spring(-80),
-                opacity: visible ? spring(1, springParamsAlt) : spring(0)
+                y: visible ? spring(0, springParamsAlt) : spring(180),
+                x: visible ? spring(0, springParamsAlt) : spring(0),
+                opacity: visible ? spring(1, springParamsAlt) : spring(-1),
+                scale: visible ? spring(1, springParamsAlt) : spring(.6),
               }}>    
               {values =>  
                 <h1 style={{
-                  transform: `translate3d(0, ${values.y}px, 0)`,
+                  transform: `translate3d(${values.x}px, ${values.y}px, 0) scale(${values.scale})`,
                   zIndex: 10,
                   position: 'relative',
                   opacity: values.opacity
-                }}>The Project</h1>}
+                }}>{this.props.section.title}</h1>}
               </Motion>
 
               <Motion 

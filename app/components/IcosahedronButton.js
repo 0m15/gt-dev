@@ -24,12 +24,14 @@ export default class IcosahedronButton extends Component {
     this.setState({
       mouseover: true
     })
+    this.props.onMouseOver()
   }
 
   mouseOut() {
     this.setState({
       mouseover: false
     }) 
+    this.props.onMouseOut()
   }
 
   renderScene(scene, camera, renderer) {

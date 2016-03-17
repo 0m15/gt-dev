@@ -1,12 +1,16 @@
 import React, { Component } from 'react'
+import { Motion, spring, TransitionMotion } from 'react-motion'
+import Transition from 'react-motion-ui-pack'
+
 import TypeWriter from '../components/TypeWriter'
 import ThreeScene from '../components/ThreeScene'
 import * as visualization from './viz-alt.js'
 import { playSfx } from '../lib/sfx'
-import { Motion, spring, TransitionMotion } from 'react-motion'
 import MotionButton from "../components/MotionButton";
 import Navigation from '../components/Navigation'
 import Paper from '../components/Paper'
+
+import WordFader from '../components/WordFader'
 
 import THREE from 'three'
 import TWEEN from 'tween'
@@ -36,7 +40,7 @@ export default class Scene extends Component {
     this.mouseOut = this.mouseOut.bind(this)
 
     // load track audio data
-    fetch('/app/data/track-data.js')
+    fetch('/app/data/track-data2.json')
       .then((res) => {
         return res.json()
       }, (err) => {
@@ -82,9 +86,6 @@ export default class Scene extends Component {
     }
   }
 
-  componentDidMount() {
-    this.typewrite()
-  }
 
   typewrite() {
     playSfx('sfx08', 0.2)
@@ -174,6 +175,7 @@ export default class Scene extends Component {
         toolbar
       </div>
 
+
       <Motion
         defaultStyle={{
           scale: 1, 
@@ -239,39 +241,29 @@ export default class Scene extends Component {
             {!this.state.canLaunch && <div className="gt-screen__action">
               <span>loading audio data...</span>
             </div>}
-
-
-            {/*<div className="gt-screen__footer">
-              <p className="gt-text gt-text--small">detect webgl</p>
-            </div>*/}
           </div>}
       </Motion>
 
-      {this.state.pageIdx > -1 &&
-        <Motion
-        defaultStyle={{
-          scale: 1, 
+
+
+      <Transition
+        runOnMount={true}
+        component={false} // don't use a wrapping component
+        enter={{
           opacity: 1,
-          y: 0
-        }} 
-        style={{
-          scale: pageIdx > -1 ? spring(1, springParamsAlt) : spring(.7),
-          opacity: pageIdx > - 1 ? spring(1, springParamsAlt) : spring(0),
-          y: pageIdx > -1 ? spring(0, springParamsAlt) : spring(200),
+          translateY: spring(0)
+        }}
+        leave={{
+          opacity: 0,
+          translateY: 600
         }}>
-          {values => 
+        {this.state.pageIdx > -1 &&
           <Paper 
+            key="paper"
             section={this.state.currentSection}
             onClose={this.closePaper.bind(this)} 
-            show={pageIdx>-1} style={{
-            transform: `translate3d(0, ${values.y}px, 0) scale(${values.scale})`,
-            opacity: values.opacity
-          }}>
-            
-          </Paper>}
-        </Motion>
-      }
-
+            show={this.state.pageIdx>-1} />}
+      </Transition>
     </div>
   }
 

@@ -608,7 +608,7 @@ clock.start()
 var start = Date.now()
 export function animate(time) {
   //sphereMaterial.uniforms[ 'time' ].value = .0001 * ( Date.now() - start );
-
+  
   sphereMaterial.uniforms[ 'time' ].value = .00025 * ( Date.now() - start );
 
   currentSegment = segmentsByTime[audio.currentTime.toFixed(1)]

@@ -6,6 +6,7 @@ import Scene from "./scenes"
 
 require('./styles/normalize.css')
 require('./styles/body.css')
+require('./styles/content.css')
 
 
 

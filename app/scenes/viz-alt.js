@@ -58,11 +58,12 @@ var center;
 var dirtPass;
 var blendPass;
 var playing = false
-
+var textObject;
+var tethraGeometry = new THREE.TetrahedronGeometry(1120, 4);
 const objects = []
 
 import { setupData, audioData, getBeatsByTime, getSegmentsByTime, getBarsByTime, getTatumsByTime, getScenesByTime } from '../lib/audio-data'
-
+import { TextMesh } from '../objects/Text'
 
 var beatsByTime;
 var segmentsByTime;
@@ -114,10 +115,13 @@ export function init() {
   // CAMERA
   camera = new THREE.PerspectiveCamera( 200, screenX / screenY, 1, 20000)
   
-  camera.position.z = 1250
+  camera.position.z = 1750
   camera.position.y = 40
+
   camera.lookAt( scene.position );
   
+  //camera.rotation.x = -1
+
   // LIGHTS
   scene.add(new THREE.AmbientLight( 0xffffff, 1.0 ))
   
@@ -133,16 +137,35 @@ export function init() {
   var light2 = new THREE.DirectionalLight( 0x92E0A9, 1.0 );
   light2.position.set(80, -120, 4000)
   scene.add(light2)
-
   //scene.add(new THREE.CameraHelper( light.shadow.camera ))
 
 
+  // INTRO TEXT
+  textObject = new THREE.Object3D()
+  scene.add(textObject)
+
+  const text1 = TextMesh('without')
+  const text2 = TextMesh('a glass palace')
+  const text3 = TextMesh('life')
+  const text4 = TextMesh('would be')
+  const text5 = TextMesh('a conviction')
+
+  text2.position.y = 400
+  text3.position.y = 800
+  text4.position.y = 2000
+  text5.position.y = 2800
+
+  textObject.add(text1)
+  textObject.add(text2)
+  textObject.add(text3)
+  textObject.add(text4)
+  textObject.add(text5)
+
   // MAIN OBJECT3D
   object3d = new THREE.Object3D()
-  object3d.position.z = 400
+  object3d.position.z = 1200
   scene.add(object3d)
-
-
+  
   // PARTICLES
   particleSystem = particles.setup()
   scene.add(particleSystem)
@@ -160,29 +183,29 @@ export function init() {
         vertexShader : vertexShader,
         fragmentShader : fragmentShader,
         transparent: true,
-        opacity: Math.random(),
+        opacity: .25,
         depthWrite: false,
-        side: THREE.FrontSide,
-        wireframe: true
+        side: THREE.DoubleSide,
+        wireframe: true,
+        //shading: THREE.FlatShading
       });
   
   var mat = new THREE.MeshPhongMaterial({
     //shading: THREE.FlatShading,
     transparent: true,
     opacity: .15,
-    wireframe: true
+    wireframe: true,
   });
 
-  var geometry = new THREE.IcosahedronGeometry(1200, 1);
-  
+  var geometry = new THREE.SphereGeometry( 1200, 8, 8 )
+  //var geometry = new THREE.Geometry()
   // material = new THREE.MeshBasicMaterial();
   geometry.computeFaceNormals();
   geometry.computeVertexNormals();
 
   //sphereMesh = THREE.SceneUtils.createMultiMaterialObject(geometry, [material, mat])
   sphereMesh = new THREE.Mesh(geometry, material);
-  sphereMesh.position.z = -100
-  
+  //sphereMesh.position.z = -100
   
   // RENDERER
   renderer = new THREE.WebGLRenderer({
@@ -208,7 +231,7 @@ export function init() {
   dirtPass = new WAGNER.DirtPass();
   blendPass = new WAGNER.BlendPass();
   bloomPass = new WAGNER.MultiPassBloomPass();
-  bloomPass.params.blurAmount = 2;
+  bloomPass.params.blurAmount = 3;
   FXAAPass = new WAGNER.FXAAPass();
   vignettePass = new WAGNER.Vignette2Pass();
   vignettePass.params.boost = 2;
@@ -216,67 +239,17 @@ export function init() {
   noisePass = new WAGNER.NoisePass();
   noisePass.params.amount = .045;
   chromaticAbberationPass = new WAGNER.ChromaticAberrationPass();
-  // chromaticAbberationPass.params.amount = 10
-  console.log(chromaticAbberationPass)
+  chromaticAbberationPass.params.amount = 100
+  oldVideoPass = new WAGNER.OldVideoPass()
 
-  // RENDER PASS
-  // var rtParameters = { 
-  //   minFilter: THREE.LinearFilter, 
-  //   magFilter: THREE.LinearFilter, 
-  //   format: THREE.RGBFormat, 
-  //   stencilBuffer: true 
-  // };
-
-
-  // // POSTPROCESSING
-  // var renderTarget = new THREE.WebGLRenderTarget( screenX, screenY, rtParameters );
-  // var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
-  // var effectFXAA = new THREE.ShaderPass( THREE.FXAAShader );
-
-  // effectFXAA.uniforms[ 'resolution' ].value.set( 1 / screenX, 1 / screenY );
-
-  // var effectBleach = new THREE.ShaderPass( THREE.BleachBypassShader );
-
-  // // tilt shift
-  // hblur = new THREE.ShaderPass( THREE.HorizontalTiltShiftShader );
-  // vblur = new THREE.ShaderPass( THREE.VerticalTiltShiftShader );
-  
-  // hblur.uniforms[ 'h' ].value = 1 / window.innerWidth;
-  // vblur.uniforms[ 'v' ].value = 1 / window.innerHeight;
-  // vblur.renderToScreen = true
-
-
-  // var effectBloom = new THREE.BloomPass(1, 32, 5);
-  // effectBloom.renderToScreen = true
-
-  // var effect = new THREE.ShaderPass( THREE.RGBShiftShader );
-  // effect.uniforms[ 'amount' ].value = 0.0015;
-  // effect.renderToScreen = true;
-  
-
-  // composer = new THREE.EffectComposer( renderer, renderTarget );  
-  // composer.addPass( new THREE.RenderPass( scene, camera ) );
-
-  
-  // var kaleidoPass = new THREE.ShaderPass( THREE.KaleidoShader );
-  // var mirrorPass = new THREE.ShaderPass( THREE.MirrorShader );
-
-    
-
-  // //composer.addPass( effectFXAA );
-  // composer.addPass( effectBloom );
-  // composer.addPass( hblur );
-  // composer.addPass( vblur );
-  // //composer.addPass( kaleidoPass );
-  // composer.addPass( mirrorPass );
-  // composer.addPass( effect );
-  //composer.addPass( effectBleach );
 }
+
 
 export function playScene() {
   // PLAY AUDIO
   audio.play()
   scene.add(sphereMesh);
+  noisePass.params.speed = 1;
 }
 
 function addSegment(segment, radius=10, multiplyScalar=10) {
@@ -284,7 +257,7 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
   loudnessMax = ((-100 - segment.loudnessMax) * -1) / 100
   var segmentLength = 12
 
-  for(var i = 0; i < 1; i++) {
+  for(var i = 0; i < 3; i++) {
     const radius = logScale([0.72, 0.97], [1, 64], loudnessMax)
 
     var uniforms = {
@@ -311,11 +284,11 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     //var geometry = new THREE.SphereGeometry( radius, 1, 1) 
     
     const materialA = new THREE.MeshPhongMaterial({
-      color: 0x121212, 
+      color: 0xffffff, 
       transparent: true,
       //opacity: 1-loudnessMax,
       //shading: THREE.FlatShading,
-      specular: 0xffffff,
+      specular: Math.random() * 0xffffff,
       wireframe: true
     })
 
@@ -330,12 +303,16 @@ function addSegment(segment, radius=10, multiplyScalar=10) {
     //   sphereMesh.rotation.x,
     //   sphereMesh.position.y,
     //   sphereMesh.position.z)
-    _mesh.scale.set(0,0,0)
-    _mesh.position.multiplyScalar(Math.random() * 3000)
+    _mesh.scale.set(1,1,0)
+    _mesh.position.multiplyScalar(Math.random() * 500)
     _mesh.castShadow = true
     _mesh.receiveShadow = false
   
     object3d.add(_mesh)
+
+    // sphereMesh.geometry.vertices = geometry.vertices
+    // sphereMesh.geometry.verticesNeedUpdate=true
+    // sphereMesh.geometry.__dirtyVertices=true
 
     tweenSegment(_mesh, loudnessMax, segment.duration, i*(segment.duration/segmentLength)*1000)
     
@@ -358,7 +335,7 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
       m.scale.set(this.scale, this.scale, this.scale)
     })
     .onComplete(function() {
-      tweenSegmentOut(m, 2300, 5000, true)
+      tweenSegmentOut(m, 2300, Math.random()*3000, true)
     })
     .start()
     
@@ -376,21 +353,18 @@ function tweenSegment(m, loudness, duration, delay=1, remove=true) {
 
 function tweenSegmentOut(mesh, duration=100, scalarValue=100, remove=false) {
   const position = mesh.position.clone()
-  //const newPosition = position.multiplyScalar(scalarValue)
-  const newPosition = {
-    x: -900,
-    y: Math.random()*screenY,
-    z: position.z
-  }
+  const newPosition = position.multiplyScalar(scalarValue)
+  newPosition.z = Math.random()*10
 
   var tween = new TWEEN
     .Tween(mesh.position)
     .to({x: newPosition.x, y: newPosition.y, z: newPosition.z}, duration)
     .easing(TWEEN.Easing.Quadratic.InOut)
     .onUpdate(function(t) {
-      //mesh.material.opacity = 1-t
+      mesh.material.opacity = 1-t
       mesh.position.set(this.x, this.y, this.z)
       mesh.rotation.set(t, t, t)
+      //mesh.scale.set(this.scale, this.scale, this.scale)
       //mesh.material.uniforms.displacement.value = Math.random() * 10
     })
     .onComplete(function() {
@@ -429,7 +403,7 @@ function bumpSegment(loudness, duration) {
 
 function bumpScene(currentScene) {
   const loudness = (-100-currentScene.loudness)*-1
-  console.log(loudness)
+
   new TWEEN
     .Tween({ scaleMesh: 1 })
     .to({ scaleMesh: loudness*0.07 }, currentScene.duration*1000)
@@ -457,7 +431,7 @@ function bumpBar(fromScale=0.2, scale=3, duration=2000, returnBack=true) {
     .start()
 }
 
-var barInterval;
+var barDuration;
 
 var lastTime = 0
 var currentScene;
@@ -469,21 +443,55 @@ var lastBar = {}
 var start = Date.now()
 var segmentLoudness = 0
 var targetRotation = 0
+var targetRotationX = 0
+var targetRotationY = 0
+var targetRotationZ = 0
+var posX = 0, posY = 0, posZ = 0
 
+//var socket = io('http://localhost:5000');
+
+var distanceX = 0, velocityX = 0
+var distanceY = 0, velocityY = 0
+
+// socket.on('motion', function(position) {
+  
+//   velocityX = position.orientation._x
+//   velocityY = position.orientation._y
+
+//   //distanceX = distanceX+velocityX
+// })
+
+// socket.on('geolocation', function(coords) {
+//   posX = coords.x
+//   posY = coords.y
+//   posZ = coords.z
+
+//   console.log('x', posX)
+//   console.log('y', posY)
+//   console.log('z', posZ)
+// })
+
+function getDistance(time) {
+  var t = time/1000
+  var distX = 1*(t)+(velocityX*Math.pow(t, 2))/2
+  var distY = 1*(t)+(velocityY*Math.pow(t, 2))/2
+  velocityX = 0
+  velocityY = 0
+  return {x: distX/10, y: distY/10 }
+}
 
 export function animate(time) {
-  barInterval = 1 / (audioData.info.bpm / 60)
+  barDuration = 1 / (audioData.info.bpm / 60)
   render()
   object3d.rotation.y += 0.01
-  
+  textObject.position.y -= 4
   particleSystem.rotation.y -= targetRotation
 
+  // sphereMesh.rotation.x = 1+velocityX*2
+  // sphereMesh.rotation.y = 1+velocityY*2
   sphereMesh.rotation.x += 0.01
   sphereMesh.rotation.y += 0.01
 
-  //camera.rotation.z += 0.01
-  //scene.rotation.y += light.rotation.x = 0.01
-  //scene.rotation.x += 0.01
   currentScene = scenesByTime[audio.currentTime.toFixed(0)]
   currentSegment = segmentsByTime[audio.currentTime.toFixed(1)]
   currentBar = barsByTime[audio.currentTime.toFixed(1)]
@@ -499,14 +507,15 @@ export function animate(time) {
     if(currentSegment && currentSegment.start != lastSegment.start) {
 
       if(currentSegment.duration >= 0.4) {
-        particles.bump(
-          Math.min(segmentLoudness*10, 1.125), 
-          'out', 
-          true, 
-          undefined, 
-          currentSegment.duration*1000)
+        // particles.bump(
+        //   Math.max(segmentLoudness, .99), 
+        //   'out', 
+        //   true, 
+        //   undefined, 
+        //   currentSegment.duration*1000)
       }
 
+      noisePass.params.amount = (segmentLoudness/100)*10
       addSegment(currentSegment)
       bumpSegment(segmentLoudness, currentSegment.duration*1000)
       lastSegment = currentSegment
@@ -544,6 +553,7 @@ export function render() {
   composer.pass( vignettePass );
   composer.pass( FXAAPass );
   composer.pass( noisePass );
+  //composer.pass( oldVideoPass );
   composer.toScreen();
 }
 

@@ -14,27 +14,15 @@ a:link {
   color: #fff;
 }
 
-p,
-.serif {
+p, .serif, .gt-text--serif {
   font-family: Lora, serif;
   line-height: 1.5;
   font-weight: 100;
 }
 
-
-#bpm-helper {
-  display: none;
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background: #222;
-  padding: 10px;
-  z-index: 1000;
-  color: #fff;
+.gt-text--subhead {
+  font-size: .65em;
+  letter-spacing: .1em;
+  /*border-bottom: 2px solid;*/
+  text-transform: uppercase;
 }
-
-/*canvas {
-  position: fixed;
-  top: 0;
-  z-index: 1;
-}*/

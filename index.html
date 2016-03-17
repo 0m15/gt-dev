@@ -11,7 +11,7 @@
   <div id="gt-app" class="gt-app"></div>
 
   <!--preload audio files-->  
-  <audio id="track" src="assets/audio/glasstress.mp3"></audio> 
+  <audio id="track" src="assets/audio/like-a-glass.mp3"></audio> 
   <audio id="sfx01" src="assets/audio/sfx/1.mp3"></audio>
   <audio id="sfx02" src="assets/audio/sfx/2.mp3"></audio>
   <audio id="sfx03" src="assets/audio/sfx/3.mp3"></audio>
@@ -23,28 +23,6 @@
   <audio id="sfx09" src="assets/audio/sfx/9.mp3"></audio>
 
   
-  <!--<script src="http://localhost:8000/libs/three.js"></script>-->
-  
-  <!--<script src="http://localhost:5000/js/ShaderPass.js"></script>
-  <script src="http://localhost:5000/js/BleachBypassShader.js"></script>
-  <script src="http://localhost:5000/js/BlendShader.js"></script>
-  <script src="http://localhost:5000/js/FXAAShader.js"></script>
-  <script src="http://localhost:5000/js/HorizontalTiltShiftShader.js"></script>
-  <script src="http://localhost:5000/js/VerticalTiltShiftShader.js"></script>
-  <script src="http://localhost:5000/js/TriangleBlurShader.js"></script>
-  <script src="http://localhost:5000/js/VignetteShader.js"></script>
-  <script src="http://localhost:5000/js/ConvolutionShader.js"></script>
-  <script src="http://localhost:5000/js/DotScreenShader.js"></script>
-  <script src="http://localhost:5000/js/RGBShiftShader.js"></script>
-  <script src="http://localhost:5000/js/EffectComposer.js"></script>
-  <script src="http://localhost:5000/js/RenderPass.js"></script>
-  <script src="http://localhost:5000/js/BloomPass.js"></script>
-  <script src="http://localhost:5000/js/MaskPass.js"></script>-->
-  
-
-  <div id="bpm-helper">
-
-  </div>
   <script id="vertexShader1" type="x-shader/x-vertex">
   uniform vec3 viewVector;
   uniform float c;
@@ -254,32 +232,15 @@ void main() {
   varying float vNoise;
   varying float vDisplacement;
   void main() {
-    gl_FragColor = vec4(vec3(1.0) / vNoise, 1.0 * vNoise);
+    gl_FragColor = vec4(vec3(1.0), vNoise);
+    //gl_FragColor = vec4(vec3(1.0) * vNoise, 1.0);
     //gl_FragColor = vec4( col ,  vNoise * (1. - vUv.y));
   }
   </script>
 
-  <script id="aurora-fragment" type="x-shader/x-vertex">
+  <!-- enable for remote vr -->
+  <!--<script src="http://localhost:5000/socket.io/socket.io.js"></script>-->
 
-  </script> 
-
-  <script id="aurora-vertex" type="x-shader/x-fragment">
-
-  varying vec2 vUv;
-  varying vec4 vAudio;
-
-  void main(){
-
-   
-    vec3 c = vAudio.x * vec3( .6 , .0 , .3 );
-    c+= vAudio.y * vec3( .3 , .0 , .9 );
-    c += vAudio.z * vec3( .2 , .9 , .7 );
-    c=  normalize( c);
-    gl_FragColor = vec4( c ,  vAudio.a * (1. - vUv.y));
-
-  }
-  </script>
-
-  <script src="assets/app.js?1903891080912831"></script>
+  <script src="assets/app.js?v2"></script>
 </body>
 </html>

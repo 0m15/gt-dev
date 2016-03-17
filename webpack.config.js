@@ -3,12 +3,15 @@ var webpack = require('webpack');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
-  entry: './app/index.js',
+  entry: {
+    app: './app/index.js',
+    vr: './app/vr/index.js'
+  },
 
   output: {
     path: path.resolve(__dirname, "assets"),
     publicPath: "/assets/",
-    filename: "app.js",
+    filename: "[name].js",
     contentBase: path.resolve(__dirname)
   },
 
@@ -25,11 +28,11 @@ module.exports = {
     }),
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-          warnings: false
-      }
-    })
+    // new webpack.optimize.UglifyJsPlugin({
+    //   compress: {
+    //       warnings: false
+    //   }
+    // })
   ],
 
   module: {

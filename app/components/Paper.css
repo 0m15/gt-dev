@@ -13,17 +13,22 @@
 }
 
 .gt-paper__back {
-  font-size: 2em;
+  font-size: 1.25em;
   font-weight: 100;
   line-height: 1;
   -webkit-font-smoothing: antialiased;
   cursor: pointer;
+  letter-spacing: -.1em;
+  margin-bottom: .25em;
 }
 
 .gt-paper__content {
   padding: 2em 14em 2em 4em;
 }
 
+.gt-paper__aside {
+  padding: 2em;
+}
 .gt-paper__content,
 .gt-paper__aside {
   flex: 1;
@@ -33,7 +38,7 @@
   border-top: 1px solid rgba(255, 255, 255, .125);
   position: relative;
   top: -1px;
-  overflow-x: hidden;
+  /*overflow-x: hidden;*/
   padding-bottom: 3em;
   margin-bottom: 6em;
   padding: 3em 0;
